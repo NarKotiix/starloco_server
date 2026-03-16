@@ -11,6 +11,7 @@ gradle-wrapper.properties
 *.iws
 *.link
 *.lnk
+*.snapshot
 
 # Logs serveur
 Logs/
