@@ -1,0 +1,406 @@
+package org.starloco.locos.database.dynamics;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.starloco.locos.database.Database;
+import org.starloco.locos.kernel.Main;
+import org.slf4j.LoggerFactory;
+import org.starloco.locos.database.dynamics.data.*;
+
+public class DynamicsDatabase {
+    private static Logger logger = (Logger) LoggerFactory.getLogger(DynamicsDatabase.class);
+    //connection
+    private HikariDataSource dataSource;
+    //data
+    private AreaData areaData;
+    private GangsterData gangsterData;
+    private BankData bankData;
+    private TrunkData trunkData;
+    private GuildMemberData guildMemberData;
+
+    private HdvObjectData hdvObjectData;
+    private HouseData houseData;
+    private MountParkData mountParkData;
+    private CollectorData collectorData;
+    private PrismData prismData;
+    private SubAreaData subAreaData;
+    private AnimationData animationData;
+    private ChallengeData challengeData;
+    private CraftData craftData;
+    private DungeonData dungeonData;
+    private DropData dropData;
+    private EndFightActionData endFightActionData;
+    private ExperienceData experienceData;
+    private ExtraMonsterData extraMonsterData;
+    private FullMorphData fullMorphData;
+    private GiftData giftData;
+    private HdvData hdvData;
+    private InteractiveDoorData interactiveDoorData;
+    private InteractiveObjectData interactiveObjectData;
+    private ObjectTemplateData objectTemplateData;
+    private ObjectSetData objectSetData;
+    private JobData jobData;
+    private MapData mapData;
+    private MonsterData monsterData;
+    private NpcQuestionData npcQuestionData;
+    private NpcAnswerData npcAnswerData;
+    private NpcTemplateData npcTemplateData;
+    private NpcData npcData;
+    private ObjectActionData objectActionData;
+    private PetTemplateData petTemplateData;
+    private QuestData questData;
+    private QuestStepData questStepData;
+    private QuestObjectiveData questObjectiveData;
+    private RuneData runeData;
+    private ScriptedCellData scriptedCellData;
+    private SpellData spellData;
+    private TutorialData tutorialData;
+    private ZaapData zaapData;
+    private ZaapiData zaapiData;
+    private HeroicMobsGroups heroicMobsGroups;
+    public LangItemData langItemData;
+    
+    private MountData mountData;
+    private ObjectData objectData;
+    private PetData petData;
+    private WorldEntityData worldEntityData;
+    private PlayerCommandData playerCommandData;
+    private GuildData guildData;
+    private QuestPlayerData questPlayerData;
+    private GladiatroolSpellsData gladiatroolSpellsData;
+    private QuickSetData quicksetsData;
+    private ShortcutsData shortcutsData;
+
+    public void initializeData() {
+        this.areaData = new AreaData(dataSource);
+        this.gangsterData = new GangsterData(this.dataSource);
+        this.bankData = new BankData(this.dataSource);
+        this.trunkData = new TrunkData(this.dataSource);
+        this.guildMemberData = new GuildMemberData(this.dataSource);
+        this.hdvObjectData = new HdvObjectData(this.dataSource);
+        this.houseData = new HouseData(this.dataSource);
+        this.mountParkData = new MountParkData(this.dataSource);
+        this.collectorData = new CollectorData(this.dataSource);
+        this.prismData = new PrismData(this.dataSource);
+        this.subAreaData = new SubAreaData(this.dataSource);
+        this.animationData = new AnimationData(this.dataSource);
+        this.areaData = new AreaData(this.dataSource);
+        this.challengeData = new ChallengeData(this.dataSource);
+        this.trunkData = new TrunkData(this.dataSource);
+        this.craftData = new CraftData(this.dataSource);
+        this.dungeonData = new DungeonData(this.dataSource);
+        this.dropData = new DropData(this.dataSource);
+        this.endFightActionData = new EndFightActionData(this.dataSource);
+        this.experienceData = new ExperienceData(this.dataSource);
+        this.extraMonsterData = new ExtraMonsterData(this.dataSource);
+        this.fullMorphData = new FullMorphData(this.dataSource);
+        this.giftData = new GiftData(this.dataSource);
+        this.hdvData = new HdvData(this.dataSource);
+        this.houseData = new HouseData(this.dataSource);
+        this.interactiveDoorData = new InteractiveDoorData(this.dataSource);
+        this.interactiveObjectData = new InteractiveObjectData(this.dataSource);
+        this.objectTemplateData = new ObjectTemplateData(this.dataSource);
+        this.objectSetData = new ObjectSetData(this.dataSource);
+        this.jobData = new JobData(this.dataSource);
+        this.mapData = new MapData(this.dataSource);
+        this.monsterData = new MonsterData(this.dataSource);
+        this.mountParkData = new MountParkData(this.dataSource);
+        this.npcQuestionData = new NpcQuestionData(this.dataSource);
+        this.npcAnswerData = new NpcAnswerData(this.dataSource);
+        this.npcTemplateData = new NpcTemplateData(this.dataSource);
+        this.npcData = new NpcData(this.dataSource);
+        this.objectActionData = new ObjectActionData(this.dataSource);
+        this.petTemplateData = new PetTemplateData(this.dataSource);
+        this.questData = new QuestData(this.dataSource);
+        this.questStepData = new QuestStepData(this.dataSource);
+        this.questObjectiveData = new QuestObjectiveData(this.dataSource);
+        this.runeData = new RuneData(this.dataSource);
+        this.scriptedCellData = new ScriptedCellData(this.dataSource);
+        this.subAreaData = new SubAreaData(this.dataSource);
+        this.spellData = new SpellData(this.dataSource);
+        this.tutorialData = new TutorialData(this.dataSource);
+        this.zaapData = new ZaapData(this.dataSource);
+        this.zaapiData = new ZaapiData(this.dataSource);
+        this.heroicMobsGroups = new HeroicMobsGroups(dataSource);
+        this.langItemData = new LangItemData(dataSource);
+
+        this.mountData = new MountData(this.dataSource);
+        this.objectData = new ObjectData(this.dataSource);
+        this.petData = new PetData(this.dataSource);
+        this.worldEntityData = new WorldEntityData(this.dataSource);
+        this.playerCommandData = new PlayerCommandData(this.dataSource);
+        this.guildData = new GuildData(this.dataSource);
+        this.questPlayerData = new QuestPlayerData(this.dataSource);
+        this.gladiatroolSpellsData = new GladiatroolSpellsData(this.dataSource);
+        this.quicksetsData = new QuickSetData(this.dataSource);
+        this.shortcutsData = new ShortcutsData(this.dataSource);
+    }
+
+    /**
+     * Initialise la connexion à la base de données MySQL avec HikariCP
+     * @return true si succès, false sinon
+     */
+    public boolean initializeConnection() {
+        try {
+            // Configuration logging détaillée
+            logger.setLevel(Level.ALL);
+            logger.trace("Lecture configuration base de données...");
+
+            // Configuration HikariCP optimisée pour serveur jeu
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(String.format(
+                    "jdbc:mysql://%s:%s/%s?characterEncoding=UTF-8&useSSL=false&" +
+                            "allowPublicKeyRetrieval=true&serverTimezone=UTC&" +
+                            "cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048",
+                    Main.hostDB, Main.portDB, Main.nameDB
+            ));
+            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            config.setUsername(Main.userDB);
+            config.setPassword(Main.passDB);
+
+            // Pool optimisé gaming server (basé CPU + charge Starloco)
+            config.setMaximumPoolSize(Math.min((Runtime.getRuntime().availableProcessors() * 2) + 1, 20));
+            config.setMinimumIdle(2);
+            config.setConnectionTimeout(10000);  // 10s timeout
+            config.setIdleTimeout(300000);       // 5min idle
+            config.setMaxLifetime(1800000);      // 30min lifetime
+            config.setAutoCommit(false);         // Transactionnel (meilleur perf)
+
+            this.dataSource = new HikariDataSource(config);
+
+            // Test connexion
+            if (!Database.tryConnection(this.dataSource)) {
+                logger.error("❌ Échec connexion DB : vérifiez identifiants/host/port");
+                Main.stop("Échec test connexion base de données");
+                return false;
+            }
+
+            logger.info("✅ Connexion base de données établie (pool size: {})",
+                    ((HikariDataSource)this.dataSource).getMaximumPoolSize());
+
+            this.initializeData();
+            logger.info("✅ Données base de données chargées");
+
+        } catch (Exception e) {
+            logger.error("❌ Erreur initialisation DB", e);
+            return false;
+        }
+        return true;
+    }
+
+    public HikariDataSource getDataSource() {
+        return dataSource;
+    }
+
+    public GangsterData getGangsterData() {
+        return gangsterData;
+    }
+
+    public BankData getBankData() {
+        return bankData;
+    }
+
+    public GuildMemberData getGuildMemberData() {
+        return guildMemberData;
+    }
+
+    public HdvObjectData getHdvObjectData() {
+        return hdvObjectData;
+    }
+
+    public CollectorData getCollectorData() {
+        return collectorData;
+    }
+
+    public PrismData getPrismData() {
+        return prismData;
+    }
+
+    public AreaData getAreaData() {
+        return areaData;
+    }
+
+    public AnimationData getAnimationData() {
+        return animationData;
+    }
+
+    public ChallengeData getChallengeData() {
+        return challengeData;
+    }
+
+    public TrunkData getTrunkData() {
+        return trunkData;
+    }
+
+    public CraftData getCraftData() {
+        return craftData;
+    }
+
+    public DungeonData getDungeonData() {
+        return dungeonData;
+    }
+
+    public DropData getDropData() {
+        return dropData;
+    }
+
+    public EndFightActionData getEndFightActionData() {
+        return endFightActionData;
+    }
+
+    public ExperienceData getExperienceData() {
+        return experienceData;
+    }
+
+    public ExtraMonsterData getExtraMonsterData() {
+        return extraMonsterData;
+    }
+
+    public FullMorphData getFullMorphData() {
+        return fullMorphData;
+    }
+
+    public GiftData getGiftData() {
+        return giftData;
+    }
+
+    public HdvData getHdvData() {
+        return hdvData;
+    }
+
+    public HouseData getHouseData() {
+        return houseData;
+    }
+
+    public InteractiveDoorData getInteractiveDoorData() { return interactiveDoorData; }
+
+    public InteractiveObjectData getInteractiveObjectData() {
+        return interactiveObjectData;
+    }
+
+    public ObjectTemplateData getObjectTemplateData() {
+        return objectTemplateData;
+    }
+
+    public ObjectSetData getObjectSetData() {
+        return objectSetData;
+    }
+
+    public JobData getJobData() {
+        return jobData;
+    }
+
+    public MapData getMapData() {
+        return mapData;
+    }
+
+    public MonsterData getMonsterData() {
+        return monsterData;
+    }
+
+    public MountParkData getMountParkData() {
+        return mountParkData;
+    }
+
+    public NpcQuestionData getNpcQuestionData() {
+        return npcQuestionData;
+    }
+
+    public NpcAnswerData getNpcAnswerData() {
+        return npcAnswerData;
+    }
+
+    public NpcTemplateData getNpcTemplateData() {
+        return npcTemplateData;
+    }
+
+    public NpcData getNpcData() {
+        return npcData;
+    }
+
+    public ObjectActionData getObjectActionData() {
+        return objectActionData;
+    }
+
+    public PetTemplateData getPetTemplateData() {
+        return petTemplateData;
+    }
+
+    public QuestData getQuestData() {
+        return questData;
+    }
+
+    public QuestStepData getQuestStepData() {
+        return questStepData;
+    }
+
+    public QuestObjectiveData getQuestObjectiveData() {
+        return questObjectiveData;
+    }
+
+    public RuneData getRuneData() {
+        return runeData;
+    }
+
+    public ScriptedCellData getScriptedCellData() {
+        return scriptedCellData;
+    }
+
+    public SubAreaData getSubAreaData() {
+        return subAreaData;
+    }
+
+    public SpellData getSpellData() {
+        return spellData;
+    }
+
+    public TutorialData getTutorialData() {
+        return tutorialData;
+    }
+
+    public ZaapData getZaapData() {
+        return zaapData;
+    }
+
+    public ZaapiData getZaapiData() {
+        return zaapiData;
+    }
+
+    public HeroicMobsGroups getHeroicMobsGroups() { return heroicMobsGroups; }
+    
+    public PlayerCommandData getPlayerCommandData() {
+		return playerCommandData;
+	}
+
+	public MountData getMountData() {
+		return mountData;
+	}
+
+	public ObjectData getObjectData() {
+		return objectData;
+	}
+
+	public PetData getPetData() {
+		return petData;
+	}
+
+	public WorldEntityData getWorldEntityData() {
+		return worldEntityData;
+	}
+
+	public GuildData getGuildData() {
+		return guildData;
+	}
+
+	public QuestPlayerData getQuestPlayerData() {
+		return questPlayerData;
+	}
+
+    public GladiatroolSpellsData getGladiatroolSpellsData() {return gladiatroolSpellsData;}
+
+    public QuickSetData getQuickSetsData() {return quicksetsData;}
+    public ShortcutsData getShortcutsData() {return shortcutsData;}
+}

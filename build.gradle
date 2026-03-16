@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'org.starloco.locos'
+version = '1.0.0'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+application {
+    // Classe contenant le main()
+    mainClass = 'org.starloco.locos.kernel.Main'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Jars locaux
+    implementation files(
+            'libs/commons-cli-1.2.jar',
+            'libs/commons-lang-2.6.jar',
+            'libs/commons-logging-1.0.3.jar',
+            'libs/config-1.2.1.jar',
+            'libs/fastutil-7.0.6.jar',
+            'libs/google-translate-095.jar',
+            'libs/HikariCP-1.3.8.jar',
+            'libs/jansi-1.7.jar',
+            'libs/javassist.jar',
+            'libs/jep.jar',
+            'libs/joda-time-2.6.jar',
+            'libs/logback-classic-1.1.2.jar',
+            'libs/logback-core-1.1.2.jar',
+            'libs/mina-core-2.2.1.jar',
+            'libs/mysql-connector-j-9.4.0.jar',
+            'libs/mysql.jar',
+            'libs/slf4j-api-1.7.7.jar'
+    )
+
+    testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+                'Main-Class': 'org.starloco.locos.kernel.Main'
+        )
+    }
+    // Inclure les dépendances dans un "fat jar" (optionnel mais pratique)
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
