@@ -53,6 +53,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import java.util.stream.Collectors;
 import java.text.SimpleDateFormat;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -61,6 +66,7 @@ public class World {
     public final static World world = new World();
 
     public Logger logger = (Logger) LoggerFactory.getLogger(World.class);
+    private static final String MOB_GROUP_STARS_SNAPSHOT_FILE = "save/mob_group_stars.snapshot";
 
     private Map<Integer, Account>    accounts    = new HashMap<>();
     private Map<Integer, Player>     players     = new HashMap<>();
@@ -196,6 +202,106 @@ public class World {
         if(map.getSubArea() != null && map.getSubArea().getArea().getId() == 42 && !Config.getInstance().NOEL)
             return;
         maps.put(map.getId(), map);
+    }
+
+    public void saveMobGroupStarsSnapshot() {
+        Properties properties = new Properties();
+        int count = 0;
+
+        for (GameMap map : this.getMaps()) {
+            if (map == null) {
+                continue;
+            }
+
+            map.saveGroupsStars();
+            Map<Integer, Integer> starsByCell = map.getSavedGroupsStars();
+            if (starsByCell == null || starsByCell.isEmpty()) {
+                continue;
+            }
+
+            for (Entry<Integer, Integer> entry : starsByCell.entrySet()) {
+                Integer stars = entry.getValue();
+                if (stars == null || stars <= 0) {
+                    continue;
+                }
+                properties.setProperty(map.getId() + ":" + entry.getKey(), String.valueOf(stars));
+                count++;
+            }
+        }
+
+        Path path = Paths.get(MOB_GROUP_STARS_SNAPSHOT_FILE);
+        try {
+            if (count == 0) {
+                Files.deleteIfExists(path);
+                logger.info("Mob stars snapshot skipped (no stars to persist).");
+                return;
+            }
+
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+
+            try (OutputStream outputStream = Files.newOutputStream(path)) {
+                properties.store(outputStream, "Mob group stars snapshot");
+            }
+            logger.info("Mob stars snapshot saved: " + count + " entries.");
+        } catch (Exception e) {
+            logger.error("Unable to save mob stars snapshot", e);
+        }
+    }
+
+    public void loadMobGroupStarsSnapshot() {
+        Path path = Paths.get(MOB_GROUP_STARS_SNAPSHOT_FILE);
+        if (!Files.exists(path)) {
+            return;
+        }
+
+        Properties properties = new Properties();
+        int count = 0;
+
+        try (InputStream inputStream = Files.newInputStream(path)) {
+            properties.load(inputStream);
+        } catch (Exception e) {
+            logger.error("Unable to read mob stars snapshot", e);
+            return;
+        }
+
+        Map<Short, Map<Integer, Integer>> starsByMap = new HashMap<>();
+        for (String key : properties.stringPropertyNames()) {
+            String[] keyParts = key.split(":");
+            if (keyParts.length != 2) {
+                continue;
+            }
+
+            try {
+                short mapId = Short.parseShort(keyParts[0]);
+                int cellId = Integer.parseInt(keyParts[1]);
+                int stars = Integer.parseInt(properties.getProperty(key, "0"));
+                if (stars <= 0) {
+                    continue;
+                }
+
+                starsByMap.computeIfAbsent(mapId, ignored -> new HashMap<>()).put(cellId, stars);
+                count++;
+            } catch (Exception ignored) {
+            }
+        }
+
+        for (Entry<Short, Map<Integer, Integer>> entry : starsByMap.entrySet()) {
+            GameMap map = this.getMap(entry.getKey());
+            if (map != null) {
+                map.setSavedGroupsStars(entry.getValue());
+            }
+        }
+
+        try {
+            Files.deleteIfExists(path);
+        } catch (Exception e) {
+            logger.warn("Unable to delete mob stars snapshot file after load", e);
+        }
+
+        logger.info("Mob stars snapshot loaded: " + count + " entries.");
     }
     //endregion
 
@@ -537,6 +643,9 @@ public class World {
 
         loadExtraMonster();
         logger.debug("The adding of extra-monsters on the maps were done successfully.");
+
+        loadMobGroupStarsSnapshot();
+        logger.debug("The mob stars snapshot was loaded successfully.");
 
         loadMonsterOnMap();
         logger.debug("The adding of mobs groups on the maps were done successfully.");

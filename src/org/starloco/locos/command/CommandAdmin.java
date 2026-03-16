@@ -65,7 +65,12 @@ public class CommandAdmin extends AdminUser {
                 //this.getClient().kick();
                 return;
             }
-            if (!groupe.haveCommand(command)) {
+            boolean isCustomStarsCommand = command.equalsIgnoreCase("STARS");
+            if (isCustomStarsCommand && groupe.isPlayer()) {
+                this.sendErrorMessage("Commande reservee aux administrateurs.");
+                return;
+            }
+            if (!groupe.haveCommand(command) && !isCustomStarsCommand) {
                 this.sendMessage("Commande invalide !");
                 return;
             }
@@ -1398,6 +1403,69 @@ public class CommandAdmin extends AdminUser {
             this.getPlayer().getCurMap().refreshSpawns();
             String mess = "Les spawns de monstres sur la map ont été rafraîchis.";
             this.sendMessage(mess);
+            return;
+        } else if (command.equalsIgnoreCase("STARS")) {
+            if (infos.length < 2) {
+                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10>");
+                return;
+            }
+
+            int starsToAdd;
+            try {
+                starsToAdd = Integer.parseInt(infos[1]);
+            } catch (Exception e) {
+                this.sendErrorMessage("Valeur invalide. Utilisation: STARS <1 a 10>");
+                return;
+            }
+
+            if (starsToAdd < 1 || starsToAdd > 10) {
+                this.sendErrorMessage("La valeur doit etre comprise entre 1 et 10.");
+                return;
+            }
+
+            final int visibleStarCap = 10;
+            final int internalStarUnit = 20;
+            final int starCap = visibleStarCap * internalStarUnit;
+            final int internalStarsToAdd = starsToAdd * internalStarUnit;
+            GameMap currentMap = this.getPlayer().getCurMap();
+            int updatedGroups = 0;
+            int totalAdded = 0;
+            List<MobGroup> changedGroups = new ArrayList<>();
+
+            for (MobGroup group : currentMap.getMobGroups().values()) {
+                if (group == null) {
+                    continue;
+                }
+
+                int currentStars = group.getStarBonus();
+                if (currentStars < 0) {
+                    continue;
+                }
+
+                int newStars = Math.min(starCap, currentStars + internalStarsToAdd);
+                int added = newStars - currentStars;
+                if (added <= 0) {
+                    continue;
+                }
+
+                group.setStarBonus(newStars);
+                updatedGroups++;
+                totalAdded += added;
+                changedGroups.add(group);
+            }
+
+            for (MobGroup group : changedGroups) {
+                SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(currentMap, group.getId());
+                SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(currentMap, group);
+            }
+
+            if (updatedGroups == 0) {
+                this.sendMessage("Aucun groupe mis a jour sur cette map.");
+            } else {
+                this.sendSuccessMessage("Etoiles ajoutees: +" + starsToAdd
+                        + " etoile(s) visibles sur " + updatedGroups
+                        + " groupe(s), total bonus ajoute=" + totalAdded + ".");
+            }
             return;
         } else if (command.equalsIgnoreCase("DELJOB")) {
             Player perso = this.getPlayer();

@@ -270,6 +270,7 @@ public class Monster {
         private int orientation = 2;
         private int align = -1;
         private int starBonus;
+        private long lastStarBonusUpdateAt;
         private int aggroDistance = 0;
         private int subarea = -1;
         private boolean changeAgro = false;
@@ -674,6 +675,7 @@ public class Monster {
             this.orientation = generateOrientation(); 
             this.isFix = false;
             this.starBonus = Constant.getStarAlea();
+            this.lastStarBonusUpdateAt = System.currentTimeMillis();
         }
 
         public MobGroup(int id, int cellId, String groupData, String objects, int stars) {
@@ -715,6 +717,7 @@ public class Monster {
 
             this.orientation = generateOrientation(); 
             		
+            this.lastStarBonusUpdateAt = System.currentTimeMillis();
 
             if(!objects.isEmpty()) {
                 for (String value : objects.split(",")) {
@@ -764,6 +767,7 @@ public class Monster {
             }
             this.orientation = generateOrientation(); 
             this.starBonus = (star ? Constant.getStarAlea() : 0);
+            this.lastStarBonusUpdateAt = System.currentTimeMillis();
         }
 
         public MobGroup(int id, GameMap map, int cellId, String groupData) {
@@ -806,6 +810,7 @@ public class Monster {
             }
             this.orientation = map != null && map.getId() == 11095 ? 3 : (Formulas.getRandomValue(0, 3) * 2) + 1;
             this.starBonus = (short) (star ? 0 : -1);
+            this.lastStarBonusUpdateAt = System.currentTimeMillis();
         }
 
         private byte generateOrientation()
@@ -890,6 +895,31 @@ public class Monster {
 
         public int getStarBonus() {
             return this.starBonus;
+        }
+
+        public void setStarBonus(int stars) {
+            this.starBonus = stars;
+        }
+
+        public boolean updateStarBonus(long currentTimeMillis, int incrementPerMinute, int starCap) {
+            if (this.starBonus < 0 || incrementPerMinute <= 0 || starCap <= this.starBonus) {
+                return false;
+            }
+
+            long elapsed = currentTimeMillis - this.lastStarBonusUpdateAt;
+            if (elapsed < 60000L) {
+                return false;
+            }
+
+            int ticks = (int) (elapsed / 60000L);
+            if (ticks <= 0) {
+                return false;
+            }
+
+            int oldStars = this.starBonus;
+            this.starBonus = Math.min(starCap, this.starBonus + (ticks * incrementPerMinute));
+            this.lastStarBonusUpdateAt += (ticks * 60000L);
+            return oldStars != this.starBonus;
         }
 
         public int getAggroDistance() {

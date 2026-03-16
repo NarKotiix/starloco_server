@@ -43,6 +43,9 @@ import java.util.stream.Collectors;
 
 public class GameMap {
 
+    private static final int STAR_INCREMENT_PER_MINUTE = 1;
+    private static final int STAR_MAX_CAP = 200;
+
     public static final Map<String, ArrayList<GameObject>> fixMobGroupObjects = new HashMap<>();
     public static final Updatable updatable = new Updatable(1000) {
         private final ArrayList<RespawnGroup> groups = new ArrayList<>();
@@ -54,15 +57,20 @@ public class GameMap {
 
                 for(RespawnGroup respawnGroup : new ArrayList<>(this.groups)) {
                     if(respawnGroup.cell != -1) {
+                        // Groupes fixes en donjon
                         Map<String, String> data = World.world.getGroupFix(respawnGroup.map.id, respawnGroup.cell);
 
                         if(time - respawnGroup.lastTime > Long.parseLong(data.get("timer"))) {
                             respawnGroup.map.addStaticGroup(respawnGroup.cell, data.get("groupData"), true);
                             this.groups.remove(respawnGroup);
                         }
-                    } else if(time - respawnGroup.lastTime > random) {
-                        respawnGroup.map.spawnGroup(-1, 1, true, -1);
-                        this.groups.remove(respawnGroup);
+                    } else {
+                        // Groupes non-fixes en map classique (sans étoiles uniquement)
+                        // Délai aléatoire comme avant
+                        if(time - respawnGroup.lastTime > random) {
+                            respawnGroup.map.spawnGroup(Constant.ALIGNEMENT_NEUTRE, 1, true, -1);
+                            this.groups.remove(respawnGroup);
+                        }
                     }
                 }
             }
@@ -80,6 +88,7 @@ public class GameMap {
 
                 for (GameMap map : World.world.getMaps()) {
                     map.onMapMonsterDeplacement();
+                    map.updateMobGroupsStars();
                     if (map.getMountPark() != null) map.getMountPark().startMoveMounts();
                 }
 
@@ -111,6 +120,8 @@ public class GameMap {
     private Map<Integer, Npc> npcs = new HashMap<>();
     private Map<Integer, ArrayList<Action>> endFightAction = new HashMap<>();
     private Map<Integer, Integer> mobExtras = new HashMap<>();
+    // Sauvegarde des étoiles des groupes (pour persistence au redémarrage)
+    private Map<Integer, Integer> savedGroupsStars = new HashMap<>();
 
     public GameMap(short id, String date, byte w, byte h, String key, String places, String dData, String monsters, String mapPos, byte maxGroup, byte fixSize, byte minSize, byte maxSize, String forbidden, byte sniffed) {
         this.id = id;
@@ -787,6 +798,7 @@ public class GameMap {
         Monster.MobGroup group = new Monster.MobGroup(this.nextObjectId, Constant.ALIGNEMENT_NEUTRE, this.mobPossibles, this, cell, this.fixSize, this.maxSize, this.maxSize, grade);
         if (group.getMobs().isEmpty())
             return false;
+        group.setStarBonus(0);
         this.mobGroups.put(this.nextObjectId, group);
         this.nextObjectId--;
         return true;
@@ -798,6 +810,9 @@ public class GameMap {
         spawnGroup(Constant.ALIGNEMENT_NEUTRE, this.maxGroup, false, -1);//Spawn des groupes d'alignement neutre
         spawnGroup(Constant.ALIGNEMENT_BONTARIEN, 1, false, -1);//Spawn du groupe de gardes bontarien s'il y a
         spawnGroup(Constant.ALIGNEMENT_BRAKMARIEN, 1, false, -1);//Spawn du groupe de gardes brakmarien s'il y a
+        
+        // Restaurer les étoiles sauvegardées des groupes (persistence au redémarrage)
+        restoreGroupsStars();
     }
 
     public void mute() {
@@ -836,7 +851,7 @@ public class GameMap {
     }
 
     public void spawnAfterTimeGroup() {
-        ((ArrayList<RespawnGroup>) updatable.get()).add(new RespawnGroup(this, -1, System.currentTimeMillis()));
+        ((ArrayList<RespawnGroup>) updatable.get()).add(new RespawnGroup(this, -1, System.currentTimeMillis(), 0));
     }
 
     public void spawnAfterTimeGroupFix(final int cell) {
@@ -870,12 +885,57 @@ public class GameMap {
         private final GameMap map;
         private final int cell;
         private final long lastTime;
+        private final int stars; // Nombre d'étoiles du groupe à respawn
 
-        public RespawnGroup(GameMap map, int cell, long lastTime) {
+        public RespawnGroup(GameMap map, int cell, long lastTime, int stars) {
             this.map = map;
             this.cell = cell;
             this.lastTime = lastTime;
+            this.stars = stars;
         }
+    }
+
+    /**
+     * Calcule le délai de respawn (en millisecondes) en fonction du nombre d'étoiles
+     * Les étoiles augmentent avec le temps entre les respawns
+     * 
+     * Sans étoiles (0): 2-5 minutes
+     * 15 étoiles: 5-8 minutes
+     * 30 étoiles: 8-11 minutes
+     * 45 étoiles: 11-14 minutes
+     * 60 étoiles: 14-17 minutes
+     * 75+ étoiles: 17-20 minutes
+     */
+    private static long calculateDelayForStars(int stars) {
+        int minDelay, maxDelay;
+        
+        if (stars <= 0) {
+            // Sans étoiles: délai court (2-5 minutes)
+            minDelay = 120000;
+            maxDelay = 300000;
+        } else if (stars < 30) {
+            // 15 étoiles: 5-8 minutes
+            minDelay = 300000;
+            maxDelay = 480000;
+        } else if (stars < 45) {
+            // 30 étoiles: 8-11 minutes
+            minDelay = 480000;
+            maxDelay = 660000;
+        } else if (stars < 60) {
+            // 45 étoiles: 11-14 minutes
+            minDelay = 660000;
+            maxDelay = 840000;
+        } else if (stars < 75) {
+            // 60 étoiles: 14-17 minutes
+            minDelay = 840000;
+            maxDelay = 1020000;
+        } else {
+            // 75+ étoiles: 17-20 minutes
+            minDelay = 1020000;
+            maxDelay = 1200000;
+        }
+        
+        return Formulas.getRandomValue(minDelay, maxDelay);
     }
 
     public void spawnGroup(int align, int nbr, boolean log, int cellID) {
@@ -914,6 +974,10 @@ public class GameMap {
 
             if (group.getMobs().isEmpty())
                 continue;
+            
+            // Comportement classique : un groupe qui spawn repart a 0 etoile.
+            group.setStarBonus(0);
+            
             this.mobGroups.put(this.nextObjectId, group);
             if (log)
                 SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(this, group);
@@ -945,6 +1009,7 @@ public class GameMap {
 
         Monster.MobGroup group = new Monster.MobGroup(this.nextObjectId, -1, this.mobPossibles, this, cell, this.fixSize, this.minSize, this.maxSize, _m);
         group.setIsFix(false);
+        group.setStarBonus(0);
         this.mobGroups.put(this.nextObjectId, group);
         SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(this, group);
         this.nextObjectId--;
@@ -959,6 +1024,7 @@ public class GameMap {
         Monster.MobGroup group = new Monster.MobGroup(this.nextObjectId, cellID, groupData);
         if (group.getMobs().isEmpty())
             return;
+        group.setStarBonus(0);
         this.mobGroups.put(this.nextObjectId, group);
         group.setCondition(condition);
         group.setIsFix(false);
@@ -974,6 +1040,7 @@ public class GameMap {
         Monster.MobGroup group = new Monster.MobGroup(this.nextObjectId, cellID, groupData);
         if (group.getMobs().isEmpty())
             return;
+        group.setStarBonus(0);
         this.mobGroups.put(this.nextObjectId, group);
         group.setIsFix(false);
         if (send)
@@ -988,6 +1055,7 @@ public class GameMap {
         Monster.MobGroup group = new Monster.MobGroup(this.nextObjectId, cellID, groupData);
         if (group.getMobs().isEmpty())
             return;
+        group.setStarBonus(0);
         this.mobGroups.put(this.nextObjectId, group);
         this.nextObjectId--;
         this.fixMobGroups.put(-1000 + this.nextObjectId, group);
@@ -1139,52 +1207,38 @@ public class GameMap {
         this.send("cs<font color='#FF69B4'>[DEBUG] Joueur " + perso.getName() +
                 " lance un combat contre le groupe " + group.getId() +
                 " sur la map " + this.id +
-                " (cell " + group.getCellId() + ")</font>");
+                " (cell " + group.getCellId() + ") - " + group.getStarBonus() + " étoiles</font>");
 
         // On enlève le groupe engagé de la map
         this.mobGroups.remove(group.getId());
+        this.savedGroupsStars.remove(group.getCellId());
 
-        // === Respawn immédiat en respectant la contrainte "1 groupe max par map" ===
+        // === Respawn immédiat en respectant maxGroup ===
 
-        // Compter les groupes restants (fix + non fix)
-        int remainingGroups = this.mobGroups.size();
-        // Si un groupe est encore présent, on NE respawn pas
-        if (remainingGroups > 0) {
-            this.send("cs<font color='#FF69B4'>[DEBUG] Aucun respawn (il reste déjà " +
-                    remainingGroups + " groupe(s) sur la map " + this.id + ")</font>");
+        if (group.isFix()) {
+            // DONJONS: Respawn instantané du groupe fixe
+            int cell = group.getCellId();
+            Map<String, String> data = World.world.getGroupFix(this.id, cell);
+
+            if (data != null) {
+                String groupData = data.get("groupData");
+                if (groupData != null && !groupData.isEmpty()) {
+                    this.addStaticGroup(cell, groupData, true);
+                }
+            }
         } else {
-            // Il n'y a plus aucun groupe, on peut respawn
-
-            if (this.haveMobFix()) {
-                // Map avec groupes fixes (donjon) : respawn instant du même groupe fixe via DB
-                int cell = group.getCellId();
-                Map<String, String> data = World.world.getGroupFix(this.id, cell);
-
-                if (data != null) {
-                    String groupData = data.get("groupData");
-
-                    if (groupData != null && !groupData.isEmpty()) {
-                        // Même logique que le spawn de donjon : addStaticGroup
-                        this.addStaticGroup(cell, groupData, true);
-
-                        this.send("cs<font color='#FF69B4'>[DEBUG] Respawn FIX instant sur la map " +
-                                this.id + " (cell " + cell + ", groupFix DB)</font>");
-                    } else {
-                        this.send("cs<font color='#FF0000'>[DEBUG] groupFix trouvé pour map " +
-                                this.id + " cell " + cell + " mais groupData est vide</font>");
-                    }
-                } else {
-                    this.send("cs<font color='#FF0000'>[DEBUG] Aucun groupFix en DB pour map " +
-                            this.id + " cell " + group.getCellId() + "</font>");
-                }
-
+            // MAPS CLASSIQUES: Respawn les groupes manquants (sans étoiles)
+            int currentNonFixGroups = this.mobGroups.size() - this.fixMobGroups.size();
+            int spotsToFill = this.maxGroup - currentNonFixGroups;
+            
+            if (spotsToFill > 0) {
+                // Respawn autant de groupes que nécessaire pour remplir la map
+                spawnGroup(Constant.ALIGNEMENT_NEUTRE, spotsToFill, true, -1);
+                this.send("cs<font color='#FF69B4'>[DEBUG] Respawn de " + spotsToFill + 
+                        " groupe(s) sur la map " + this.id + "</font>");
             } else {
-                // Map classique : respawn instant d'un groupe neutre aléatoire
-                if (this.mobGroups.size() - this.fixMobGroups.size() < this.maxGroup) {
-                    spawnGroup(Constant.ALIGNEMENT_NEUTRE, 1, true, -1);
-                    this.send("cs<font color='#FF69B4'>[DEBUG] Spawn d'un nouveau groupe neutre sur la map " +
-                            this.id + " (cell aléatoire)</font>");
-                }
+                this.send("cs<font color='#FF69B4'>[DEBUG] Pas de respawn: " + currentNonFixGroups + 
+                        "/" + this.maxGroup + " groupes</font>");
             }
         }
 
@@ -1794,4 +1848,90 @@ public class GameMap {
     public void send(String packet) {
         this.getPlayers().stream().filter(player -> player != null).forEach(player -> player.send(packet));
     }
+
+    private void updateMobGroupsStars() {
+        long now = System.currentTimeMillis();
+        List<Monster.MobGroup> changedGroups = new ArrayList<>();
+
+        for (Monster.MobGroup group : this.mobGroups.values()) {
+            if (group == null) {
+                continue;
+            }
+            if (group.updateStarBonus(now, STAR_INCREMENT_PER_MINUTE, STAR_MAX_CAP)) {
+                changedGroups.add(group);
+            }
+        }
+
+        if (!changedGroups.isEmpty() && !this.getPlayers().isEmpty()) {
+            for (Monster.MobGroup group : changedGroups) {
+                SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(this, group.getId());
+                SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(this, group);
+            }
+        }
+    }
+
+    /**
+     * Sauvegarde les étoiles actuelles des groupes de monstres
+     * Cette méthode est appelée au redémarrage pour persister l'état des groupes
+     */
+    public void saveGroupsStars() {
+        this.savedGroupsStars.clear();
+        for (Monster.MobGroup group : this.mobGroups.values()) {
+            if (group != null && group.getStarBonus() > 0) {
+                this.savedGroupsStars.put(group.getCellId(), group.getStarBonus());
+            }
+        }
+    }
+
+    /**
+     * Restaure les étoiles sauvegardées des groupes après leur création
+     * Les étoiles sont restaurées par cellID du groupe
+     */
+    public void restoreGroupsStars() {
+        if (this.savedGroupsStars.isEmpty())
+            return;
+
+        List<Integer> remainingStars = new ArrayList<>();
+        List<Monster.MobGroup> groups = new ArrayList<>();
+
+        for (Integer savedStars : this.savedGroupsStars.values()) {
+            if (savedStars != null && savedStars > 0) {
+                remainingStars.add(Math.min(savedStars, STAR_MAX_CAP));
+            }
+        }
+
+        for (Monster.MobGroup group : this.mobGroups.values()) {
+            if (group != null) {
+                group.setStarBonus(0);
+                groups.add(group);
+            }
+        }
+
+        remainingStars.sort(Collections.reverseOrder());
+        groups.sort(Comparator.comparingInt(Monster.MobGroup::getCellId));
+
+        for (int index = 0; index < remainingStars.size() && index < groups.size(); index++) {
+            groups.get(index).setStarBonus(remainingStars.get(index));
+        }
+
+        this.savedGroupsStars.clear();
+    }
+
+    /**
+     * Définit les étoiles sauvegardées (par cellID)
+     * Utilisé lors du redémarrage pour transférer l'état
+     */
+    public void setSavedGroupsStars(Map<Integer, Integer> savedStars) {
+        this.savedGroupsStars = new HashMap<>(savedStars);
+    }
+
+    /**
+     * Récupère les étoiles sauvegardées
+     */
+    public Map<Integer, Integer> getSavedGroupsStars() {
+        return this.savedGroupsStars;
+    }
 }
+
+
+

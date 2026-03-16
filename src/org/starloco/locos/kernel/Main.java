@@ -173,6 +173,7 @@ public class Main {
             
             // === ÉTAPE 2 : Sauvegarder les données du monde
             logger.info("Step 2/4 - Saving world data (players, objects, mounts, etc)...");
+            World.world.saveMobGroupStarsSnapshot();
             WorldSave.cast(0);
             GameServer.setState(0);
 

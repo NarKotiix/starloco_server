@@ -980,11 +980,9 @@ public class Fight {
             return;
 
         if (this.getType() == Constant.FIGHT_TYPE_PVM) {
-            if (this.getMobGroup().isFix() && isCheckTimer() && this.getMapOld().getId() != 6826 && this.getMapOld().getId() != 10332 && this.getMapOld().getId() != 7388)
-                this.getMapOld().spawnAfterTimeGroupFix(this.getMobGroup().getCellId());// Respawn d'un groupe fix
-            if(!Config.getInstance().HEROIC)
-                if (!this.getMobGroup().isFix() && this.isCheckTimer())
-                    this.getMapOld().spawnAfterTimeGroup();// Respawn d'un groupe
+            // Le respawn est maintenant géré dans startFightVersusMonstres()
+            // Ici on ne fait rien - les groupes sans étoiles respawnent instantanément
+            // Les groupes avec étoiles sont gérés par un timer existant
         }
 
         if (getType() == Constant.FIGHT_TYPE_CONQUETE) {
@@ -3931,12 +3929,7 @@ public class Fight {
         }
 
         if (this.getType() != Constant.FIGHT_TYPE_CHALLENGE) {
-            if (fighter.getPdv() <= 0)
-                player.setPdv(1);
-            else
-                player.setPdv(fighter.getPdv());
-
-            if(fighter.getLevelUp()) player.fullPDV();
+            player.fullPDV();
         }
 
         if (this.getType() == 2)
@@ -4022,45 +4015,26 @@ public class Fight {
         }
 
         if (this.getType() != Constant.FIGHT_TYPE_CHALLENGE) {
-            int loose = Formulas.getLoosEnergy(player.getLevel(), getType() == 1, getType() == 5);
-            int energy = player.getEnergy() - loose;
-
-            player.setEnergy((energy < 0 ? 0 : energy));
-
-            if (player.isOnline())
-                SocketManager.GAME_SEND_Im_PACKET(player, "034;" + loose);
             if(Config.getInstance().HEROIC) {
                 if(fighter.killedBy != null)
                     player.die(fighter.killedBy.first, fighter.killedBy.second);
             } else {
-                if (energy <= 0) {
-                    if (this.getType() == Constant.FIGHT_TYPE_AGRESSION && fighter.getTraqued()) {
-                        if (getTeam1().containsValue(fighter))
-                            player.teleportFaction(this.getAlignementOfTraquer(this.getTeam0().values(), player));
-                        else
-                            player.teleportFaction(this.getAlignementOfTraquer(this.getTeam1().values(), player));
-                        player.setEnergy(1);
-                    } else {
-                        player.setFuneral();
-                    }
+                if (this.getType() == Constant.FIGHT_TYPE_AGRESSION && fighter.getTraqued()) {
+                    if (getTeam1().containsValue(fighter))
+                        player.teleportFaction(this.getAlignementOfTraquer(this.getTeam0().values(), player));
+                    else
+                        player.teleportFaction(this.getAlignementOfTraquer(this.getTeam1().values(), player));
                 } else {
-                    if (this.getType() == Constant.FIGHT_TYPE_AGRESSION && fighter.getTraqued()) {
-                        if (getTeam1().containsValue(fighter))
-                            player.teleportFaction(this.getAlignementOfTraquer(this.getTeam0().values(), player));
-                        else
-                            player.teleportFaction(this.getAlignementOfTraquer(this.getTeam1().values(), player));
+                    if (player.getCurMap() != null && player.getCurMap().getSubArea() != null && (player.getCurMap().getSubArea().getId() == 319 || player.getCurMap().getSubArea().getId() == 210)) {
+                        player.setNeededEndFightAction(new Action(1001, "9558,224", "", null));
+                        player.teleportLaby((short) 9558, 224);
+                        TimerWaiter.addNext(() -> {
+                            Minotoror.sendPacketMap(player); // Retarde le paquet sinon les portes sont ferms. Le paquet de GameInformation doit faire chier ce pd
+                            player.fullPDV();
+                        }, 3500, TimerWaiter.DataType.CLIENT);
                     } else {
-                        if (player.getCurMap() != null && player.getCurMap().getSubArea() != null && (player.getCurMap().getSubArea().getId() == 319 || player.getCurMap().getSubArea().getId() == 210)) {
-                            player.setNeededEndFightAction(new Action(1001, "9558,224", "", null));
-                            player.teleportLaby((short) 9558, 224);
-                            TimerWaiter.addNext(() -> {
-                                Minotoror.sendPacketMap(player); // Retarde le paquet sinon les portes sont ferms. Le paquet de GameInformation doit faire chier ce pd
-                                player.setPdv(1);
-                            }, 3500, TimerWaiter.DataType.CLIENT);
-                        } else {
-                            player.setNeededEndFightAction(new Action(1001, player.getSavePosition(), "", null));
-                            player.setPdv(1);
-                        }
+                        player.setNeededEndFightAction(new Action(1001, player.getSavePosition(), "", null));
+                        player.fullPDV();
                     }
                 }
             }
@@ -4581,7 +4555,7 @@ public class Fight {
                                 }
                             } else { // mob loose..
                                 list = Fight.give(group.isFix() ? GameMap.fixMobGroupObjects.get(this.getMapOld().getId() + "," + group.getCellId()) : group.getObjects(), winners);
-                                if(!group.isFix()) this.getMapOld().spawnAfterTimeGroup();
+                                // Le respawn est maintenant géré dans startFightVersusMonstres()
                             }
                         } catch(Exception e) { e.printStackTrace(); }
                         break;
