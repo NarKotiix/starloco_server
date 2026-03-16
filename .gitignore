@@ -21,6 +21,12 @@ Logs/
 Server-*.jar
 config.properties
 convert-to-utf8.ps1
+test_colors.ps1
+test_colors.sh
+Start-Server-UTF8.bat
+start-server-utf8.sh
+test_colors.sh
+test_colors.ps1
 
 # OS
 .DS_Store
