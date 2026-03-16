@@ -10,7 +10,7 @@ gradle-wrapper.properties
 *.iml
 *.iws
 *.link
-*.ink
+*.lnk
 
 # Logs serveur
 Logs/
