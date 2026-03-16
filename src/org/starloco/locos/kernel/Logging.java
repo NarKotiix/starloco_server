@@ -1,5 +1,7 @@
 package org.starloco.locos.kernel;
 
+import org.fusesource.jansi.Ansi;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

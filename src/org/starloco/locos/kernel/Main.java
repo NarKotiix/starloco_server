@@ -2,7 +2,6 @@ package org.starloco.locos.kernel;
 
 import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
 import org.starloco.locos.area.map.GameMap;
@@ -52,6 +51,15 @@ public class Main {
     public static ExchangeClient exchangeClient;
 
     public static void main(String[] args) throws SQLException {
+        // Forcer UTF-8 pour les entrées/sorties
+        System.setProperty("file.encoding", "UTF-8");
+        System.setProperty("sun.jnu.encoding", "UTF-8");
+        System.setProperty("stdout.encoding", "UTF-8");
+        System.setProperty("stderr.encoding", "UTF-8");
+        
+        // Initialiser Jansi pour les couleurs ANSI sur Windows
+        AnsiConsole.systemInstall();
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Ce hook ne devrait se déclencher que quand la JVM s'arrête déjà
             if (Main.isRunning) {
@@ -63,7 +71,10 @@ public class Main {
         }));
 
         try {
-            System.setOut(new PrintStream(System.out, true, "IBM850"));
+            // Configurer les streams en UTF-8 avec support des couleurs
+            System.setOut(new PrintStream(System.out, true, "UTF-8"));
+            System.setErr(new PrintStream(System.err, true, "UTF-8"));
+            
             if (!new File("Logs/Error").exists()) new File("Logs/Error").mkdir();
             System.setErr(new PrintStream(Files.newOutputStream(
                     Paths.get("Logs/Error/" + new SimpleDateFormat("dd-MM-yyyy - HH-mm-ss", Locale.FRANCE)
@@ -110,10 +121,8 @@ public class Main {
                 Main.refreshTitle();
                 Main.logger.info("The server is ready ! Waiting for connection..\n");
 
-                ch.qos.logback.classic.Logger root =
-                        (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(
-                                ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-                root.setLevel(Level.ERROR);
+                // Les niveaux de log sont gérés par logback.xml
+                // Ne pas surcharger les paramètres ici
 
                 while (Main.isRunning) {
                     try {
