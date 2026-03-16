@@ -13,7 +13,7 @@ echo [INFO] Lancement du serveur StarLoco...
 echo.
 
 :START
-java -Xms512m -Xmx1024m -XX:+UseG1GC -jar game.jar
+java -Xms512m -Xmx1024m -XX:+UseG1GC -jar Server-1.0.0.jar
 
 echo.
 echo [INFO] Le serveur est ferme.
