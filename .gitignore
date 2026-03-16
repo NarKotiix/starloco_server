@@ -9,6 +9,7 @@ gradle-wrapper.properties
 .idea/
 *.iml
 *.iws
+*.link
 
 # Logs serveur
 Logs/
