@@ -1,0 +1,159 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  ✨ SYSTÈME DE LOGGING COLORISÉ - RÉSUMÉ ✨                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📊 NIVEAUX DE LOG ET COULEURS                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  🔍 DEBUG   🔵 CYAN    → Informations de débogage                           │
+│  ℹ️  INFO    🟢 VERT    → Informations importantes                          │
+│  ⚠️  WARN    🟡 JAUNE   → Avertissements / Anomalies                        │
+│  ❌ ERROR   🔴 ROUGE   → Erreurs non critiques                             │
+│  💀 FATAL   🔴 ROUGE   → Erreurs critiques                                 │
+│  🔬 TRACE   🟣 MAGENTA → Informations très détaillées                      │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📁 FICHIERS CRÉÉS ET MODIFIÉS                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ✨ CRÉÉ: src/logback.xml                                                    │
+│     └─ Configuration Logback avec patterns colorés et rotation              │
+│                                                                              │
+│  ✨ CRÉÉ: src/org/starloco/locos/kernel/ColoredLog.java                    │
+│     └─ Classe utilitaire pour logs colorisés manuels                       │
+│                                                                              │
+│  ✨ CRÉÉ: src/org/starloco/locos/kernel/LoggingExample.java                │
+│     └─ Exemples complets d'utilisation                                     │
+│                                                                              │
+│  ✏️  MODIFIÉ: src/org/starloco/locos/kernel/Main.java                      │
+│     └─ Initialisation AnsiConsole + encodage UTF-8                         │
+│                                                                              │
+│  ✏️  MODIFIÉ: src/org/starloco/locos/kernel/Logging.java                   │
+│     └─ Import Jansi pour support des couleurs                              │
+│                                                                              │
+│  ✨ CRÉÉ: README_LOGS.md                                                     │
+│     └─ Documentation complète du système                                    │
+│                                                                              │
+│  ✨ CRÉÉ: MODIFICATIONS_LOGGING.md                                           │
+│     └─ Résumé détaillé des changements                                     │
+│                                                                              │
+│  ✨ CRÉÉ: QUICK_START_LOGGING.md                                             │
+│     └─ Guide rapide de démarrage                                           │
+│                                                                              │
+│  ✨ CRÉÉ: test_colors.ps1                                                    │
+│     └─ Script PowerShell de test des couleurs                              │
+│                                                                              │
+│  ✨ CRÉÉ: test_colors.sh                                                     │
+│     └─ Script Bash de test des couleurs                                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 EXEMPLE DE SORTIE CONSOLE                                                 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  🔍 [14:23:45.123] [DEBUG] org.starloco.locos.kernel - Démarrage            │
+│  ℹ️  [14:23:46.456] [INFO] org.starloco.locos.game - Serveur prêt!         │
+│  ⚠️  [14:23:47.789] [WARN] org.starloco.locos.entity - Charge élevée       │
+│  ❌ [14:23:48.012] [ERROR] org.starloco.locos.db - Reconnexion BDD        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 💻 UTILISATION DANS LE CODE                                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  // Approche 1: SLF4J (Recommandé)                                          │
+│  private static final Logger logger =                                       │
+│      LoggerFactory.getLogger(MaClasse.class);                              │
+│                                                                              │
+│  logger.debug("Message de debug");        // Cyan 🔵                       │
+│  logger.info("Information");              // Vert 🟢                       │
+│  logger.warn("Avertissement");            // Jaune 🟡                      │
+│  logger.error("Erreur!", exception);      // Rouge 🔴                      │
+│                                                                              │
+│  ───────────────────────────────────────────────────────────────────────   │
+│                                                                              │
+│  // Approche 2: ColoredLog (Pour sorties spéciales)                         │
+│  ColoredLog.success("Succès!");           // Vert avec ✓                  │
+│  ColoredLog.fail("Échec!");               // Rouge avec ✗                 │
+│  ColoredLog.printTitle("== TITRE ==");    // Avec séparateurs             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⚙️ CONFIGURATION                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  📝 Fichier: src/logback.xml                                                │
+│                                                                              │
+│  ✓ Changez le niveau global:                                               │
+│    <root level="DEBUG">        ← DEBUG, INFO, WARN, ERROR                  │
+│                                                                              │
+│  ✓ Modifier le pattern:                                                    │
+│    %d{HH:mm:ss.SSS} | %highlight(%-5level) | %logger{36} - %msg%n        │
+│                                                                              │
+│  ✓ Ajouter un logger pour un package:                                      │
+│    <logger name="org.starloco.locos.exchange" level="WARN"/>              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📊 FICHIERS LOGS GÉNÉRÉS                                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Logs/                                                                       │
+│  ├── server.log                    ← Tous les logs (rotatif)               │
+│  ├── server-2024-03-16-1.log       ← Archive                               │
+│  ├── server-2024-03-16-2.log       ← Archive                               │
+│  ├── errors.log                    ← Erreurs uniquement                    │
+│  ├── errors-2024-03-16-1.log       ← Archive erreurs                       │
+│  └── Error/                        ← Ancien format (compatibilité)         │
+│      └── stderr logs...                                                    │
+│                                                                              │
+│  💾 Rotation automatique: 10MB par fichier, 30 jours de conservation       │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ✅ STATUT DE COMPILATION                                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  BUILD SUCCESSFUL in 12s                                                    │
+│  6 actionable tasks: 6 executed                                             │
+│                                                                              │
+│  ✓ Aucune erreur de compilation                                            │
+│  ✓ Aucune nouvelle dépendance ajoutée                                      │
+│  ✓ Code prêt à l'exécution                                                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🚀 PRÊT À DÉMARRER                                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Exécutez simplement:                                                       │
+│                                                                              │
+│     java -jar Server-1.0.0.jar                                             │
+│                                                                              │
+│  Les logs apparaîtront AUTOMATIQUEMENT EN COULEUR! 🎨                      │
+│                                                                              │
+│  💡 Le système s'active dès le démarrage du serveur.                      │
+│  💡 Aucune action supplémentaire requise.                                  │
+│  💡 Les couleurs s'affichent sur Windows, Linux et macOS.                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    ✨ SYSTÈME PRÊT À L'EMPLOI ✨                             ║
+║                                                                              ║
+║                 Consultez les fichiers .md pour plus d'infos:              ║
+║                  • QUICK_START_LOGGING.md (Guide rapide)                   ║
+║                  • README_LOGS.md (Documentation complète)                 ║
+║                  • MODIFICATIONS_LOGGING.md (Détails techniques)           ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
