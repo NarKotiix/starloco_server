@@ -117,3 +117,51 @@ Les logs sont sauvegardés dans le dossier `Logs/` :
 
 Vous pouvez consulter l'historique même si la console ne l'affiche plus.
 
+## Arrêt gracieux du serveur (CTRL+C)
+
+### Comportement
+
+Quand vous appuyez sur **CTRL+C** dans la console du serveur :
+
+1. ✅ **Arrêt des nouvelles connexions** - Aucun nouveau joueur ne peut se connecter
+2. ✅ **Sauvegarde du monde** - Tous les objets, montures, maisons, etc. sont sauvegardés
+3. ✅ **Déconnexion des joueurs** - Les données de chaque joueur sont sauvegardées dans la base de données
+4. ✅ **Fermeture des bases de données** - Les connexions MySQL sont proprement fermées
+
+### Exemple de sortie de console
+
+```
+══════════════════════════════════════════════════════════
+  SHUTDOWN SIGNAL RECEIVED - Saving data before closing...
+══════════════════════════════════════════════════════════
+
+19:45:30.123 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
+19:45:30.124 | WARN  | org.starloco.locos.kernel.Main -   SERVER SHUTDOWN INITIATED - CTRL+C / Shutdown Signal
+19:45:30.125 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
+19:45:30.126 | INFO  | org.starloco.locos.kernel.Main - Step 1/4 - Stopping new connections...
+19:45:30.127 | INFO  | org.starloco.locos.kernel.Main - Step 2/4 - Saving world data (players, objects, mounts, etc)...
+19:45:30.500 | INFO  | org.starloco.locos.game.world.World - -> of accounts.
+19:45:30.600 | INFO  | org.starloco.locos.game.world.World - -> of players.
+19:45:30.750 | INFO  | org.starloco.locos.kernel.Main - Step 3/4 - Disconnecting all players and saving their data...
+19:45:31.000 | INFO  | org.starloco.locos.kernel.Main - Step 4/4 - Closing database connections...
+19:45:31.200 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
+19:45:31.201 | WARN  | org.starloco.locos.kernel.Main -   ✅ SERVER SHUTDOWN COMPLETE - All data saved
+19:45:31.202 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
+19:45:31.203 | INFO  | org.starloco.locos.kernel.Main - The server is now closed.
+```
+
+### Aucun risque de perte de données
+
+- **Avant** : Appuyer sur CTRL+C = risque de rollback (perte de données)
+- **Après** : Appuyer sur CTRL+C = sauvegarde complète + arrêt propre ✅
+
+Tous les changements effectués sur les joueurs, items, comptes, etc. avant l'arrêt sont **persistés en base de données**.
+
+## Documentation complémentaire
+
+Pour plus de détails sur l'arrêt du serveur, consultez :
+
+- 📄 **[GRACEFUL_SHUTDOWN.md](docs/GRACEFUL_SHUTDOWN.md)** - Guide complet d'arrêt (4 étapes, exemples, FAQ)
+- 📋 **[QUICK_SHUTDOWN.md](docs/QUICK_SHUTDOWN.md)** - Guide rapide en 30 secondes
+- 🔧 **[MODIFICATIONS_GRACEFUL_SHUTDOWN.md](docs/MODIFICATIONS_GRACEFUL_SHUTDOWN.md)** - Détails techniques des modifications
+

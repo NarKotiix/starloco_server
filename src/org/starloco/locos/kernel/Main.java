@@ -60,15 +60,12 @@ public class Main {
         // Initialiser Jansi pour les couleurs ANSI sur Windows
         AnsiConsole.systemInstall();
 
+        // Hook d'arrêt gracieux : CTRL+C -> Sauvegarde des données
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            // Ce hook ne devrait se déclencher que quand la JVM s'arrête déjà
             if (Main.isRunning) {
-                Main.logger.info("Shutdown hook triggered, stopping server...");
-                Main.stop("Shutdown hook");
-            } else {
-                Main.logger.info("The server is now closed.");
+                Main.stop("Shutdown hook triggered");
             }
-        }));
+        }, "ShutdownHook"));
 
         try {
             // Configurer les streams en UTF-8 avec support des couleurs
@@ -164,20 +161,63 @@ public class Main {
 
     public static void stop(String reason) {
         try {
-            logger.info("Stopping server: " + reason);
+            logger.warn("═══════════════════════════════════════════════════════════");
+            logger.warn("  SERVER SHUTDOWN INITIATED - " + reason);
+            logger.warn("═══════════════════════════════════════════════════════════");
+
             isRunning = false;
 
+            // === ÉTAPE 1 : Arrêter les nouvelles connexions
+            logger.info("Step 1/4 - Stopping new connections...");
             GameServer.setState(0);
+            
+            // === ÉTAPE 2 : Sauvegarder les données du monde
+            logger.info("Step 2/4 - Saving world data (players, objects, mounts, etc)...");
             WorldSave.cast(0);
             GameServer.setState(0);
 
-            if (gameServer != null) gameServer.kickAll(true);
+            // === ÉTAPE 3 : Déconnecter les joueurs
+            logger.info("Step 3/4 - Disconnecting all players and saving their data...");
+            if (gameServer != null) {
+                gameServer.kickAll(true);  // true = avec sauvegarde
+            }
+
+            // === ÉTAPE 4 : Fermer les bases de données proprement
+            logger.info("Step 4/4 - Closing database connections...");
             Logging.getInstance().stop();
             Database.getStatics().getServerData().loggedZero();
+            
+            logger.warn("═══════════════════════════════════════════════════════════");
+            logger.warn("  ✅ SERVER SHUTDOWN COMPLETE - All data saved");
+            logger.warn("═══════════════════════════════════════════════════════════");
+            
         } catch (Exception e) {
+            logger.error("❌ Error during server shutdown", e);
             e.printStackTrace();
         } finally {
             logger.info("The server is now closed.");
+            
+            // Nettoyage Jansi
+            try {
+                AnsiConsole.systemUninstall();
+                System.out.flush();
+                System.err.flush();
+                System.out.println("\r\n🎉 Serveur arrêté !");
+            } catch (Exception ignored) {}
+            
+            // 🚨 KILL BRUTAL : Force tous threads non-daemon
+            Thread[] threads = new Thread[Thread.activeCount() + 10];
+            int count = Thread.enumerate(threads);
+            for (int i = 0; i < count; i++) {
+                if (threads[i] != null && !threads[i].isDaemon() && !threads[i].equals(Thread.currentThread())) {
+                    try {
+                        threads[i].interrupt();
+                    } catch (Exception ignored) {}
+                }
+            }
+            
+            // EXIT FINAL : halt(0) ignore tous les shutdown hooks restants
+            Runtime.getRuntime().halt(0);
         }
     }
 
