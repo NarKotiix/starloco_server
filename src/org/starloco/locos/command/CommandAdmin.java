@@ -1406,7 +1406,52 @@ public class CommandAdmin extends AdminUser {
             return;
         } else if (command.equalsIgnoreCase("STARS")) {
             if (infos.length < 2) {
-                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10>");
+                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10> | STARS CLEARALL");
+                return;
+            }
+
+            if (infos[1].equalsIgnoreCase("CLEARALL")) {
+                int updatedGroups = 0;
+                int updatedMaps = 0;
+
+                for (GameMap map : World.world.getMaps()) {
+                    if (map == null) {
+                        continue;
+                    }
+
+                    List<MobGroup> changedGroups = new ArrayList<>();
+                    for (MobGroup group : map.getMobGroups().values()) {
+                        if (group == null) {
+                            continue;
+                        }
+
+                        int currentStars = group.getStarBonus();
+                        if (currentStars <= 0) {
+                            continue;
+                        }
+
+                        group.setStarBonus(0);
+                        changedGroups.add(group);
+                    }
+
+                    if (changedGroups.isEmpty()) {
+                        continue;
+                    }
+
+                    updatedMaps++;
+                    updatedGroups += changedGroups.size();
+                    map.getSavedGroupsStars().clear();
+
+                    if (!map.getPlayers().isEmpty()) {
+                        for (MobGroup group : changedGroups) {
+                            SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(map, group.getId());
+                            SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(map, group);
+                        }
+                    }
+                }
+
+                this.sendSuccessMessage("Etoiles remises a 0 sur toutes les maps: " + updatedGroups
+                        + " groupe(s) modifie(s) sur " + updatedMaps + " map(s).");
                 return;
             }
 
@@ -1414,7 +1459,7 @@ public class CommandAdmin extends AdminUser {
             try {
                 starsToAdd = Integer.parseInt(infos[1]);
             } catch (Exception e) {
-                this.sendErrorMessage("Valeur invalide. Utilisation: STARS <1 a 10>");
+                this.sendErrorMessage("Valeur invalide. Utilisation: STARS <1 a 10> | STARS CLEARALL");
                 return;
             }
 
