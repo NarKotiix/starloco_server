@@ -47,6 +47,7 @@ public class GameMap {
     private static final int STAR_FIRST_VISIBLE_DELAY_MINUTES = 10;
     private static final int STAR_TEN_VISIBLE_TOTAL_MINUTES = 480;
     private static final int STAR_MAX_CAP = 200;
+    private static final short STAR_DEBUG_TRACE_MAP_ID = 1278;
 
     public static final Map<String, ArrayList<GameObject>> fixMobGroupObjects = new HashMap<>();
     public static final Updatable updatable = new Updatable(1000) {
@@ -1957,13 +1958,51 @@ public class GameMap {
     private void updateMobGroupsStars() {
         long now = System.currentTimeMillis();
         List<Monster.MobGroup> changedGroups = new ArrayList<>();
+        boolean traceStars = shouldTraceStars();
+        Map<Integer, Integer> oldStarsByGroupId = traceStars ? new HashMap<>() : null;
+        Map<Integer, Long> oldUpdateAtByGroupId = traceStars ? new HashMap<>() : null;
 
         for (Monster.MobGroup group : this.mobGroups.values()) {
             if (group == null) {
                 continue;
             }
+
+            if (traceStars) {
+                oldStarsByGroupId.put(group.getId(), group.getStarBonus());
+                oldUpdateAtByGroupId.put(group.getId(), group.getLastStarBonusUpdateAt());
+            }
+
             if (group.updateStarBonus(now, STAR_MAX_CAP, STAR_VISIBLE_UNIT, STAR_FIRST_VISIBLE_DELAY_MINUTES, STAR_TEN_VISIBLE_TOTAL_MINUTES)) {
                 changedGroups.add(group);
+            }
+        }
+
+        if (traceStars && !changedGroups.isEmpty()) {
+            World.world.logger.info("[DEBUG STARS] Map {} : {} groupe(s) ont recu des etoiles.", this.id, changedGroups.size());
+
+            for (Monster.MobGroup group : changedGroups) {
+                int oldInternal = oldStarsByGroupId.getOrDefault(group.getId(), 0);
+                int newInternal = group.getStarBonus();
+                int gainedInternal = newInternal - oldInternal;
+                long oldUpdateAt = oldUpdateAtByGroupId.getOrDefault(group.getId(), now);
+                long elapsedMs = Math.max(0L, now - oldUpdateAt);
+                long requiredDelayMs = computeStarDelayPerPointMillis(oldInternal);
+                int oldVisible = oldInternal / STAR_VISIBLE_UNIT;
+                int newVisible = newInternal / STAR_VISIBLE_UNIT;
+                String phase = oldInternal < STAR_VISIBLE_UNIT ? "phase 0->1*" : "phase 1->10*";
+
+                World.world.logger.info("[DEBUG STARS] map={} group={} cell={} starsInternal {}->{} (visible {}->{}) gained={} elapsed={}ms required={}ms reason=elapsed>=required ({})",
+                        this.id,
+                        group.getId(),
+                        group.getCellId(),
+                        oldInternal,
+                        newInternal,
+                        oldVisible,
+                        newVisible,
+                        gainedInternal,
+                        elapsedMs,
+                        requiredDelayMs,
+                        phase);
             }
         }
 
@@ -1973,6 +2012,23 @@ public class GameMap {
                 SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(this, group);
             }
         }
+    }
+
+    private boolean shouldTraceStars() {
+        return Main.modDebug && this.id == STAR_DEBUG_TRACE_MAP_ID;
+    }
+
+    private long computeStarDelayPerPointMillis(int currentInternalStars) {
+        long firstStarMillis = Math.max(1L, STAR_FIRST_VISIBLE_DELAY_MINUTES) * 60000L;
+
+        if (currentInternalStars < STAR_VISIBLE_UNIT) {
+            return firstStarMillis;
+        }
+
+        long totalTenStarsMillis = Math.max(firstStarMillis, Math.max(1L, STAR_TEN_VISIBLE_TOTAL_MINUTES) * 60000L);
+        long remainingMillis = Math.max(1L, totalTenStarsMillis - firstStarMillis);
+        int remainingInternalPoints = STAR_VISIBLE_UNIT * 9;
+        return Math.max(1L, remainingMillis / remainingInternalPoints);
     }
 
     /**

@@ -897,6 +897,10 @@ public class Monster {
             return this.starBonus;
         }
 
+        public long getLastStarBonusUpdateAt() {
+            return this.lastStarBonusUpdateAt;
+        }
+
         public void setStarBonus(int stars) {
             this.starBonus = stars;
         }
@@ -919,12 +923,24 @@ public class Monster {
             int oldStars = this.starBonus;
             long consumed = 0L;
 
+            long firstStarMillis = Math.max(1L, firstStarDelayMinutes) * 60000L;
+            if (this.starBonus < visibleStarUnit) {
+                // Aucun point interne avant le palier 10 minutes: on passe directement a 1 etoile visible.
+                if (elapsed < firstStarMillis) {
+                    return false;
+                }
+                this.starBonus = Math.min(starCap, visibleStarUnit);
+                consumed += firstStarMillis;
+                elapsed -= firstStarMillis;
+            }
+
             while (this.starBonus < starCap) {
                 long delayPerPoint = getDelayPerPointMillis(visibleStarUnit, firstStarDelayMinutes, totalTenStarsMinutes);
-                if (delayPerPoint <= 0L || elapsed - consumed < delayPerPoint) {
+                if (delayPerPoint <= 0L || elapsed < delayPerPoint) {
                     break;
                 }
 
+                elapsed -= delayPerPoint;
                 consumed += delayPerPoint;
                 this.starBonus++;
             }
@@ -935,12 +951,6 @@ public class Monster {
 
         private long getDelayPerPointMillis(int visibleStarUnit, int firstStarDelayMinutes, int totalTenStarsMinutes) {
             long firstStarMillis = Math.max(1L, firstStarDelayMinutes) * 60000L;
-            int firstStarInternalPoints = visibleStarUnit;
-
-            // 0 -> 1 etoile visible
-            if (this.starBonus < firstStarInternalPoints) {
-                return Math.max(1L, firstStarMillis / firstStarInternalPoints);
-            }
 
             // 1 -> 10 etoiles visibles
             long totalTenStarsMillis = Math.max(firstStarMillis, Math.max(1L, totalTenStarsMinutes) * 60000L);
