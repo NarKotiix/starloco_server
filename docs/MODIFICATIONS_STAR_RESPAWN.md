@@ -12,7 +12,8 @@ Ce document détaille les modifications apportées à la logique de respawn des 
 La progression lineaire historique (`+1 point/min`) est remplacee par une progression temporelle:
 
 - `1 etoile visible` atteinte a `10 minutes`
-- `10 etoiles visibles` atteintes vers `8 heures` au total
+- `de 1 a 10 etoiles visibles` : `8 heures` supplementaires
+- `10 etoiles visibles` atteintes vers `8h10` au total
 - `20 points internes = 1 etoile visible` (cap a `200`)
 
 ### Implementation technique
@@ -21,7 +22,7 @@ La progression lineaire historique (`+1 point/min`) est remplacee par une progre
   - nouvelles constantes:
     - `STAR_VISIBLE_UNIT = 20`
     - `STAR_FIRST_VISIBLE_DELAY_MINUTES = 10`
-    - `STAR_TEN_VISIBLE_TOTAL_MINUTES = 480`
+    - `STAR_ONE_TO_TEN_VISIBLE_MINUTES = 480`
     - `STAR_MAX_CAP = 200`
   - `updateMobGroupsStars()` appelle maintenant la mise a jour temporelle du groupe
 
