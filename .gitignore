@@ -27,6 +27,7 @@ test_colors.sh
 Start-Server-UTF8.bat
 start-server-utf8.sh
 test_modifications.sh
+AGENTS.md
 
 # OS
 .DS_Store
