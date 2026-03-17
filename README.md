@@ -47,15 +47,16 @@ Développé avec aide IA pour debugging et features.
 
 ---
 
-## Mises à jour récentes (5 derniers commits)
+## Mises à jour récentes (6 derniers commits)
 
 | Commit | Type | Résumé |
 |--------|------|--------|
-| `adc64ef` | 🔐 security | Fail-fast mouvements + anti-flood + logs throttlés + doc sécurité v1.2.1 |
-| `f7837d1` | ⚡ perf | Table inversée O(1) pour HASH, simplification `getCase()` |
-| `2e64144` | ⚡ perf | Index tableau O(1) pour les cases, refactoring constructeur `GameMap` |
-| `fa47140` | ⚡ perf | Chargement parallèle des groupes de monstres |
-| `f48cf12` | ⚡ perf | Démarrage DB accéléré + fail-fast |
+| `9fccc52` | ✨ stars/debug | Traces détaillées du gain d'étoiles (map/groupe/elapsed/raison) |
+| `6d42388` | ✨ admin/debug | Logs DEBUG lors des commandes `STARS CLEARMAP` / `STARS CLEARALL` |
+| `7a0f4df` | ✨ exchange/logging | Filtrage conditionnel des logs Exchange selon le paquet |
+| `f558098` | ✨ admin | Ajout de `STARS CLEARMAP` (reset étoiles map courante) |
+| `028927d` | ✨ stars | Ajout de `resetStarBonus()` (étoiles + timestamp) |
+| `25e10ec` | ✨ admin | Ajout de `STARS CLEARALL` (reset global des étoiles) |
 
 > Détail complet → [`docs/CHANGELOG_RECENT_COMMITS.md`](docs/CHANGELOG_RECENT_COMMITS.md), [`docs/CHANGELOG_PERF_V1.2.0.md`](docs/CHANGELOG_PERF_V1.2.0.md) et [`docs/SECURITY_HARDENING_V1.2.1.md`](docs/SECURITY_HARDENING_V1.2.1.md)
 

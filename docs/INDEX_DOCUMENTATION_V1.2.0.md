@@ -75,7 +75,7 @@
 
 | Fichier | Description |
 |---------|-------------|
-| [`CHANGELOG_RECENT_COMMITS.md`](CHANGELOG_RECENT_COMMITS.md) | Résumé des derniers commits appliqués |
+| [`CHANGELOG_RECENT_COMMITS.md`](CHANGELOG_RECENT_COMMITS.md) | Résumé des 6 derniers commits appliqués |
 
 ---
 
