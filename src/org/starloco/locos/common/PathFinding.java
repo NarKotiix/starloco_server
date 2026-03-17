@@ -16,6 +16,7 @@ import org.starloco.locos.kernel.Constant;
 
 import java.sql.Array;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PathFinding {
@@ -214,7 +215,14 @@ public class PathFinding {
     }
 
 
-    public final static Map<String, List<Short>> outForbiddenCells = new HashMap<>();
+    public final static Map<String, boolean[]> outForbiddenCells = new ConcurrentHashMap<>();
+
+    private static boolean isOutForbiddenCell(boolean[] forbiddenMask, int cell) {
+        if (cell < 0) {
+            return true;
+        }
+        return forbiddenMask != null && (cell >= forbiddenMask.length || forbiddenMask[cell]);
+    }
 
     public static int GetCaseIDFromDirrection(int cellId, char dir,
                                               GameMap map, boolean fight) {
@@ -247,8 +255,8 @@ public class PathFinding {
                 cell =  cellId - map.getW() + 1;
                 break;
         }
-        List<Short> cells = outForbiddenCells.get(map.getW() + "_" + map.getH());
-        if(cells != null && cells.contains((short) cell))
+        boolean[] cells = outForbiddenCells.get(map.getW() + "_" + map.getH());
+        if (isOutForbiddenCell(cells, cell))
             return -1;
         return cell;
     }
@@ -1248,7 +1256,7 @@ public class PathFinding {
             return -1;
         if (forbidden == null) forbidden = new ArrayList<>();
         int dist = 1000, cellId = startCell;
-        List<Short> cells = outForbiddenCells.get(map.getW() + "_" + map.getH());
+        boolean[] cells = outForbiddenCells.get(map.getW() + "_" + map.getH());
 
         for (char d : new char[] {'b', 'd', 'f', 'h'}) {
             int newCellId = PathFinding.GetCaseIDFromDirrection(cellId, d, map, true);
@@ -1258,7 +1266,7 @@ public class PathFinding {
                 int distance = PathFinding.getDistanceBetween(map, endCell, newCellId);
 
                 if (distance < dist && cell.isWalkable(true, true, -1) && cell.getFirstFighter() == null
-                        && !forbidden.contains(cell) && !cells.contains((short) newCellId)) {
+                        && !forbidden.contains(cell) && !isOutForbiddenCell(cells, newCellId)) {
                     dist = distance;
                     cellId = newCellId;
                 }

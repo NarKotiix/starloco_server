@@ -13,6 +13,12 @@
 |---------|-------------|----------|-------|
 | [`CHANGELOG_PERF_V1.2.0.md`](CHANGELOG_PERF_V1.2.0.md) | Détail des 4 commits de performance | Dev | 10 min |
 
+### 🔐 Sécurité (v1.2.1)
+
+| Fichier | Description | Audience | Durée |
+|---------|-------------|----------|-------|
+| [`SECURITY_HARDENING_V1.2.1.md`](SECURITY_HARDENING_V1.2.1.md) | Fail-fast mouvement, anti-flood léger, logs throttlés | Dev / Ops | 8 min |
+
 ---
 
 ### 🔄 Respawn & Étoiles (v1.1.0)
@@ -78,6 +84,7 @@
 | Je veux… | → Document |
 |----------|-----------|
 | Comprendre les dernières optis de perfs | [`CHANGELOG_PERF_V1.2.0.md`](CHANGELOG_PERF_V1.2.0.md) |
+| Comprendre le durcissement sécurité récent | [`SECURITY_HARDENING_V1.2.1.md`](SECURITY_HARDENING_V1.2.1.md) |
 | Déployer le système de respawn | [`QUICK_START_STAR_RESPAWN.md`](QUICK_START_STAR_RESPAWN.md) |
 | Configurer les délais de respawn | [`CONFIGURATION_STAR_RESPAWN.md`](CONFIGURATION_STAR_RESPAWN.md) |
 | Déboguer un problème de respawn | [`MAPS_CLASSIQUES_MULTIGROUPS.md`](MAPS_CLASSIQUES_MULTIGROUPS.md) |

@@ -89,6 +89,15 @@ public class GameClient {
     private final Map<Integer, GameAction> actions = new HashMap<>();
     public long timeLastTradeMsg = 0, timeLastRecrutmentMsg = 0, timeLastAlignMsg = 0, timeLastChatMsg = 0, timeLastIncarnamMsg = 0, timeLastTaverne, timeLastTP, lastPacketTime = 0, action = 0;
     private byte language = Lang.ENGLISH;
+    private long invalidMoveWindowStart = 0L;
+    private int invalidMoveCount = 0;
+    private long invalidMoveCooldownUntil = 0L;
+    private long invalidMoveLastLogAt = 0L;
+    private int invalidMoveSuppressedLogs = 0;
+    private static final int INVALID_MOVE_MAX_IN_WINDOW = 6;
+    private static final long INVALID_MOVE_WINDOW_MS = 2000L;
+    private static final long INVALID_MOVE_COOLDOWN_MS = 1000L;
+    private static final long INVALID_MOVE_LOG_INTERVAL_MS = 5000L;
 
     public GameClient(IoSession session) {
         this.session = session;
@@ -110,6 +119,66 @@ public class GameClient {
 
     public byte getLanguage() {
         return language;
+    }
+
+    private boolean isMoveRateLimited() {
+        return System.currentTimeMillis() < this.invalidMoveCooldownUntil;
+    }
+
+    private void recordInvalidMove() {
+        long now = System.currentTimeMillis();
+        if (now - this.invalidMoveWindowStart > INVALID_MOVE_WINDOW_MS) {
+            this.invalidMoveWindowStart = now;
+            this.invalidMoveCount = 0;
+        }
+
+        this.invalidMoveCount++;
+        if (this.invalidMoveCount >= INVALID_MOVE_MAX_IN_WINDOW) {
+            this.invalidMoveCooldownUntil = now + INVALID_MOVE_COOLDOWN_MS;
+            this.invalidMoveCount = 0;
+            this.invalidMoveWindowStart = now;
+        }
+    }
+
+    private void logInvalidMove(String reason) {
+        long now = System.currentTimeMillis();
+        if (now - this.invalidMoveLastLogAt < INVALID_MOVE_LOG_INTERVAL_MS) {
+            this.invalidMoveSuppressedLogs++;
+            return;
+        }
+
+        String playerName = this.player != null ? this.player.getName() : "unknown";
+        String ip = "unknown";
+        try {
+            ip = ((InetSocketAddress) this.getSession().getRemoteAddress()).getAddress().getHostAddress();
+        } catch (Exception ignored) {
+        }
+
+        if (this.invalidMoveSuppressedLogs > 0) {
+            World.world.logger.warn("Invalid move flood: {} suppression(s) for player={} ip={}", this.invalidMoveSuppressedLogs, playerName, ip);
+            this.invalidMoveSuppressedLogs = 0;
+        }
+
+        World.world.logger.warn("Invalid move packet rejected: reason={} player={} ip={}", reason, playerName, ip);
+        this.invalidMoveLastLogAt = now;
+    }
+
+    private GameCase resolveMovementCell(GameMap map, String encodedCell) {
+        if (map == null || encodedCell == null || encodedCell.length() != 2) {
+            return null;
+        }
+        int cellId = CryptManager.cellCode_To_ID(encodedCell);
+        if (cellId < 0) {
+            return null;
+        }
+        return map.getCase(cellId);
+    }
+
+    private int resolveOrientationFromPath(String path) {
+        if (path == null || path.length() < 3) {
+            return -1;
+        }
+        return CryptManager.getIntByHashedValue(path.charAt(path.length() - 3));
     }
 
     public void parsePacket(String packet) throws InterruptedException {
@@ -4445,6 +4514,21 @@ public class GameClient {
     private void gameParseDeplacementPacket(GameAction GA) {
         String path = GA.packet.substring(5);
 
+        if (this.isMoveRateLimited()) {
+            this.logInvalidMove("rate_limited");
+            SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
+            removeAction(GA);
+            return;
+        }
+
+        if (path == null || path.length() < 3) {
+            this.recordInvalidMove();
+            this.logInvalidMove("invalid_path_length");
+            SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
+            removeAction(GA);
+            return;
+        }
+
         if (this.player.getFight() == null) {
             if (this.player.getBlockMovement()) {
                 SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
@@ -4477,7 +4561,14 @@ public class GameClient {
                 return;
             }
             //Si déplacement inutile
-            GameCase targetCell = this.player.getCurMap().getCase(CryptManager.cellCode_To_ID(path.substring(path.length() - 2)));
+            GameCase targetCell = this.resolveMovementCell(this.player.getCurMap(), path.substring(path.length() - 2));
+            if (targetCell == null) {
+                this.recordInvalidMove();
+                this.logInvalidMove("invalid_target_cell");
+                SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
+                removeAction(GA);
+                return;
+            }
 
             if(this.player.getCurMap().getId() == 6824 && this.player.start != null && targetCell.getId() == 325 && !this.player.start.leave) {
                 this.player.start.leave = true;
@@ -4529,12 +4620,21 @@ public class GameClient {
                 this.player.getCurCell().removePlayer(this.player);
                 SocketManager.GAME_SEND_BN(this);
                 //On prend la case ciblée
-                GameCase nextCell = this.player.getCurMap().getCase(CryptManager.cellCode_To_ID(path.substring(path.length() - 2)));
-                targetCell = this.player.getCurMap().getCase(CryptManager.cellCode_To_ID(GA.packet.substring(GA.packet.length() - 2)));
+                GameCase nextCell = this.resolveMovementCell(this.player.getCurMap(), path.substring(path.length() - 2));
+                targetCell = this.resolveMovementCell(this.player.getCurMap(), GA.packet.substring(GA.packet.length() - 2));
+                int orientation = this.resolveOrientationFromPath(path);
+
+                if (nextCell == null || targetCell == null || orientation < 0) {
+                    this.recordInvalidMove();
+                    this.logInvalidMove("walkfast_invalid_cell_or_orientation");
+                    SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
+                    removeAction(GA);
+                    return;
+                }
 
                 //On définie la case et on ajthise le this.playernnage sur la case
                 this.player.setCurCell(nextCell);
-                this.player.set_orientation(CryptManager.getIntByHashedValue(path.charAt(path.length() - 3)));
+                this.player.set_orientation(orientation);
                 this.player.getCurCell().addPlayer(this.player);
                 if (!this.player.isGhost())
                     this.player.setAway(false);
@@ -5041,14 +5141,23 @@ public class GameClient {
                         String path = GA.args;
                         //On prend la case ciblée
 
-                        GameCase nextCell = this.player.getCurMap().getCase(CryptManager.cellCode_To_ID(path.substring(path.length() - 2)));
-                        GameCase targetCell = this.player.getCurMap().getCase(CryptManager.cellCode_To_ID(GA.packet.substring(GA.packet.length() - 2)));
+                        GameCase nextCell = this.resolveMovementCell(this.player.getCurMap(), path.substring(path.length() - 2));
+                        GameCase targetCell = this.resolveMovementCell(this.player.getCurMap(), GA.packet.substring(GA.packet.length() - 2));
+                        int orientation = this.resolveOrientationFromPath(path);
+
+                        if (nextCell == null || targetCell == null || orientation < 0) {
+                            this.recordInvalidMove();
+                            this.logInvalidMove("ack_invalid_cell_or_orientation");
+                            SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
+                            removeAction(GA);
+                            return;
+                        }
 
                         //FIXME: Anti cheat engine speedhack
 
                         //On définie la case et on ajoute le personnage sur la case
                         this.player.setCurCell(nextCell);
-                        this.player.set_orientation(CryptManager.getIntByHashedValue(path.charAt(path.length() - 3)));
+                        this.player.set_orientation(orientation);
                         this.player.getCurCell().addPlayer(this.player);
                         if (!this.player.isGhost())
                             this.player.setAway(false);
@@ -5091,8 +5200,17 @@ public class GameClient {
                         return;
                     String path = GA.args;
                     this.player.getCurCell().removePlayer(this.player);
-                    this.player.setCurCell(this.player.getCurMap().getCase(newCellID));
-                    this.player.set_orientation(CryptManager.getIntByHashedValue(path.charAt(path.length() - 3)));
+                    GameCase newCell = this.player.getCurMap().getCase(newCellID);
+                    int orientation = this.resolveOrientationFromPath(path);
+                    if (newCell == null || orientation < 0) {
+                        this.recordInvalidMove();
+                        this.logInvalidMove("ack_stop_invalid_cell_or_orientation");
+                        SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
+                        removeAction(GA);
+                        return;
+                    }
+                    this.player.setCurCell(newCell);
+                    this.player.set_orientation(orientation);
                     this.player.getCurCell().addPlayer(this.player);
                     SocketManager.GAME_SEND_BN(this);
                     if (GA.tp) {

@@ -27,6 +27,8 @@ public class CryptManager {
     }
 
     private final char[] HEX_CHARS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    private static final int MAX_MAPDATA_CHARS = 200_000; // garde-fou anti-DoS
+    private static final int MAX_MESSAGE_CHARS = 16_384;  // borne raisonnable pour paquets chiffrés
 
     public String cellID_To_Code(int cellID) {
 
@@ -35,10 +37,16 @@ public class CryptManager {
     }
 
     public static int cellCode_To_ID(String cellCode) {
+        if (cellCode == null || cellCode.length() < 2) {
+            return -1;
+        }
         char char1 = cellCode.charAt(0), char2 = cellCode.charAt(1);
         int code1 = (char1 < 128 ? HASH_REVERSE[char1] : -1);
         int code2 = (char2 < 128 ? HASH_REVERSE[char2] : -1);
-        return (code1 * 64) + code2;
+        if (code1 < 0 || code2 < 0) {
+            return -1;
+        }
+        return (code1 << 6) + code2;
     }
 
     public static int getIntByHashedValue(char c) {
@@ -46,21 +54,34 @@ public class CryptManager {
     }
 
     public static char getHashedValueByInt(int c) {
-        return HASH[c];
+        return (c >= 0 && c < HASH.length) ? HASH[c] : '\0';
     }
 
     public ArrayList<GameCase> parseStartCell(GameMap map, int num) {
-        ArrayList<GameCase> list = null;
-        String infos;
-        if (!map.getPlaces().equalsIgnoreCase("-1")) {
-            infos = map.getPlaces().split("\\|")[num];
-            int a = 0;
-            list = new ArrayList<>();
-            while (a < infos.length()) {
-                GameCase cell = map.getCase((getIntByHashedValue(infos.charAt(a)) << 6) + getIntByHashedValue(infos.charAt(a + 1)));
-                if(cell != null && cell.isWalkable(false))
-                    list.add(cell);
-                a = a + 2;
+        if (map == null || num < 0) {
+            return null;
+        }
+
+        String places = map.getPlaces();
+        if (places == null || places.equalsIgnoreCase("-1")) {
+            return null;
+        }
+
+        String infos = extractPlaceSegment(places, num);
+        if (infos == null || infos.isEmpty()) {
+            return null;
+        }
+
+        ArrayList<GameCase> list = new ArrayList<>();
+        for (int a = 0; a + 1 < infos.length(); a += 2) {
+            int hi = getIntByHashedValue(infos.charAt(a));
+            int lo = getIntByHashedValue(infos.charAt(a + 1));
+            if (hi < 0 || lo < 0) {
+                continue;
+            }
+            GameCase cell = map.getCase((hi << 6) + lo);
+            if (cell != null && cell.isWalkable(false)) {
+                list.add(cell);
             }
         }
         return list;
@@ -68,22 +89,39 @@ public class CryptManager {
 
     public String key = "8fd8ad4a38cdd0432248a76f8f148ceb";
 
-    private List<Short> cellWalkable(GameMap map){
-        List<Short> limit = new ArrayList<>();
-        short H = map.getH();
-        short W = (short) (map.getW()-1);
-        short val = 0;
-        for (short h = 0; h < H; h++ ){
-            if (h ==0) val = W;
-            else val = (short) (val + (W * 2) + 1);
-            limit.add(val);
-            limit.add((short) (val-W));
+    private boolean[] cellWalkable(GameMap map) {
+        int h = map.getH();
+        int w = map.getW() - 1;
+        int maxCellId = (h * (w + 1) + ((h - 1) * w)) - 1;
+        if (maxCellId < 0) {
+            return new boolean[0];
         }
-        for (short w = 1; w < W; w++){
-            limit.add(w);
-            limit.add((short) (((H * (W+1)+((H-1)*W))-1)-w));
+
+        boolean[] forbidden = new boolean[maxCellId + 1];
+        int val = 0;
+        for (int y = 0; y < h; y++) {
+            if (y == 0) val = w;
+            else val = val + (w * 2) + 1;
+
+            if (val >= 0 && val < forbidden.length) {
+                forbidden[val] = true;
+            }
+            int mirror = val - w;
+            if (mirror >= 0 && mirror < forbidden.length) {
+                forbidden[mirror] = true;
+            }
         }
-        return limit;
+
+        for (int x = 1; x < w; x++) {
+            if (x >= 0 && x < forbidden.length) {
+                forbidden[x] = true;
+            }
+            int down = maxCellId - x;
+            if (down >= 0 && down < forbidden.length) {
+                forbidden[down] = true;
+            }
+        }
+        return forbidden;
     }
 
     public String prepareMapDataKey(String key) {
@@ -116,49 +154,68 @@ public class CryptManager {
     }
 
     public String decryptMapData(String mapData, String key) {
+        if (mapData == null || mapData.isEmpty() || key == null || key.isEmpty() || (mapData.length() & 1) != 0) {
+            return "";
+        }
+
         key = prepareKey(key);
+        if (key == null || key.isEmpty()) {
+            return "";
+        }
+
         String strsum = checksumKey(key);
         int checksum = Integer.parseInt(strsum, 16) * 2;
-        mapData = decypherData(mapData, key, checksum);
-        return mapData;
+        return decypherData(mapData, key, checksum);
     }
 
     public String decypherData(String Data, String Key, int Checksum) {
-        StringBuilder dataToDecrypt = new StringBuilder();
+        if (Data == null || Key == null || Key.isEmpty() || (Data.length() & 1) != 0) {
+            return "";
+        }
+
+        StringBuilder dataToDecrypt = new StringBuilder(Data.length() / 2);
         int num4 = (Data.length() - 2);
         int i = 0;
         while ((i <= num4)) {
-            String sub = Data.substring(i, i+2);
-            int num = Integer.parseInt(sub, 16);
-            int s = (int) (Math.round((double) (((((i) / 2) + Checksum) % (double) (Key.length())))));
-            int num2 = (int) Key.substring(s, s+1).charAt(0);
-            dataToDecrypt.append(String.valueOf((char) (((char) num) ^ ((char) num2))));
+            int num = parseHexByte(Data, i);
+            if (num < 0) {
+                return "";
+            }
+            int s = (((i / 2) + Checksum) % Key.length());
+            int num2 = Key.charAt(s);
+            dataToDecrypt.append((char) (num ^ num2));
             i = (i + 2);
         }
         return unescape(dataToDecrypt.toString());
     }
 
     private boolean mapCrypted(String mapData) {
+        if (mapData == null || mapData.isEmpty()) {
+            return false;
+        }
         int nb = 0;
         for (char a : mapData.toCharArray()) if (Character.isDigit(a)) nb++;
         return (nb > 1000);
     }
 
     public List<GameCase> decompileMapData(GameMap map, String data, byte sniffed) {
+        if (map == null || data == null || data.isEmpty() || data.length() > MAX_MAPDATA_CHARS || (data.length() % 10) != 0) {
+            return Collections.emptyList();
+        }
+
         final int cellCount = data.length() / 10;
         List<GameCase> cells = new ArrayList<>(cellCount);
         List<Short> losCells = new ArrayList<>(cellCount);
 
-        if(mapCrypted(data) && !map.getKey().isEmpty()) {
-            try {
-                data = this.decryptMapData(data, map.getKey());
-            } catch (Exception e) {
-                System.err.println("Erreur decypher map data : " + map.getId());
-                e.printStackTrace();
+        if (mapCrypted(data) && map.getKey() != null && !map.getKey().isEmpty()) {
+            data = this.decryptMapData(data, map.getKey());
+            if (data.isEmpty() || (data.length() % 10) != 0) {
+                return Collections.emptyList();
             }
         }
+
         String mapSizeKey = map.getW() + "_" + map.getH();
-        if(PathFinding.outForbiddenCells.get(mapSizeKey) == null)
+        if (PathFinding.outForbiddenCells.get(mapSizeKey) == null)
             PathFinding.outForbiddenCells.put(mapSizeKey, cellWalkable(map));
         try {
             for (short cellId = 0; cellId < cellCount; cellId++) {
@@ -169,6 +226,9 @@ public class CryptManager {
                 int a7 = getIntByHashedValue(data.charAt(offset + 7));
                 int a8 = getIntByHashedValue(data.charAt(offset + 8));
                 int a9 = getIntByHashedValue(data.charAt(offset + 9));
+                if (a0 < 0 || a2 < 0 || a7 < 0 || a8 < 0 || a9 < 0) {
+                    continue;
+                }
 
                 boolean isSpecialBlockedCell =
                         (data.charAt(offset) == 'b' && data.charAt(offset + 1) == 'h' && data.charAt(offset + 2) == 'G' &&
@@ -197,8 +257,7 @@ public class CryptManager {
             CellCacheImpl cache = new CellCacheImpl(losCells, map.getW(), map.getH());
             map.setCellCache(cache);
         } catch (Exception e) {
-            System.err.println(e.getMessage() + " : mapId : " + map.getId());
-            e.printStackTrace();
+            System.err.println("Erreur decompileMapData mapId=" + map.getId() + " : " + e.getMessage());
         }
         return cells;
     }
@@ -225,33 +284,43 @@ public class CryptManager {
     }
 
     public String decryptMessage(String message, String key) {
+        if (message == null || key == null || key.isEmpty() || message.length() < 2 || message.length() > MAX_MESSAGE_CHARS || (message.length() & 1) != 0) {
+            return "";
+        }
         try {
             int c = Integer.parseInt(Character.toString(message.charAt(1)), 16) * 2;
-            StringBuilder str = new StringBuilder();
+            StringBuilder str = new StringBuilder((message.length() - 2) / 2);
             int j = 0, keyLength = key.length();
 
             for (int i = 2; i < message.length(); i = i + 2) {
-                try {
-                    str.append((char) (Integer.parseInt(message.substring(i, i + 2), 16) ^ key.charAt((j++ + c) % keyLength)));
-                } catch (Exception ignored) {
-                    System.out.println("CryptManager : DecryptMessage : " + message + " (key: " + key + ") : " + i + " to" + (i + 2));
+                int byteValue = parseHexByte(message, i);
+                if (byteValue < 0) {
+                    return "";
                 }
+                str.append((char) (byteValue ^ key.charAt((j++ + c) % keyLength)));
             }
             String data = str.toString();
             data = data.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
             data = data.replaceAll("\\+", "%2B");
-            message = URLDecoder.decode(data, "UTF-8").replace("'", "\'");
-            return message;
+            return URLDecoder.decode(data, "UTF-8").replace("'", "\\'");
         } catch (Exception e) {
-            e.printStackTrace();
             return "";
         }
     }
 
     public String prepareKey(String key) {
-        StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < key.length(); i += 2)
-            sb.append((char) Integer.parseInt(key.substring(i, i + 2), 16));
+        if (key == null || key.isEmpty() || (key.length() & 1) != 0) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder(key.length() / 2);
+        for (int i = 0; i < key.length(); i += 2) {
+            int value = parseHexByte(key, i);
+            if (value < 0) {
+                return null;
+            }
+            sb.append((char) value);
+        }
 
         try {
             return URLDecoder.decode(sb.toString(), "UTF-8");
@@ -292,5 +361,34 @@ public class CryptManager {
 
     private boolean isUnsafe(char ch) {
         return ch > 255 || "+%".indexOf(ch) >= 0;
+    }
+
+    private static int parseHexByte(String data, int index) {
+        if (data == null || index < 0 || index + 1 >= data.length()) {
+            return -1;
+        }
+        int hi = Character.digit(data.charAt(index), 16);
+        int lo = Character.digit(data.charAt(index + 1), 16);
+        if (hi < 0 || lo < 0) {
+            return -1;
+        }
+        return (hi << 4) + lo;
+    }
+
+    private static String extractPlaceSegment(String places, int num) {
+        int start = 0;
+        for (int i = 0; i < num; i++) {
+            int sep = places.indexOf('|', start);
+            if (sep == -1) {
+                return null;
+            }
+            start = sep + 1;
+        }
+
+        int end = places.indexOf('|', start);
+        if (end == -1) {
+            end = places.length();
+        }
+        return start <= end ? places.substring(start, end) : null;
     }
 }
