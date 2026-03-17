@@ -145,8 +145,9 @@ public class CryptManager {
     }
 
     public List<GameCase> decompileMapData(GameMap map, String data, byte sniffed) {
-        List<GameCase> cells = new ArrayList<>();
-        List<Short> losCells = new ArrayList<>();
+        final int cellCount = data.length() / 10;
+        List<GameCase> cells = new ArrayList<>(cellCount);
+        List<Short> losCells = new ArrayList<>(cellCount);
 
         if(mapCrypted(data) && !map.getKey().isEmpty()) {
             try {
@@ -156,33 +157,39 @@ public class CryptManager {
                 e.printStackTrace();
             }
         }
-        if(PathFinding.outForbiddenCells.get(map.getW() + "_" + map.getH()) == null)
-            PathFinding.outForbiddenCells.put(map.getW() + "_" + map.getH(), cellWalkable(map));
+        String mapSizeKey = map.getW() + "_" + map.getH();
+        if(PathFinding.outForbiddenCells.get(mapSizeKey) == null)
+            PathFinding.outForbiddenCells.put(mapSizeKey, cellWalkable(map));
         try {
-            short cellId = 0;
-            for (; cellId < data.length()/10; cellId ++ ){
-                String cellData = data.substring(cellId*10, (cellId+1)*10);
-                byte[] array = new byte[10];
-                for (int i = 0; i < cellData.length(); i++)
-                    array[i] = (byte) getIntByHashedValue(cellData.charAt(i));
+            for (short cellId = 0; cellId < cellCount; cellId++) {
+                int offset = cellId * 10;
 
-                boolean walkable = true, los = true;
-                short groundSlope, groundLevel;
-                int io;
+                int a0 = getIntByHashedValue(data.charAt(offset));
+                int a2 = getIntByHashedValue(data.charAt(offset + 2));
+                int a7 = getIntByHashedValue(data.charAt(offset + 7));
+                int a8 = getIntByHashedValue(data.charAt(offset + 8));
+                int a9 = getIntByHashedValue(data.charAt(offset + 9));
 
-                walkable = (((array[2] & 56 ) >> 3) != 0 && !cellData.equalsIgnoreCase("bhGaeaaaaa") && !cellData.equalsIgnoreCase("Hhaaeaaaaa"));
-                if((array[0] & 1) == 0)
-                    los = false;
-                if(los) losCells.add(cellId);
-                short tmp = (short) ((array[4] & 60) >> 2);
-                if (tmp != 1) groundSlope = tmp;
+                boolean isSpecialBlockedCell =
+                        (data.charAt(offset) == 'b' && data.charAt(offset + 1) == 'h' && data.charAt(offset + 2) == 'G' &&
+                                data.charAt(offset + 3) == 'a' && data.charAt(offset + 4) == 'e' && data.charAt(offset + 5) == 'a' &&
+                                data.charAt(offset + 6) == 'a' && data.charAt(offset + 7) == 'a' && data.charAt(offset + 8) == 'a' &&
+                                data.charAt(offset + 9) == 'a')
+                                ||
+                        (data.charAt(offset) == 'H' && data.charAt(offset + 1) == 'h' && data.charAt(offset + 2) == 'a' &&
+                                data.charAt(offset + 3) == 'a' && data.charAt(offset + 4) == 'e' && data.charAt(offset + 5) == 'a' &&
+                                data.charAt(offset + 6) == 'a' && data.charAt(offset + 7) == 'a' && data.charAt(offset + 8) == 'a' &&
+                                data.charAt(offset + 9) == 'a');
 
-                tmp = (short) (array[1] & 15);
-                if (tmp != 0) groundLevel = tmp;
+                boolean walkable = (((a2 & 56) >> 3) != 0) && !isSpecialBlockedCell;
+                boolean los = (a0 & 1) != 0;
+                if(los) {
+                    losCells.add(cellId);
+                }
 
-                int layerObject2 = ((array[0] & 2) << 12) + ((array[7] & 1) << 12) + (array[8] << 6) + array[9];
-                boolean layerObject2Interactive = ((array[7] & 2) >> 1) != 0;
-                int obj = (layerObject2Interactive?layerObject2:-1);
+                int layerObject2 = ((a0 & 2) << 12) + ((a7 & 1) << 12) + (a8 << 6) + a9;
+                boolean layerObject2Interactive = ((a7 & 2) >> 1) != 0;
+                int obj = layerObject2Interactive ? layerObject2 : -1;
 
                 cells.add(new GameCase(map, cellId, walkable, los, obj));
 
