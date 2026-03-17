@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <property name="LOG_DIR" value="Logs"/>
+    <!-- Variable d'environnement optionnelle: APP_LOG_LEVEL (ex: DEBUG, INFO, WARN) -->
+    <property name="APP_LOG_LEVEL" value="${APP_LOG_LEVEL:-INFO}"/>
 
     <!-- Déclaration du convertisseur personnalisé -->
     <conversionRule conversionWord="clr" converterClass="org.starloco.locos.kernel.ANSIColoredConverter" />
@@ -57,8 +59,8 @@
         </rollingPolicy>
     </appender>
 
-    <!-- Logger root avec niveau DEBUG -->
-    <root level="DEBUG">
+    <!-- Logger root dynamique via APP_LOG_LEVEL (fallback INFO) -->
+    <root level="${APP_LOG_LEVEL}">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="CONSOLE_ERROR"/>
         <appender-ref ref="FILE"/>
@@ -66,7 +68,7 @@
     </root>
 
     <!-- Loggers spécifiques pour les packages StarLoco -->
-    <logger name="org.starloco.locos" level="DEBUG" additivity="false">
+    <logger name="org.starloco.locos" level="${APP_LOG_LEVEL}" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="CONSOLE_ERROR"/>
         <appender-ref ref="FILE"/>
@@ -74,15 +76,19 @@
     </logger>
 
     <!-- Logger pour le kernel -->
-    <logger name="org.starloco.locos.kernel" level="DEBUG" additivity="false">
+    <logger name="org.starloco.locos.kernel" level="${APP_LOG_LEVEL}" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="CONSOLE_ERROR"/>
         <appender-ref ref="FILE"/>
         <appender-ref ref="ERROR_FILE"/>
     </logger>
 
+    <!-- Libraries bruyantes -->
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.apache.mina.filter.codec.ProtocolCodecFilter" level="WARN"/>
+
     <!-- Logger pour la base de données -->
-    <logger name="org.starloco.locos.database" level="INFO" additivity="false">
+    <logger name="org.starloco.locos.database" level="${APP_LOG_LEVEL}" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="CONSOLE_ERROR"/>
         <appender-ref ref="FILE"/>
