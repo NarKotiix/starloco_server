@@ -488,18 +488,7 @@ public class GameMap {
 
     public GameCase getCase(int id) {
         if (id >= 0 && id < this.casesById.length) {
-            GameCase cachedCase = this.casesById[id];
-            if (cachedCase != null) {
-                return cachedCase;
-            }
-        }
-
-        for(GameCase gameCase : this.cases) {
-            if(gameCase.getId() == id) {
-                ensureCaseCapacity(id);
-                this.casesById[id] = gameCase;
-                return gameCase;
-            }
+            return this.casesById[id];
         }
         return null;
     }
@@ -644,12 +633,6 @@ public class GameMap {
         }
     }
 
-    private void ensureCaseCapacity(int id) {
-        if (id < this.casesById.length) {
-            return;
-        }
-        this.casesById = Arrays.copyOf(this.casesById, id + 1);
-    }
 
     public Fight newFight(Player init1, Player init2, int type) {
         if (init1.getFight() != null || init2.getFight() != null)

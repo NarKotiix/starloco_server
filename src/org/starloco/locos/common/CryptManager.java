@@ -15,6 +15,17 @@ public class CryptManager {
             'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
             'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7',
             '8', '9', '-', '_'};
+
+    /** Table de correspondance inversée HASH[c] → index, O(1) au lieu de O(64). */
+    private static final int[] HASH_REVERSE;
+    static {
+        HASH_REVERSE = new int[128];
+        Arrays.fill(HASH_REVERSE, -1);
+        for (int i = 0; i < HASH.length; i++) {
+            HASH_REVERSE[HASH[i]] = i;
+        }
+    }
+
     private final char[] HEX_CHARS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     public String cellID_To_Code(int cellID) {
@@ -24,25 +35,14 @@ public class CryptManager {
     }
 
     public static int cellCode_To_ID(String cellCode) {
-
         char char1 = cellCode.charAt(0), char2 = cellCode.charAt(1);
-        int code1 = 0, code2 = 0, a = 0;
-
-        while (a < HASH.length) {
-            if (HASH[a] == char1)
-                code1 = a * 64;
-            if (HASH[a] == char2)
-                code2 = a;
-            a++;
-        }
-        return (code1 + code2);
+        int code1 = (char1 < 128 ? HASH_REVERSE[char1] : -1);
+        int code2 = (char2 < 128 ? HASH_REVERSE[char2] : -1);
+        return (code1 * 64) + code2;
     }
 
     public static int getIntByHashedValue(char c) {
-        for (int a = 0; a < HASH.length; a++)
-            if (HASH[a] == c)
-                return a;
-        return -1;
+        return (c < 128) ? HASH_REVERSE[c] : -1;
     }
 
     public static char getHashedValueByInt(int c) {
