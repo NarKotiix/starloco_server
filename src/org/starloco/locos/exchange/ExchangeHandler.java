@@ -18,13 +18,18 @@ public class ExchangeHandler extends IoHandlerAdapter {
     @Override
     public void messageReceived(IoSession arg0, Object arg1) throws Exception {
         String packet = ioBufferToString(arg1);
-        ExchangeClient.logger.info(formatExchangePacketLog("RECV", packet));
+        if (shouldLogExchangePacket(packet)) {
+            ExchangeClient.logger.info(formatExchangePacketLog("RECV", packet));
+        }
         ExchangePacketHandler.parser(packet);
     }
 
     @Override
     public void messageSent(IoSession arg0, Object arg1) throws Exception {
-        ExchangeClient.logger.info(formatExchangePacketLog("SEND", ioBufferToString(arg1)));
+        String packet = ioBufferToString(arg1);
+        if (shouldLogExchangePacket(packet)) {
+            ExchangeClient.logger.info(formatExchangePacketLog("SEND", packet));
+        }
     }
 
     @Override
@@ -124,5 +129,31 @@ public class ExchangeHandler extends IoHandlerAdapter {
         }
 
         return "Paquet exchange non mappe (" + normalized + ")";
+    }
+
+    private static boolean shouldLogExchangePacket(String packet) {
+        String raw = packet == null ? "" : packet;
+        String normalized = raw.endsWith("#") ? raw.substring(0, raw.length() - 1) : raw;
+
+        if (normalized.isEmpty()) {
+            return true;
+        }
+
+        String[] parts = normalized.split("#");
+        boolean hasNonEmptyPart = false;
+
+        for (String part : parts) {
+            if (part.isEmpty()) {
+                continue;
+            }
+
+            hasNonEmptyPart = true;
+            if (!("F?".equals(part) || part.matches("^F\\d+$"))) {
+                return true;
+            }
+        }
+
+        // Si tous les paquets sont des heartbeats F? / F<nombre>, on ne log pas.
+        return !hasNonEmptyPart;
     }
 }
