@@ -901,6 +901,11 @@ public class Monster {
             this.starBonus = stars;
         }
 
+        public void resetStarBonus(int stars, long currentTimeMillis) {
+            this.starBonus = stars;
+            this.lastStarBonusUpdateAt = currentTimeMillis;
+        }
+
         public boolean updateStarBonus(long currentTimeMillis, int starCap, int visibleStarUnit, int firstStarDelayMinutes, int totalTenStarsMinutes) {
             if (this.starBonus < 0 || visibleStarUnit <= 0 || starCap <= this.starBonus) {
                 return false;
