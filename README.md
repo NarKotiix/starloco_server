@@ -29,6 +29,14 @@ Développé avec aide IA Perplexity / Claude pour debugging et features.
 - Build Gradle 7.4 + JDK 8 (Linux/Windows sync)
 - Fix encodage UTF-8 (é/à/ç)
 
+## Mises a jour recentes (3 derniers commits)
+
+- `cd719aa` : ajout de `*.snapshot` dans `.gitignore`
+- `cbccc2a` : ajout de `test_modifications.sh` dans `.gitignore`
+- `b35fc38` : ajout du systeme de persistence des etoiles + delais de respawn + lot complet de documentation
+
+Detail complet dans `docs/CHANGELOG_RECENT_COMMITS.md`.
+
 ## Téléchargement
 
 - **Server**: Sources + Gradle (build.sh / gradlew build)
@@ -164,4 +172,5 @@ Pour plus de détails sur l'arrêt du serveur, consultez :
 - 📄 **[GRACEFUL_SHUTDOWN.md](docs/GRACEFUL_SHUTDOWN.md)** - Guide complet d'arrêt (4 étapes, exemples, FAQ)
 - 📋 **[QUICK_SHUTDOWN.md](docs/QUICK_SHUTDOWN.md)** - Guide rapide en 30 secondes
 - 🔧 **[MODIFICATIONS_GRACEFUL_SHUTDOWN.md](docs/MODIFICATIONS_GRACEFUL_SHUTDOWN.md)** - Détails techniques des modifications
+- 📝 **[CHANGELOG_RECENT_COMMITS.md](docs/CHANGELOG_RECENT_COMMITS.md)** - Resume des 3 derniers commits
 

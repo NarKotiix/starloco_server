@@ -1,5 +1,10 @@
 # 📖 INDEX COMPLET - Documentation Respawn System v1.1.0
 
+## 🔄 Mises a jour recentes
+
+- Nouveau suivi des 3 derniers commits: `CHANGELOG_RECENT_COMMITS.md`
+- Commits couverts: `cd719aa`, `cbccc2a`, `b35fc38`
+
 ## 🎯 Documents par audience
 
 ### Pour les ADMINISTRATEURS (5 min)
@@ -58,6 +63,7 @@ Contient:
 | Fichier | Taille | Lecteurs | Temps | Priority |
 |---------|--------|----------|-------|----------|
 | QUICK_START_STAR_RESPAWN.md | 3KB | 👨‍💼👨‍💻 | 5 min | ⭐⭐⭐ |
+| CHANGELOG_RECENT_COMMITS.md | 2KB | 📋 | 3 min | ⭐⭐ |
 | MODIFICATIONS_STAR_RESPAWN.md | 6KB | 👨‍💻 | 20 min | ⭐⭐⭐ |
 | MAPS_CLASSIQUES_MULTIGROUPS.md | 8KB | 👨‍💻🎮 | 15 min | ⭐⭐⭐ |
 | CONFIGURATION_STAR_RESPAWN.md | 5KB | 🎮 | 15 min | ⭐⭐ |
@@ -95,6 +101,9 @@ Contient:
 
 **Connaître l'historique des versions**
 → `CHANGELOG_STAR_RESPAWN_V1.0.0.md`
+
+**Voir les 3 derniers commits appliqués**
+→ `CHANGELOG_RECENT_COMMITS.md`
 
 ## 📋 Ordre de lecture par rôle
 
