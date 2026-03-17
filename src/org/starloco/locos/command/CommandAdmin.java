@@ -1406,13 +1406,48 @@ public class CommandAdmin extends AdminUser {
             return;
         } else if (command.equalsIgnoreCase("STARS")) {
             if (infos.length < 2) {
-                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10> | STARS CLEARALL");
+                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10> | STARS CLEARMAP | STARS CLEARALL");
+                return;
+            }
+
+            if (infos[1].equalsIgnoreCase("CLEARMAP")) {
+                GameMap currentMap = this.getPlayer().getCurMap();
+                int updatedGroups = 0;
+                long now = System.currentTimeMillis();
+                List<MobGroup> changedGroups = new ArrayList<>();
+
+                for (MobGroup group : currentMap.getMobGroups().values()) {
+                    if (group == null) {
+                        continue;
+                    }
+
+                    if (group.getStarBonus() < 0) {
+                        continue;
+                    }
+
+                    group.resetStarBonus(0, now);
+                    changedGroups.add(group);
+                }
+
+                currentMap.getSavedGroupsStars().clear();
+                updatedGroups = changedGroups.size();
+
+                if (!currentMap.getPlayers().isEmpty()) {
+                    for (MobGroup group : changedGroups) {
+                        SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(currentMap, group.getId());
+                        SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(currentMap, group);
+                    }
+                }
+
+                this.sendMessage("Etoiles remises a 0 sur la map " + currentMap.getId()
+                        + ": " + updatedGroups + " groupe(s) mis a jour.");
                 return;
             }
 
             if (infos[1].equalsIgnoreCase("CLEARALL")) {
                 int updatedGroups = 0;
                 int updatedMaps = 0;
+                long now = System.currentTimeMillis();
 
                 for (GameMap map : World.world.getMaps()) {
                     if (map == null) {
@@ -1426,11 +1461,11 @@ public class CommandAdmin extends AdminUser {
                         }
 
                         int currentStars = group.getStarBonus();
-                        if (currentStars <= 0) {
+                        if (currentStars < 0) {
                             continue;
                         }
 
-                        group.setStarBonus(0);
+                        group.resetStarBonus(0, now);
                         changedGroups.add(group);
                     }
 
@@ -1450,7 +1485,7 @@ public class CommandAdmin extends AdminUser {
                     }
                 }
 
-                this.sendSuccessMessage("Etoiles remises a 0 sur toutes les maps: " + updatedGroups
+                this.sendMessage("Etoiles remises a 0 sur toutes les maps: " + updatedGroups
                         + " groupe(s) modifie(s) sur " + updatedMaps + " map(s).");
                 return;
             }
@@ -1459,7 +1494,7 @@ public class CommandAdmin extends AdminUser {
             try {
                 starsToAdd = Integer.parseInt(infos[1]);
             } catch (Exception e) {
-                this.sendErrorMessage("Valeur invalide. Utilisation: STARS <1 a 10> | STARS CLEARALL");
+                this.sendErrorMessage("Valeur invalide. Utilisation: STARS <1 a 10> | STARS CLEARMAP | STARS CLEARALL");
                 return;
             }
 
@@ -1507,7 +1542,7 @@ public class CommandAdmin extends AdminUser {
             if (updatedGroups == 0) {
                 this.sendMessage("Aucun groupe mis a jour sur cette map.");
             } else {
-                this.sendSuccessMessage("Etoiles ajoutees: +" + starsToAdd
+                this.sendMessage("Etoiles ajoutees: +" + starsToAdd
                         + " etoile(s) visibles sur " + updatedGroups
                         + " groupe(s), total bonus ajoute=" + totalAdded + ".");
             }
