@@ -60,6 +60,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class World {
     
@@ -555,8 +559,10 @@ public class World {
         Database.getDynamics().getObjectSetData().load();
         logger.debug("The panoplies were loaded successfully.");
 
+        long mapsLoadStart = System.currentTimeMillis();
         Database.getDynamics().getMapData().load();
         logger.debug("The maps were loaded successfully.");
+        logger.info("World step 'maps' completed in {} ms.", System.currentTimeMillis() - mapsLoadStart);
 
         Database.getDynamics().getScriptedCellData().load();
         logger.debug("The scripted cells were loaded successfully.");
@@ -647,8 +653,10 @@ public class World {
         loadMobGroupStarsSnapshot();
         logger.debug("The mob stars snapshot was loaded successfully.");
 
+        long mobGroupsLoadStart = System.currentTimeMillis();
         loadMonsterOnMap();
         logger.debug("The adding of mobs groups on the maps were done successfully.");
+        logger.info("World step 'mob groups on maps' completed in {} ms.", System.currentTimeMillis() - mobGroupsLoadStart);
 
         Database.getDynamics().getGangsterData().load();
         logger.debug("The adding of gangsters on the maps were done successfully.");
@@ -790,13 +798,66 @@ public class World {
     }
 
     public void loadMonsterOnMap() {
-        maps.values().stream().filter(map -> map != null).forEach(map -> {
-            try {
-                map.loadMonsterOnMap();
-            } catch (Exception e) {
-                logger.error("An error occurred when the server try to put monster on the map id " + map.getId() + ".");
+        List<GameMap> mapsToLoad = new ArrayList<>();
+        for (GameMap map : this.maps.values()) {
+            if (map != null) {
+                mapsToLoad.add(map);
             }
-        });
+        }
+
+        if (mapsToLoad.isEmpty()) {
+            return;
+        }
+
+        int configuredParallelism = Main.worldLoadParallelism;
+        int threadCount = configuredParallelism > 0
+                ? configuredParallelism
+                : Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+        threadCount = Math.min(threadCount, mapsToLoad.size());
+
+        long start = System.currentTimeMillis();
+        if (threadCount <= 1 || mapsToLoad.size() < 32) {
+            for (GameMap map : mapsToLoad) {
+                try {
+                    map.loadMonsterOnMap();
+                } catch (Exception e) {
+                    logger.error("An error occurred when the server try to put monster on the map id " + map.getId() + ".", e);
+                }
+            }
+            logger.info("Monster groups initialized on {} map(s) in {} ms using sequential loading.",
+                    mapsToLoad.size(), System.currentTimeMillis() - start);
+            return;
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        List<Future<?>> futures = new ArrayList<>(mapsToLoad.size());
+        try {
+            for (GameMap map : mapsToLoad) {
+                futures.add(executor.submit(() -> {
+                    map.loadMonsterOnMap();
+                    return null;
+                }));
+            }
+
+            for (int i = 0; i < futures.size(); i++) {
+                try {
+                    futures.get(i).get();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    logger.error("Monster group loading interrupted.", e);
+                    break;
+                } catch (ExecutionException e) {
+                    GameMap map = mapsToLoad.get(i);
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    logger.error("An error occurred when the server try to put monster on the map id " + map.getId() + ".", cause);
+                }
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        logger.info("Monster groups initialized on {} map(s) in {} ms using {} thread(s).",
+                mapsToLoad.size(), System.currentTimeMillis() - start, threadCount);
     }
 
     public Area getArea(int areaID) {

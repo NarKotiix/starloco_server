@@ -88,6 +88,7 @@ public class Config {
         Main.dbMaxLifetimeMs = getInt(p, "DB_MAX_LIFETIME_MS", Main.dbMaxLifetimeMs);
         Main.dbMaxPoolSize = getInt(p, "DB_POOL_MAX_SIZE", Main.dbMaxPoolSize);
         Main.dbMinIdle = getInt(p, "DB_POOL_MIN_IDLE", Main.dbMinIdle);
+        Main.worldLoadParallelism = getInt(p, "WORLD_LOAD_PARALLELISM", Main.worldLoadParallelism);
     }
 
     private void applyRules(Properties p) {
@@ -179,6 +180,7 @@ public class Config {
         props.setProperty("DB_MAX_LIFETIME_MS", "1800000");
         props.setProperty("DB_POOL_MAX_SIZE", "10");
         props.setProperty("DB_POOL_MIN_IDLE", "0");
+        props.setProperty("WORLD_LOAD_PARALLELISM", "0");
 
         // Règles / flags
         props.setProperty("SUBSCRIBER",       "false");

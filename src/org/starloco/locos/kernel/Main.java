@@ -54,6 +54,7 @@ public class Main {
     public static int dbMaxLifetimeMs = 1800000;
     public static int dbMaxPoolSize = 10;
     public static int dbMinIdle = 0;
+    public static int worldLoadParallelism = 0;
 
     public static GameServer gameServer;
     public static ExchangeClient exchangeClient;
