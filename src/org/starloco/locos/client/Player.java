@@ -1954,8 +1954,6 @@ public class Player {
                 }
             }
         }
-
-        if (vote) this.send("Im116;<b>Server</b>~" + Lang.get(this, 13));
     }
 
     public void SetSeeFriendOnline(boolean bool) {

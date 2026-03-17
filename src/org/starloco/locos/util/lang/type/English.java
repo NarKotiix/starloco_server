@@ -8,12 +8,13 @@ import org.starloco.locos.util.lang.AbstractLang;
  */
 public class English extends AbstractLang {
 
-    public final static English singleton = new English();
+    public static final English singleton = new English();
 
     public static English getInstance() {
         return singleton;
     }
 
+    @Override
     public void initialize() {
         int index = 0;
         this.sentences.add(index, "Your overall channel is disabled."); index++;

@@ -1,23 +1,20 @@
 package org.starloco.locos.util.lang.type;
 
-import org.starloco.locos.common.SocketManager;
 import org.starloco.locos.kernel.Config;
 import org.starloco.locos.util.lang.AbstractLang;
-import org.starloco.locos.client.*;
-import org.starloco.locos.command.ExecuteCommandPlayer.*;
 
 /**
  * Created by Locos on 09/12/2015.
  */
 public class French extends AbstractLang {
 
-    public final static French singleton = new French();
+    public static final French singleton = new French();
 
     public static French getInstance() {
         return singleton;
     }
 
-    
+    @Override
     public void initialize() {
         int index = 0;
         this.sentences.add(index, "Votre canal général est désactivé."); index++;
@@ -32,10 +29,6 @@ public class French extends AbstractLang {
         this.sentences.add(index, "\nJoueurs en ligne : #1"); index++;
         this.sentences.add(index, "\nJoueurs uniques en ligne : #1"); index++;
         this.sentences.add(index, "\nRecord de connexion : #1"); index++;
-        Player player = null;
-		//            + "<b>.infos</b> - Permet d'obtenir des informations sur le serveur.\n"    
-        //+ "<b>.noall</b> - Permet de ne plus recevoir les messages du canal général."); index++;
-        //+ "<b>.staff</b> - Permet de voir les membres du staff connectés.\n"
         this.sentences.add(index, "Les commandes disponnibles sont :\n"
         		+ "<b>.all</b> - <b>.noall</b> - Permet d'envoyer un message à tous les joueurs. (ex : .all Hey!)\n"
                 + "<b>.deblo</b> - Permet de vous débloquer en vous téléportant à une cellule libre.\n"
@@ -62,7 +55,6 @@ public class French extends AbstractLang {
                 + "<b>.phoenix</b> - Permet de se téléporter à la statue du Phoenix.\n"
                 + "<b>.ange</b> - Permet de passer en Alignement Bontarien.\n"
                 + "<b>.demon</b> - Permet de passer en Alignement Brakmarien.\n"
-                + "<b>.neutre</b> - Permet de passer en Alignement Neutre.\n"); index++;
-        this.sentences.add(index, "Retrouvez les commandes en tapant .commandes ou .x dans le chat.");
+                + "<b>.neutre</b> - Permet de passer en Alignement Neutre.\n");
     }
 }
