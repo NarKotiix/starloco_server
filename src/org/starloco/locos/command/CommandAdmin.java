@@ -1447,7 +1447,7 @@ public class CommandAdmin extends AdminUser {
             return;
         } else if (command.equalsIgnoreCase("STARS")) {
             if (infos.length < 2) {
-                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10> | STARS INFO [groupId|cellId] | STARS CLEARMAP | STARS CLEARALL");
+                this.sendErrorMessage("Commande invalide. Utilisation: STARS (1 a 10) | STARS INFO [groupId|cellId] | STARS CLEARMAP | STARS CLEARALL");
                 return;
             }
 
