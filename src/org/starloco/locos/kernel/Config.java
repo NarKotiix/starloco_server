@@ -19,6 +19,7 @@ public class Config {
     // Gameplay rules
     public boolean autoReboot = true, allZaap = false, allEmote = false, onlyLocal = false, prestige = false;
     public boolean mobGroupMovement = true;
+    public float playerMoveSpeedMultiplier = 1.0f;
     public int startMap = 0, startCell = 0;
 
     // Rates
@@ -107,8 +108,9 @@ public class Config {
         Main.fightAsBlocked  = getBool(p,  "FIGHT_AS_BLOCKED", Main.fightAsBlocked);
         Main.tradeAsBlocked  = getBool(p,  "TRADE_AS_BLOCKED", Main.tradeAsBlocked);
         this.mobGroupMovement = getBool(p, "MOB_GROUP_MOVEMENT", this.mobGroupMovement);
+        this.playerMoveSpeedMultiplier = Math.max(1.0f, getFloat(p, "PLAYER_MOVE_SPEED_MULTIPLIER", this.playerMoveSpeedMultiplier));
 
-        String startPlayer = p.getProperty("START_PLAYER");
+        String startPlayer = getSanitized(p, "START_PLAYER");
         if (startPlayer != null) {
             try {
                 String[] parts = startPlayer.split(",");
@@ -117,13 +119,13 @@ public class Config {
             } catch (Exception ignored) {}
         }
 
-        String startPano = p.getProperty("START_PANO");
+        String startPano = getSanitized(p, "START_PANO");
         if (startPano != null && !startPano.isEmpty()) {
             try { START_PANO = parseIntArray(startPano.split(";")); }
             catch (NumberFormatException e) { e.printStackTrace(); }
         }
 
-        String startItem = p.getProperty("START_ITEM");
+        String startItem = getSanitized(p, "START_ITEM");
         if (startItem != null) {
             try { START_ITEM = startItem.isEmpty() ? new int[]{} : parseIntArray(startItem.split(";")); }
             catch (NumberFormatException e) { e.printStackTrace(); }
@@ -202,6 +204,7 @@ public class Config {
         props.setProperty("FIGHT_AS_BLOCKED", "false");
         props.setProperty("TRADE_AS_BLOCKED", "false");
         props.setProperty("MOB_GROUP_MOVEMENT", "true");
+        props.setProperty("PLAYER_MOVE_SPEED_MULTIPLIER", "2.0");
 
         // Configuration serveur
         props.setProperty("MESSAGE",        "Bienvenue dans l'émulation FREE d'entraide");
@@ -235,33 +238,41 @@ public class Config {
     // Helpers de lecture sécurisée
     // -------------------------------------------------------------------------
 
+    private String getSanitized(Properties p, String key) {
+        String v = p.getProperty(key);
+        if (v == null) return null;
+
+        String value = v.trim();
+        if (value.contains("#")) {
+            value = value.substring(0, value.indexOf('#')).trim();
+        }
+        return value;
+    }
+
     private String get(Properties p, String key, String defaultValue) {
         String v = p.getProperty(key);
         return (v != null) ? v.trim() : defaultValue;
     }
 
     private int getInt(Properties p, String key, int defaultValue) {
-        String v = p.getProperty(key);
+        String v = getSanitized(p, key);
         if (v == null) return defaultValue;
         try { return Integer.parseInt(v.trim()); }
         catch (NumberFormatException e) { return defaultValue; }
     }
 
     private float getFloat(Properties p, String key, float defaultValue) {
-        String v = p.getProperty(key);
+        String v = getSanitized(p, key);
         if (v == null) return defaultValue;
         try { return Float.parseFloat(v.trim()); }
         catch (NumberFormatException e) { return defaultValue; }
     }
 
     private boolean getBool(Properties p, String key, boolean defaultValue) {
-        String v = p.getProperty(key);
+        String v = getSanitized(p, key);
         if (v == null) return defaultValue;
 
         String value = v.trim().toLowerCase();
-        if (value.contains("#")) {
-            value = value.substring(0, value.indexOf('#')).trim();
-        }
 
         if (value.equals("true") || value.equals("yes") || value.equals("oui") || value.equals("1"))
             return true;

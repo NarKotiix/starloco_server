@@ -21,10 +21,23 @@ public final class MobGroupStarProgression {
     }
 
     public static long requiredDelayForCurrentInternalStars(int currentInternalStars) {
+        if (currentInternalStars < 0 || currentInternalStars >= MAX_CAP) {
+            return 0L;
+        }
         if (currentInternalStars < VISIBLE_UNIT) {
             return firstVisibleDelayMillis();
         }
         return delayPerInternalPointMillis();
+    }
+
+    public static long remainingMillisBeforeNextGain(int currentInternalStars, long lastUpdateAt, long currentTimeMillis) {
+        long requiredDelay = requiredDelayForCurrentInternalStars(currentInternalStars);
+        if (requiredDelay <= 0L) {
+            return 0L;
+        }
+
+        long elapsed = Math.max(0L, currentTimeMillis - lastUpdateAt);
+        return Math.max(0L, requiredDelay - elapsed);
     }
 
     public static int toVisibleStars(int internalStars) {

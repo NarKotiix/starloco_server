@@ -37,6 +37,15 @@ public class MobGroupStarProgressionTest {
     }
 
     @Test
+    public void shouldComputeRemainingDelayBeforeNextGain() {
+        long remainingBeforeFirstStar = MobGroupStarProgression.remainingMillisBeforeNextGain(0, 0L, 120000L);
+        long remainingAfterFirstStar = MobGroupStarProgression.remainingMillisBeforeNextGain(21, 760000L, 800000L);
+
+        assertEquals(480000L, remainingBeforeFirstStar);
+        assertEquals(120000L, remainingAfterFirstStar);
+    }
+
+    @Test
     public void shouldReachTenVisibleStarsAfterEightHoursPlusTenMinutesTotal() {
         long total = MobGroupStarProgression.firstVisibleDelayMillis()
                 + MobGroupStarProgression.delayPerInternalPointMillis() * (MobGroupStarProgression.MAX_CAP - MobGroupStarProgression.VISIBLE_UNIT);
@@ -78,4 +87,5 @@ public class MobGroupStarProgressionTest {
         assertEquals(777L, legacy.getLastUpdateAt());
     }
 }
+
 

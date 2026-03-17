@@ -11,6 +11,7 @@ import org.starloco.locos.common.CryptManager;
 import org.starloco.locos.common.SocketManager;
 import org.starloco.locos.database.Database;
 import org.starloco.locos.entity.Collector;
+import org.starloco.locos.entity.monster.MobGroupStarProgression;
 import org.starloco.locos.entity.monster.Monster;
 import org.starloco.locos.entity.mount.Mount;
 import org.starloco.locos.entity.pet.PetEntry;
@@ -48,6 +49,46 @@ public class CommandAdmin extends AdminUser {
 
     public CommandAdmin(Player player) {
         super(player);
+    }
+
+    private String formatDurationCompact(long durationMillis) {
+        long totalSeconds = Math.max(0L, durationMillis / 1000L);
+        long hours = totalSeconds / 3600L;
+        long minutes = (totalSeconds % 3600L) / 60L;
+        long seconds = totalSeconds % 60L;
+
+        if (hours > 0L) {
+            return String.format("%02dh%02dm%02ds", hours, minutes, seconds);
+        }
+        return String.format("%02dm%02ds", minutes, seconds);
+    }
+
+    private String buildStarsInfoLine(MobGroup group, long now) {
+        int internalStars = group.getStarBonus();
+        int visibleStars = MobGroupStarProgression.toVisibleStars(internalStars);
+        long requiredDelay = MobGroupStarProgression.requiredDelayForCurrentInternalStars(internalStars);
+        long remainingDelay = MobGroupStarProgression.remainingMillisBeforeNextGain(internalStars, group.getLastStarBonusUpdateAt(), now);
+        long elapsedDelay = Math.max(0L, requiredDelay - remainingDelay);
+        String phase = internalStars < MobGroupStarProgression.VISIBLE_UNIT ? "0->1*" : "1->10*";
+
+        String nextStep;
+        if (internalStars >= MobGroupStarProgression.MAX_CAP) {
+            nextStep = "cap 10* atteint";
+        } else {
+            int nextInternal = internalStars < MobGroupStarProgression.VISIBLE_UNIT ? MobGroupStarProgression.VISIBLE_UNIT : internalStars + 1;
+            int nextVisible = MobGroupStarProgression.toVisibleStars(nextInternal);
+            nextStep = "next=" + nextInternal + " interne(s) / " + nextVisible + "*";
+        }
+
+        return "Groupe " + group.getId()
+                + " | cell=" + group.getCellId()
+                + " | interne=" + internalStars
+                + " | visible=" + visibleStars + "*"
+                + " | phase=" + phase
+                + " | elapsed=" + formatDurationCompact(elapsedDelay)
+                + "/" + formatDurationCompact(requiredDelay)
+                + " | reste=" + formatDurationCompact(remainingDelay)
+                + " | " + nextStep;
     }
 
     public void apply(String packet) {
@@ -1406,7 +1447,49 @@ public class CommandAdmin extends AdminUser {
             return;
         } else if (command.equalsIgnoreCase("STARS")) {
             if (infos.length < 2) {
-                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10> | STARS CLEARMAP | STARS CLEARALL");
+                this.sendErrorMessage("Commande invalide. Utilisation: STARS <1 a 10> | STARS INFO [groupId|cellId] | STARS CLEARMAP | STARS CLEARALL");
+                return;
+            }
+
+            if (infos[1].equalsIgnoreCase("INFO")) {
+                GameMap currentMap = this.getPlayer().getCurMap();
+                Integer target = null;
+                if (infos.length > 2) {
+                    try {
+                        target = Integer.parseInt(infos[2]);
+                    } catch (Exception e) {
+                        this.sendErrorMessage("Valeur invalide. Utilisation: STARS INFO [groupId|cellId]");
+                        return;
+                    }
+                }
+
+                long now = System.currentTimeMillis();
+                List<MobGroup> groups = new ArrayList<>();
+                for (MobGroup group : currentMap.getMobGroups().values()) {
+                    if (group == null || group.getStarBonus() < 0) {
+                        continue;
+                    }
+                    if (target != null && group.getId() != target && group.getCellId() != target) {
+                        continue;
+                    }
+                    groups.add(group);
+                }
+
+                if (groups.isEmpty()) {
+                    this.sendMessage(target == null
+                            ? "Aucun groupe monstre inspectable sur cette map."
+                            : "Aucun groupe trouve pour ce groupId/cellId sur cette map.");
+                    return;
+                }
+
+                groups.sort(Comparator.comparingInt(MobGroup::getStarBonus).reversed().thenComparingInt(MobGroup::getCellId));
+
+                this.sendMessage("[STARS INFO] map=" + currentMap.getId() + " groupes=" + groups.size()
+                        + (target != null ? " filtre=" + target : ""));
+                this.sendMessage("Regle: 0->1* = 10min | 1->10* = 8h | 20 internes = 1 etoile visible");
+                for (MobGroup group : groups) {
+                    this.sendMessage(buildStarsInfoLine(group, now));
+                }
                 return;
             }
 
@@ -1502,7 +1585,7 @@ public class CommandAdmin extends AdminUser {
             try {
                 starsToAdd = Integer.parseInt(infos[1]);
             } catch (Exception e) {
-                this.sendErrorMessage("Valeur invalide. Utilisation: STARS <1 a 10> | STARS CLEARMAP | STARS CLEARALL");
+                this.sendErrorMessage("Valeur invalide. Utilisation: STARS <1 a 10> | STARS INFO [groupId|cellId] | STARS CLEARMAP | STARS CLEARALL");
                 return;
             }
 
@@ -1512,7 +1595,7 @@ public class CommandAdmin extends AdminUser {
             }
 
             final int visibleStarCap = 10;
-            final int internalStarUnit = 20;
+            final int internalStarUnit = MobGroupStarProgression.VISIBLE_UNIT;
             final int starCap = visibleStarCap * internalStarUnit;
             final int internalStarsToAdd = starsToAdd * internalStarUnit;
             GameMap currentMap = this.getPlayer().getCurMap();
@@ -2841,7 +2924,7 @@ public class CommandAdmin extends AdminUser {
                 mess = "Aucun Extra Monstres existe.";
             this.sendMessage(mess);
             return;
-        } else if (command.equalsIgnoreCase("CREATEGUILD")) {
+        } else if (command.equalsIgnoreCase("CREATEGUILD") || command.equalsIgnoreCase("PANELGUILDE")) {
             Player perso = this.getPlayer();
             if (infos.length > 1) {
                 perso = World.world.getPlayerByName(infos[1]);
