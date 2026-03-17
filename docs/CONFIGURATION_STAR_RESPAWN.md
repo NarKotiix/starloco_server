@@ -2,6 +2,40 @@
 
 ## Paramètres modifiables
 
+## Mise a jour progression des etoiles (17/03/2026)
+
+La progression des etoiles de groupes est maintenant basee sur une courbe temporelle:
+
+- `1 etoile visible` au bout de `10 minutes` sans combat lance
+- `10 etoiles visibles` atteintes vers `8 heures` au total
+- conversion interne: `1 etoile visible = 20 points` (`starBonus`)
+
+### Paliers cibles (visibles)
+
+| Etoiles visibles | Temps cumule cible |
+|------------------|--------------------|
+| 1                | 00:10              |
+| 2                | 01:02              |
+| 3                | 01:54              |
+| 4                | 02:46              |
+| 5                | 03:38              |
+| 6                | 04:30              |
+| 7                | 05:22              |
+| 8                | 06:14              |
+| 9                | 07:06              |
+| 10               | 07:58 (~8h)        |
+
+### Parametres de code associes
+
+Dans `src/org/starloco/locos/area/map/GameMap.java`:
+
+- `STAR_VISIBLE_UNIT = 20`
+- `STAR_FIRST_VISIBLE_DELAY_MINUTES = 10`
+- `STAR_TEN_VISIBLE_TOTAL_MINUTES = 480`
+- `STAR_MAX_CAP = 200`
+
+La mise a jour est appliquee dans `updateMobGroupsStars()` et le calcul fin se fait dans `MobGroup.updateStarBonus(...)`.
+
 Les délais peuvent être ajustés en fonction de vos besoins. Voici les délais par défaut:
 
 ### Délais de respawn par nombre d'étoiles

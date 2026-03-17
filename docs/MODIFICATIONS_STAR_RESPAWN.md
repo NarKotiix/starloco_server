@@ -7,6 +7,29 @@ Ce document détaille les modifications apportées à la logique de respawn des 
 2. Ajouter une vraie gestion des étoiles qui augmente avec le temps
 3. Éviter les spawns avec étoiles si le délai n'est pas respecté
 
+## Mise a jour 17/03/2026 - Nouvelle progression des etoiles
+
+La progression lineaire historique (`+1 point/min`) est remplacee par une progression temporelle:
+
+- `1 etoile visible` atteinte a `10 minutes`
+- `10 etoiles visibles` atteintes vers `8 heures` au total
+- `20 points internes = 1 etoile visible` (cap a `200`)
+
+### Implementation technique
+
+- `src/org/starloco/locos/area/map/GameMap.java`
+  - nouvelles constantes:
+    - `STAR_VISIBLE_UNIT = 20`
+    - `STAR_FIRST_VISIBLE_DELAY_MINUTES = 10`
+    - `STAR_TEN_VISIBLE_TOTAL_MINUTES = 480`
+    - `STAR_MAX_CAP = 200`
+  - `updateMobGroupsStars()` appelle maintenant la mise a jour temporelle du groupe
+
+- `src/org/starloco/locos/entity/monster/Monster.java`
+  - `MobGroup.updateStarBonus(...)` calcule la progression selon le temps reel ecoule:
+    - phase 1: 0 -> 1 etoile visible
+    - phase 2: 1 -> 10 etoiles visibles
+
 ## Fichiers modifiés
 
 ### 1. `GameMap.java`

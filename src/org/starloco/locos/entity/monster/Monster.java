@@ -901,25 +901,48 @@ public class Monster {
             this.starBonus = stars;
         }
 
-        public boolean updateStarBonus(long currentTimeMillis, int incrementPerMinute, int starCap) {
-            if (this.starBonus < 0 || incrementPerMinute <= 0 || starCap <= this.starBonus) {
+        public boolean updateStarBonus(long currentTimeMillis, int starCap, int visibleStarUnit, int firstStarDelayMinutes, int totalTenStarsMinutes) {
+            if (this.starBonus < 0 || visibleStarUnit <= 0 || starCap <= this.starBonus) {
                 return false;
             }
 
             long elapsed = currentTimeMillis - this.lastStarBonusUpdateAt;
-            if (elapsed < 60000L) {
-                return false;
-            }
-
-            int ticks = (int) (elapsed / 60000L);
-            if (ticks <= 0) {
+            if (elapsed <= 0L) {
                 return false;
             }
 
             int oldStars = this.starBonus;
-            this.starBonus = Math.min(starCap, this.starBonus + (ticks * incrementPerMinute));
-            this.lastStarBonusUpdateAt += (ticks * 60000L);
+            long consumed = 0L;
+
+            while (this.starBonus < starCap) {
+                long delayPerPoint = getDelayPerPointMillis(visibleStarUnit, firstStarDelayMinutes, totalTenStarsMinutes);
+                if (delayPerPoint <= 0L || elapsed - consumed < delayPerPoint) {
+                    break;
+                }
+
+                consumed += delayPerPoint;
+                this.starBonus++;
+            }
+
+            this.lastStarBonusUpdateAt += consumed;
             return oldStars != this.starBonus;
+        }
+
+        private long getDelayPerPointMillis(int visibleStarUnit, int firstStarDelayMinutes, int totalTenStarsMinutes) {
+            long firstStarMillis = Math.max(1L, firstStarDelayMinutes) * 60000L;
+            int firstStarInternalPoints = visibleStarUnit;
+
+            // 0 -> 1 etoile visible
+            if (this.starBonus < firstStarInternalPoints) {
+                return Math.max(1L, firstStarMillis / firstStarInternalPoints);
+            }
+
+            // 1 -> 10 etoiles visibles
+            long totalTenStarsMillis = Math.max(firstStarMillis, Math.max(1L, totalTenStarsMinutes) * 60000L);
+            long remainingMillis = Math.max(1L, totalTenStarsMillis - firstStarMillis);
+            int remainingInternalPoints = visibleStarUnit * 9;
+
+            return Math.max(1L, remainingMillis / remainingInternalPoints);
         }
 
         public int getAggroDistance() {
@@ -1018,8 +1041,8 @@ public class Monster {
             isFirst = false;
             }
             toreturn.append("+").append(this.cellId).append(";").append(this.orientation).append(";");
-        	//a mettre dans monster/parsegm
-            toreturn.append(getStarBonus());// bonus en pourcentage (étoile/20%) // Actuellement 1%/min
+            // Valeur interne des etoiles envoyee au client (20 points internes = 1 etoile visible)
+            toreturn.append(getStarBonus());
             toreturn.append(";").append(this.id).append(";").append(mobIDs).append(";-3;").append(mobGFX).append(";").append(mobLevels).append(";").append(colors);
             return toreturn.toString();
         }

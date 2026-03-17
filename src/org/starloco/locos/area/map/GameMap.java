@@ -43,7 +43,9 @@ import java.util.stream.Collectors;
 
 public class GameMap {
 
-    private static final int STAR_INCREMENT_PER_MINUTE = 1;
+    private static final int STAR_VISIBLE_UNIT = 20;
+    private static final int STAR_FIRST_VISIBLE_DELAY_MINUTES = 10;
+    private static final int STAR_TEN_VISIBLE_TOTAL_MINUTES = 480;
     private static final int STAR_MAX_CAP = 200;
 
     public static final Map<String, ArrayList<GameObject>> fixMobGroupObjects = new HashMap<>();
@@ -79,7 +81,7 @@ public class GameMap {
                 if(Config.getInstance().autoReboot) {
                     if (Reboot.check()) {
                         if ((System.currentTimeMillis() - Config.getInstance().startTime) > 60000) {
-                            for (Player player : World.world.getOnlinePlayers()) player.send(this.toString());
+                            for (Player player : World.world.getOnlinePlayers()) SocketManager.send(player, this.toString());
                             try { Thread.sleep(5000); } catch (Exception ignored) {}
                             Main.stop("Automatic restart");
                         }
@@ -1949,7 +1951,7 @@ public class GameMap {
     }
 
     public void send(String packet) {
-        this.getPlayers().stream().filter(player -> player != null).forEach(player -> player.send(packet));
+        this.getPlayers().stream().filter(player -> player != null).forEach(player -> SocketManager.send(player, packet));
     }
 
     private void updateMobGroupsStars() {
@@ -1960,7 +1962,7 @@ public class GameMap {
             if (group == null) {
                 continue;
             }
-            if (group.updateStarBonus(now, STAR_INCREMENT_PER_MINUTE, STAR_MAX_CAP)) {
+            if (group.updateStarBonus(now, STAR_MAX_CAP, STAR_VISIBLE_UNIT, STAR_FIRST_VISIBLE_DELAY_MINUTES, STAR_TEN_VISIBLE_TOTAL_MINUTES)) {
                 changedGroups.add(group);
             }
         }
