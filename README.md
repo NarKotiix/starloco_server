@@ -16,7 +16,7 @@ Développé avec aide IA pour debugging et features.
 
 - Gladiatrool
 - Client 1.39.8 : Split packets, positions Spells/Obj en Int (pas Hexa)
-- Maps chiffrées offici
+- Maps chiffrées officielles
 
 ## Corrections
 
@@ -36,18 +36,27 @@ Développé avec aide IA pour debugging et features.
 - Optimisation : `getDirBetweenTwoCase`, `addObjet`/`createNewItem`, packets Stats
 - Conditions anti-exceptions config — Build Gradle + JDK 8 (Linux/Windows sync) — Fix encodage UTF-8
 
+## Sécurité renforcée [@NarKotiix — v1.2.1]
+
+- **Déplacements (`GameClient`)** : validation stricte path/cellule/orientation, rejet immédiat des paquets malformés (*fail-fast*).
+- **Anti-flood léger** : limitation par client des mouvements invalides (fenêtre glissante + cooldown court).
+- **Logs sécurité** : journalisation `WARN` throttlée (agrégation des suppressions) pour éviter le bruit en cas de flood.
+- **Parsing (`CryptManager`)** : garde-fous de bornes/format (hex, longueurs, cellules), réduction des chemins de crash.
+- **Pathfinding (`PathFinding`)** : vérification des cellules interdites en O(1) via masque `boolean[]`.
+
 ---
 
-## Mises à jour récentes (4 derniers commits)
+## Mises à jour récentes (5 derniers commits)
 
 | Commit | Type | Résumé |
 |--------|------|--------|
+| `adc64ef` | 🔐 security | Fail-fast mouvements + anti-flood + logs throttlés + doc sécurité v1.2.1 |
 | `f7837d1` | ⚡ perf | Table inversée O(1) pour HASH, simplification `getCase()` |
 | `2e64144` | ⚡ perf | Index tableau O(1) pour les cases, refactoring constructeur `GameMap` |
 | `fa47140` | ⚡ perf | Chargement parallèle des groupes de monstres |
 | `f48cf12` | ⚡ perf | Démarrage DB accéléré + fail-fast |
 
-> Détail complet → [`docs/CHANGELOG_RECENT_COMMITS.md`](docs/CHANGELOG_RECENT_COMMITS.md) et [`docs/CHANGELOG_PERF_V1.2.0.md`](docs/CHANGELOG_PERF_V1.2.0.md)
+> Détail complet → [`docs/CHANGELOG_RECENT_COMMITS.md`](docs/CHANGELOG_RECENT_COMMITS.md), [`docs/CHANGELOG_PERF_V1.2.0.md`](docs/CHANGELOG_PERF_V1.2.0.md) et [`docs/SECURITY_HARDENING_V1.2.1.md`](docs/SECURITY_HARDENING_V1.2.1.md)
 
 ---
 
@@ -153,6 +162,7 @@ Step 4/4 - Closing database connections...
 - 📖 **[INDEX_DOCUMENTATION_V1.2.0.md](docs/INDEX_DOCUMENTATION_V1.2.0.md)** — Index complet de tous les documents
 - 📋 **[CHANGELOG_RECENT_COMMITS.md](docs/CHANGELOG_RECENT_COMMITS.md)** — Résumé des derniers commits
 - ⚡ **[CHANGELOG_PERF_V1.2.0.md](docs/CHANGELOG_PERF_V1.2.0.md)** — Détail des optimisations de performance v1.2.0
+- 🔐 **[SECURITY_HARDENING_V1.2.1.md](docs/SECURITY_HARDENING_V1.2.1.md)** — Durcissement sécurité des déplacements (fail-fast, anti-flood, logs throttlés)
 - 🔄 **[QUICK_START_STAR_RESPAWN.md](docs/QUICK_START_STAR_RESPAWN.md)** — Système de respawn avec étoiles
 - 💾 **[SUMMARY_PERSISTENCE_STARS_V1.0.0.md](docs/SUMMARY_PERSISTENCE_STARS_V1.0.0.md)** — Persistance des étoiles après reboot
 - 🛑 **[GRACEFUL_SHUTDOWN.md](docs/GRACEFUL_SHUTDOWN.md)** — Guide complet d'arrêt propre (CTRL+C)
