@@ -1441,6 +1441,10 @@ public class CommandAdmin extends AdminUser {
 
                 this.sendMessage("Etoiles remises a 0 sur la map " + currentMap.getId()
                         + ": " + updatedGroups + " groupe(s) mis a jour.");
+                if (Main.modDebug) {
+                    World.world.logger.info("[DEBUG STARS] CLEARMAP par {} sur map {} : {} groupe(s) reset a t={}",
+                            this.getPlayer().getName(), currentMap.getId(), updatedGroups, now);
+                }
                 return;
             }
 
@@ -1487,6 +1491,10 @@ public class CommandAdmin extends AdminUser {
 
                 this.sendMessage("Etoiles remises a 0 sur toutes les maps: " + updatedGroups
                         + " groupe(s) modifie(s) sur " + updatedMaps + " map(s).");
+                if (Main.modDebug) {
+                    World.world.logger.info("[DEBUG STARS] CLEARALL par {} : {} groupe(s) reset sur {} map(s) a t={}",
+                            this.getPlayer().getName(), updatedGroups, updatedMaps, now);
+                }
                 return;
             }
 
