@@ -9,6 +9,7 @@ import org.starloco.locos.database.Database;
 import org.starloco.locos.entity.Collector;
 import org.starloco.locos.entity.mount.Mount;
 import org.starloco.locos.entity.Prism;
+import org.starloco.locos.entity.monster.MobGroupStarProgression;
 import org.starloco.locos.entity.monster.Monster;
 import org.starloco.locos.entity.npc.Npc;
 import org.starloco.locos.entity.npc.NpcMovable;
@@ -43,10 +44,6 @@ import java.util.stream.Collectors;
 
 public class GameMap {
 
-    private static final int STAR_VISIBLE_UNIT = 20;
-    private static final int STAR_FIRST_VISIBLE_DELAY_MINUTES = 10;
-    private static final int STAR_TEN_VISIBLE_TOTAL_MINUTES = 480;
-    private static final int STAR_MAX_CAP = 200;
     private static final short STAR_DEBUG_TRACE_MAP_ID = 1278;
 
     public static final Map<String, ArrayList<GameObject>> fixMobGroupObjects = new HashMap<>();
@@ -127,7 +124,7 @@ public class GameMap {
     private Map<Integer, ArrayList<Action>> endFightAction = new HashMap<>();
     private Map<Integer, Integer> mobExtras = new HashMap<>();
     // Sauvegarde des étoiles des groupes (pour persistence au redémarrage)
-    private Map<Integer, Integer> savedGroupsStars = new HashMap<>();
+    private Map<Integer, MobGroupStarProgression.Snapshot> savedGroupsStars = new HashMap<>();
 
     public GameMap(short id, String date, byte w, byte h, String key, String places, String dData, String monsters, String mapPos, byte maxGroup, byte fixSize, byte minSize, byte maxSize, String forbidden, byte sniffed) {
         this.id = id;
@@ -1972,7 +1969,7 @@ public class GameMap {
                 oldUpdateAtByGroupId.put(group.getId(), group.getLastStarBonusUpdateAt());
             }
 
-            if (group.updateStarBonus(now, STAR_MAX_CAP, STAR_VISIBLE_UNIT, STAR_FIRST_VISIBLE_DELAY_MINUTES, STAR_TEN_VISIBLE_TOTAL_MINUTES)) {
+            if (group.updateStarBonus(now)) {
                 changedGroups.add(group);
             }
         }
@@ -1987,9 +1984,9 @@ public class GameMap {
                 long oldUpdateAt = oldUpdateAtByGroupId.getOrDefault(group.getId(), now);
                 long elapsedMs = Math.max(0L, now - oldUpdateAt);
                 long requiredDelayMs = computeStarDelayPerPointMillis(oldInternal);
-                int oldVisible = oldInternal / STAR_VISIBLE_UNIT;
-                int newVisible = newInternal / STAR_VISIBLE_UNIT;
-                String phase = oldInternal < STAR_VISIBLE_UNIT ? "phase 0->1*" : "phase 1->10*";
+                int oldVisible = MobGroupStarProgression.toVisibleStars(oldInternal);
+                int newVisible = MobGroupStarProgression.toVisibleStars(newInternal);
+                String phase = oldInternal < MobGroupStarProgression.VISIBLE_UNIT ? "phase 0->1*" : "phase 1->10*";
 
                 World.world.logger.info("[DEBUG STARS] map={} group={} cell={} starsInternal {}->{} (visible {}->{}) gained={} elapsed={}ms required={}ms reason=elapsed>=required ({})",
                         this.id,
@@ -2019,16 +2016,7 @@ public class GameMap {
     }
 
     private long computeStarDelayPerPointMillis(int currentInternalStars) {
-        long firstStarMillis = Math.max(1L, STAR_FIRST_VISIBLE_DELAY_MINUTES) * 60000L;
-
-        if (currentInternalStars < STAR_VISIBLE_UNIT) {
-            return firstStarMillis;
-        }
-
-        long totalTenStarsMillis = Math.max(firstStarMillis, Math.max(1L, STAR_TEN_VISIBLE_TOTAL_MINUTES) * 60000L);
-        long remainingMillis = Math.max(1L, totalTenStarsMillis - firstStarMillis);
-        int remainingInternalPoints = STAR_VISIBLE_UNIT * 9;
-        return Math.max(1L, remainingMillis / remainingInternalPoints);
+        return MobGroupStarProgression.requiredDelayForCurrentInternalStars(currentInternalStars);
     }
 
     /**
@@ -2039,7 +2027,7 @@ public class GameMap {
         this.savedGroupsStars.clear();
         for (Monster.MobGroup group : this.mobGroups.values()) {
             if (group != null && group.getStarBonus() > 0) {
-                this.savedGroupsStars.put(group.getCellId(), group.getStarBonus());
+                this.savedGroupsStars.put(group.getCellId(), new MobGroupStarProgression.Snapshot(group.getStarBonus(), group.getLastStarBonusUpdateAt()));
             }
         }
     }
@@ -2052,27 +2040,17 @@ public class GameMap {
         if (this.savedGroupsStars.isEmpty())
             return;
 
-        List<Integer> remainingStars = new ArrayList<>();
-        List<Monster.MobGroup> groups = new ArrayList<>();
-
-        for (Integer savedStars : this.savedGroupsStars.values()) {
-            if (savedStars != null && savedStars > 0) {
-                remainingStars.add(Math.min(savedStars, STAR_MAX_CAP));
-            }
-        }
+        long now = System.currentTimeMillis();
 
         for (Monster.MobGroup group : this.mobGroups.values()) {
             if (group != null) {
-                group.setStarBonus(0);
-                groups.add(group);
+                MobGroupStarProgression.Snapshot snapshot = this.savedGroupsStars.get(group.getCellId());
+                if (snapshot != null && snapshot.getInternalStars() > 0) {
+                    group.resetStarBonus(snapshot.getInternalStars(), snapshot.getLastUpdateAt());
+                } else {
+                    group.resetStarBonus(0, now);
+                }
             }
-        }
-
-        remainingStars.sort(Collections.reverseOrder());
-        groups.sort(Comparator.comparingInt(Monster.MobGroup::getCellId));
-
-        for (int index = 0; index < remainingStars.size() && index < groups.size(); index++) {
-            groups.get(index).setStarBonus(remainingStars.get(index));
         }
 
         this.savedGroupsStars.clear();
@@ -2082,14 +2060,14 @@ public class GameMap {
      * Définit les étoiles sauvegardées (par cellID)
      * Utilisé lors du redémarrage pour transférer l'état
      */
-    public void setSavedGroupsStars(Map<Integer, Integer> savedStars) {
+    public void setSavedGroupsStars(Map<Integer, MobGroupStarProgression.Snapshot> savedStars) {
         this.savedGroupsStars = new HashMap<>(savedStars);
     }
 
     /**
      * Récupère les étoiles sauvegardées
      */
-    public Map<Integer, Integer> getSavedGroupsStars() {
+    public Map<Integer, MobGroupStarProgression.Snapshot> getSavedGroupsStars() {
         return this.savedGroupsStars;
     }
 }

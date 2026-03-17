@@ -163,6 +163,10 @@ public class GameClient {
         this.invalidMoveLastLogAt = now;
     }
 
+    private boolean isConfiguredFastWalkEnabled() {
+        return Config.getInstance().playerMoveSpeedMultiplier >= 2.0f;
+    }
+
     private GameCase resolveMovementCell(GameMap map, String encodedCell) {
         if (map == null || encodedCell == null || encodedCell.length() != 2) {
             return null;
@@ -4616,7 +4620,7 @@ public class GameClient {
 
             //On sauvegarde le path dans la variable
             GA.args = path;
-            if (this.player.walkFast) {
+            if (this.player.walkFast || this.isConfiguredFastWalkEnabled()) {
                 this.player.getCurCell().removePlayer(this.player);
                 SocketManager.GAME_SEND_BN(this);
                 //On prend la case ciblée

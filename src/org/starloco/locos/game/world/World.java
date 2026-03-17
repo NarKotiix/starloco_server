@@ -18,6 +18,7 @@ import org.starloco.locos.common.Formulas;
 import org.starloco.locos.common.SocketManager;
 import org.starloco.locos.database.Database;
 import org.starloco.locos.entity.Collector;
+import org.starloco.locos.entity.monster.MobGroupStarProgression;
 import org.starloco.locos.entity.monster.Monster;
 import org.starloco.locos.entity.mount.Mount;
 import org.starloco.locos.entity.npc.NpcAnswer;
@@ -218,17 +219,17 @@ public class World {
             }
 
             map.saveGroupsStars();
-            Map<Integer, Integer> starsByCell = map.getSavedGroupsStars();
+            Map<Integer, MobGroupStarProgression.Snapshot> starsByCell = map.getSavedGroupsStars();
             if (starsByCell == null || starsByCell.isEmpty()) {
                 continue;
             }
 
-            for (Entry<Integer, Integer> entry : starsByCell.entrySet()) {
-                Integer stars = entry.getValue();
-                if (stars == null || stars <= 0) {
+            for (Entry<Integer, MobGroupStarProgression.Snapshot> entry : starsByCell.entrySet()) {
+                MobGroupStarProgression.Snapshot snapshot = entry.getValue();
+                if (snapshot == null || snapshot.getInternalStars() <= 0) {
                     continue;
                 }
-                properties.setProperty(map.getId() + ":" + entry.getKey(), String.valueOf(stars));
+                properties.setProperty(map.getId() + ":" + entry.getKey(), snapshot.serialize());
                 count++;
             }
         }
@@ -271,7 +272,8 @@ public class World {
             return;
         }
 
-        Map<Short, Map<Integer, Integer>> starsByMap = new HashMap<>();
+        Map<Short, Map<Integer, MobGroupStarProgression.Snapshot>> starsByMap = new HashMap<>();
+        long fallbackLastUpdateAt = System.currentTimeMillis();
         for (String key : properties.stringPropertyNames()) {
             String[] keyParts = key.split(":");
             if (keyParts.length != 2) {
@@ -281,18 +283,18 @@ public class World {
             try {
                 short mapId = Short.parseShort(keyParts[0]);
                 int cellId = Integer.parseInt(keyParts[1]);
-                int stars = Integer.parseInt(properties.getProperty(key, "0"));
-                if (stars <= 0) {
+                MobGroupStarProgression.Snapshot snapshot = MobGroupStarProgression.parseSnapshot(properties.getProperty(key), fallbackLastUpdateAt);
+                if (snapshot == null || snapshot.getInternalStars() <= 0) {
                     continue;
                 }
 
-                starsByMap.computeIfAbsent(mapId, ignored -> new HashMap<>()).put(cellId, stars);
+                starsByMap.computeIfAbsent(mapId, ignored -> new HashMap<>()).put(cellId, snapshot);
                 count++;
             } catch (Exception ignored) {
             }
         }
 
-        for (Entry<Short, Map<Integer, Integer>> entry : starsByMap.entrySet()) {
+        for (Entry<Short, Map<Integer, MobGroupStarProgression.Snapshot>> entry : starsByMap.entrySet()) {
             GameMap map = this.getMap(entry.getKey());
             if (map != null) {
                 map.setSavedGroupsStars(entry.getValue());

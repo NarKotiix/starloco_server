@@ -910,54 +910,11 @@ public class Monster {
             this.lastStarBonusUpdateAt = currentTimeMillis;
         }
 
-        public boolean updateStarBonus(long currentTimeMillis, int starCap, int visibleStarUnit, int firstStarDelayMinutes, int totalTenStarsMinutes) {
-            if (this.starBonus < 0 || visibleStarUnit <= 0 || starCap <= this.starBonus) {
-                return false;
-            }
-
-            long elapsed = currentTimeMillis - this.lastStarBonusUpdateAt;
-            if (elapsed <= 0L) {
-                return false;
-            }
-
-            int oldStars = this.starBonus;
-            long consumed = 0L;
-
-            long firstStarMillis = Math.max(1L, firstStarDelayMinutes) * 60000L;
-            if (this.starBonus < visibleStarUnit) {
-                // Aucun point interne avant le palier 10 minutes: on passe directement a 1 etoile visible.
-                if (elapsed < firstStarMillis) {
-                    return false;
-                }
-                this.starBonus = Math.min(starCap, visibleStarUnit);
-                consumed += firstStarMillis;
-                elapsed -= firstStarMillis;
-            }
-
-            while (this.starBonus < starCap) {
-                long delayPerPoint = getDelayPerPointMillis(visibleStarUnit, firstStarDelayMinutes, totalTenStarsMinutes);
-                if (delayPerPoint <= 0L || elapsed < delayPerPoint) {
-                    break;
-                }
-
-                elapsed -= delayPerPoint;
-                consumed += delayPerPoint;
-                this.starBonus++;
-            }
-
-            this.lastStarBonusUpdateAt += consumed;
-            return oldStars != this.starBonus;
-        }
-
-        private long getDelayPerPointMillis(int visibleStarUnit, int firstStarDelayMinutes, int totalTenStarsMinutes) {
-            long firstStarMillis = Math.max(1L, firstStarDelayMinutes) * 60000L;
-
-            // 1 -> 10 etoiles visibles
-            long totalTenStarsMillis = Math.max(firstStarMillis, Math.max(1L, totalTenStarsMinutes) * 60000L);
-            long remainingMillis = Math.max(1L, totalTenStarsMillis - firstStarMillis);
-            int remainingInternalPoints = visibleStarUnit * 9;
-
-            return Math.max(1L, remainingMillis / remainingInternalPoints);
+        public boolean updateStarBonus(long currentTimeMillis) {
+            MobGroupStarProgression.ProgressResult result = MobGroupStarProgression.advance(this.starBonus, this.lastStarBonusUpdateAt, currentTimeMillis);
+            this.starBonus = result.getInternalStars();
+            this.lastStarBonusUpdateAt = result.getLastUpdateAt();
+            return result.isChanged();
         }
 
         public int getAggroDistance() {
