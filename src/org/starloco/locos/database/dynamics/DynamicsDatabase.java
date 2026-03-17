@@ -145,41 +145,35 @@ public class DynamicsDatabase {
      */
     public boolean initializeConnection() {
         try {
+            long start = System.currentTimeMillis();
             // Configuration logging détaillée
             logger.setLevel(Level.ALL);
             logger.trace("Lecture configuration base de données...");
+            logger.debug("[GAME-DB] Target {}:{}/{} (pool max={}, minIdle={}, connectTimeout={}ms, socketTimeout={}ms)",
+                    Main.hostDB, Main.portDB, Main.nameDB,
+                    Main.dbMaxPoolSize, Main.dbMinIdle, Main.dbConnectTimeoutMs, Main.dbSocketTimeoutMs);
 
-            // Configuration HikariCP optimisée pour serveur jeu
-            HikariConfig config = new HikariConfig();
-            config.setJdbcUrl(String.format(
-                    "jdbc:mysql://%s:%s/%s?characterEncoding=UTF-8&useSSL=false&" +
-                            "allowPublicKeyRetrieval=true&serverTimezone=UTC&" +
-                            "cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048",
-                    Main.hostDB, Main.portDB, Main.nameDB
-            ));
-            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-            config.setUsername(Main.userDB);
-            config.setPassword(Main.passDB);
-
-            // Pool optimisé gaming server (basé CPU + charge Starloco)
-            config.setMaximumPoolSize(Math.min((Runtime.getRuntime().availableProcessors() * 2) + 1, 20));
-            config.setMinimumIdle(2);
-            config.setConnectionTimeout(10000);  // 10s timeout
-            config.setIdleTimeout(300000);       // 5min idle
-            config.setMaxLifetime(1800000);      // 30min lifetime
-            config.setAutoCommit(false);         // Transactionnel (meilleur perf)
+            HikariConfig config = Database.createHikariConfig(
+                    "game-db",
+                    Main.hostDB,
+                    Main.portDB,
+                    Main.nameDB,
+                    Main.userDB,
+                    Main.passDB,
+                    false
+            );
 
             this.dataSource = new HikariDataSource(config);
 
             // Test connexion
             if (!Database.tryConnection(this.dataSource)) {
                 logger.error("❌ Échec connexion DB : vérifiez identifiants/host/port");
-                Main.stop("Échec test connexion base de données");
                 return false;
             }
 
-            logger.info("✅ Connexion base de données établie (pool size: {})",
-                    ((HikariDataSource)this.dataSource).getMaximumPoolSize());
+            logger.info("✅ Connexion base de données établie en {} ms (pool size: {})",
+                    System.currentTimeMillis() - start,
+                    this.dataSource.getMaximumPoolSize());
 
             this.initializeData();
             logger.info("✅ Données base de données chargées");

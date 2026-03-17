@@ -47,6 +47,14 @@ public class Main {
     public static String hostDB = "127.0.0.1", nameDB = "", userDB = "", passDB = "", portDB = "3306";
     public static String Ip = "127.0.0.1";
 
+    // Database tuning (startup/fail-fast)
+    public static int dbConnectTimeoutMs = 5000;
+    public static int dbSocketTimeoutMs = 10000;
+    public static int dbIdleTimeoutMs = 300000;
+    public static int dbMaxLifetimeMs = 1800000;
+    public static int dbMaxPoolSize = 10;
+    public static int dbMinIdle = 0;
+
     public static GameServer gameServer;
     public static ExchangeClient exchangeClient;
 

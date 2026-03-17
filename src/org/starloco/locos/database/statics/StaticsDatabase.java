@@ -50,29 +50,33 @@ public class StaticsDatabase {
 
     public boolean initializeConnection() {
         try {
+            long start = System.currentTimeMillis();
             logger.setLevel(Level.ALL);
             logger.trace("Reading database config");
+            logger.debug("[LOGIN-DB] Target {}:{}/{} (pool max={}, minIdle={}, connectTimeout={}ms, socketTimeout={}ms)",
+                    Main.loginHostDB, Main.loginPortDB, Main.loginNameDB,
+                    Main.dbMaxPoolSize, Main.dbMinIdle, Main.dbConnectTimeoutMs, Main.dbSocketTimeoutMs);
 
-            HikariConfig config = new HikariConfig();
-            config.setJdbcUrl("jdbc:mysql://" + Main.loginHostDB + ":" + Main.loginPortDB + "/" + Main.loginNameDB + "?characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
-            config.setDriverClassName("com.mysql.cj.jdbc.Driver"); // Ahora funcionare
-            config.setUsername(Main.loginUserDB);
-            config.setPassword(Main.loginPassDB);
-            config.setAutoCommit(true);
-            config.setMaximumPoolSize(20);
-            config.setMinimumIdle(1);
+            HikariConfig config = Database.createHikariConfig(
+                    "login-db",
+                    Main.loginHostDB,
+                    Main.loginPortDB,
+                    Main.loginNameDB,
+                    Main.loginUserDB,
+                    Main.loginPassDB,
+                    true
+            );
             this.dataSource = new HikariDataSource(config);
 
             if (!Database.tryConnection(this.dataSource)) {
                 logger.error("Please check your username and password and database connection");
-                Main.stop("statics try connection failed");
                 return false;
             }
-            logger.info("Database connection established");
+            logger.info("Database connection established in {} ms", System.currentTimeMillis() - start);
             initializeData();
             logger.info("Database data loaded");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error during login database initialization", e);
             return false;
         }
         return true;

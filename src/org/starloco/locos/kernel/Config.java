@@ -81,6 +81,13 @@ public class Config {
         Main.userDB = get(p, "GAME_USER_DB", Main.userDB);
         Main.passDB = get(p, "GAME_PASS_DB", Main.passDB);
         Main.portDB = get(p, "GAME_PORT_DB", Main.portDB);
+
+        Main.dbConnectTimeoutMs = getInt(p, "DB_CONNECT_TIMEOUT_MS", Main.dbConnectTimeoutMs);
+        Main.dbSocketTimeoutMs = getInt(p, "DB_SOCKET_TIMEOUT_MS", Main.dbSocketTimeoutMs);
+        Main.dbIdleTimeoutMs = getInt(p, "DB_IDLE_TIMEOUT_MS", Main.dbIdleTimeoutMs);
+        Main.dbMaxLifetimeMs = getInt(p, "DB_MAX_LIFETIME_MS", Main.dbMaxLifetimeMs);
+        Main.dbMaxPoolSize = getInt(p, "DB_POOL_MAX_SIZE", Main.dbMaxPoolSize);
+        Main.dbMinIdle = getInt(p, "DB_POOL_MIN_IDLE", Main.dbMinIdle);
     }
 
     private void applyRules(Properties p) {
@@ -164,6 +171,14 @@ public class Config {
         props.setProperty("GAME_USER_DB", "root");
         props.setProperty("GAME_PASS_DB", "");
         props.setProperty("GAME_PORT_DB", "3306");
+
+        // Tuning DB / startup fail-fast
+        props.setProperty("DB_CONNECT_TIMEOUT_MS", "5000");
+        props.setProperty("DB_SOCKET_TIMEOUT_MS", "10000");
+        props.setProperty("DB_IDLE_TIMEOUT_MS", "300000");
+        props.setProperty("DB_MAX_LIFETIME_MS", "1800000");
+        props.setProperty("DB_POOL_MAX_SIZE", "10");
+        props.setProperty("DB_POOL_MIN_IDLE", "0");
 
         // Règles / flags
         props.setProperty("SUBSCRIBER",       "false");
