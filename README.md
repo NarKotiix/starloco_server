@@ -1,176 +1,160 @@
 # Starloco-Fun Server (Dofus 1.29+)
 
 **Reprise et optimisation du projet Starloco par [@NarKotiix](https://github.com/NarKotiix)**  
-Améliorations : refactoring code, fix UTF-8, optimisations performance (donjons, respawn, Account), build Gradle propre.  
-Développé avec aide IA Perplexity / Claude pour debugging et features.
+Améliorations : refactoring code, fix UTF-8, optimisations performance (démarrage DB, chargement maps, pathfinding, respawn), build Gradle propre.  
+Développé avec aide IA pour debugging et features.
 
 ## Auteurs originaux
 
-- [@sarazar928ghost](https://github.com/sarazar928ghost) - Discord: Kevin#6537
-- [@arwase](https://github.com/arwase) - Discord: Arwase#6656 (TWEAK Gladiatrool)
-- [@iR3SH](https://github.com/iR3SH) - Discord: Hydronish#0843 (FIX Gladiatrool)
+- [@sarazar928ghost](https://github.com/sarazar928ghost) — Discord : Kevin#6537
+- [@arwase](https://github.com/arwase) — Discord : Arwase#6656 (TWEAK Gladiatrool)
+- [@iR3SH](https://github.com/iR3SH) — Discord : Hydronish#0843 (FIX Gladiatrool)
 
-## Nouveautés
+---
+
+## Fonctionnalités notables
 
 - Gladiatrool
-- Client 1.39.8: Split packets, positions Spells/Obj en Int (pas Hexa)
-- Maps chiffrées offi
+- Client 1.39.8 : Split packets, positions Spells/Obj en Int (pas Hexa)
+- Maps chiffrées offici
 
-## Debugs
+## Corrections
 
-- **Joueur**: FM cac 100%, anti-multi-équip (ex. 20 anneaux), morph armes, drop équipé, pas d'ID fantôme, IA, panda porter/jeter, items class persistants, ban/mute OK
-- **Gladiatrool**: Sauvegarde sorts incarnation/perso (reboot-proof), effets toniques
+- **Joueur** : FM cac 100%, anti-multi-équip (ex. 20 anneaux), morph armes, drop équip, pas d'ID fantôme, IA, panda porter/jeter, items classe persistants, ban/mute OK
+- **Gladiatrool** : Sauvegarde sorts incarnation/perso (reboot-proof), effets toniques
 
-## Optimisations [@NarKotiix]
+---
 
-- Refactoring massif: lisibilité/pro (mouvements inventaire, actions objets)
-- Opti: getDirBetweenTwoCase, addObjet/createNewItem, packets Stats (raccourcis)
-- Conditions anti-exceptions config
-- Build Gradle 7.4 + JDK 8 (Linux/Windows sync)
-- Fix encodage UTF-8 (é/à/ç)
+## Optimisations de performance [@NarKotiix — v1.2.0]
 
-## Mises a jour recentes (3 derniers commits)
+- **`CryptManager`** : `getIntByHashedValue()` et `cellCode_To_ID()` passent de O(64) à **O(1)** grâce à une table de correspondance inversée statique `HASH_REVERSE[128]`.
+- **`GameMap.getCase()`** : lookup O(1) via tableau `casesById[]` — plus aucun scan linéaire O(n) à chaque appel de pathfinding/combat.
+- **`GameMap` constructeur** : parsing manuel par index (zéro allocation `String.split()`), extrait en méthodes lisibles.
+- **Groupes monstres** : chargement parallélisé au démarrage via `ExecutorService`.
+- **Base de données** : initialisation accélérée + détection immédiate des erreurs de connexion (*fail-fast*).
+- Refactoring massif : lisibilité/pro (mouvements inventaire, actions objets)
+- Optimisation : `getDirBetweenTwoCase`, `addObjet`/`createNewItem`, packets Stats
+- Conditions anti-exceptions config — Build Gradle + JDK 8 (Linux/Windows sync) — Fix encodage UTF-8
 
-- `cd719aa` : ajout de `*.snapshot` dans `.gitignore`
-- `cbccc2a` : ajout de `test_modifications.sh` dans `.gitignore`
-- `b35fc38` : ajout du systeme de persistence des etoiles + delais de respawn + lot complet de documentation
+---
 
-Detail complet dans `docs/CHANGELOG_RECENT_COMMITS.md`.
+## Mises à jour récentes (4 derniers commits)
+
+| Commit | Type | Résumé |
+|--------|------|--------|
+| `f7837d1` | ⚡ perf | Table inversée O(1) pour HASH, simplification `getCase()` |
+| `2e64144` | ⚡ perf | Index tableau O(1) pour les cases, refactoring constructeur `GameMap` |
+| `fa47140` | ⚡ perf | Chargement parallèle des groupes de monstres |
+| `f48cf12` | ⚡ perf | Démarrage DB accéléré + fail-fast |
+
+> Détail complet → [`docs/CHANGELOG_RECENT_COMMITS.md`](docs/CHANGELOG_RECENT_COMMITS.md) et [`docs/CHANGELOG_PERF_V1.2.0.md`](docs/CHANGELOG_PERF_V1.2.0.md)
+
+---
 
 ## Téléchargement
 
-- **Server**: Sources + Gradle (build.sh / gradlew build)
-- **SQL**: help_game / help_login
-- **Client**: [Mega 1.39.8](https://mega.nz/file/3sAljAyR#optHLctMbZWvgsksJhOH2gDNkEo-xpwXbyVTr45Q_50)
-- Supprimez config.txt ancien au 1er lancement
+- **Server** : Sources + Gradle (`./gradlew build`)
+- **SQL** : help_game / help_login
+- **Client** : [Mega 1.39.8](https://mega.nz/file/3sAljAyR#optHLctMbZWvgsksJhOH2gDNkEo-xpwXbyVTr45Q_50)
+- Supprimez `config.txt` ancien au 1er lancement
+
+---
 
 ## Installation rapide
 
-### Compilation du projet
+### Compilation
 
 ```bash
-# Linux/MacOS
+# Linux/macOS
 ./gradlew clean build
 
 # Windows
 .\gradlew.bat clean build
 ```
 
-### Lancement du serveur
+### Lancement
 
 ```bash
-# Windows - Mode normal
+# Linux
+./start-server.sh
+
+# Windows — mode normal
 .\Start-Server.bat
 
-# Windows - Mode debug (plus de logs)
+# Windows — mode debug (plus de logs)
 .\Start-Server.bat --debug
 ```
 
 **Le script `Start-Server.bat` active automatiquement :**
-- ✅ Encodage UTF-8 pour les caractères spéciaux (é, à, ç, etc.)
+- ✅ Encodage UTF-8 pour les caractères spéciaux (é, è, ê, etc.)
 - ✅ Support couleurs ANSI dans la console Windows
-- ✅ Configuration mémoire optimisée (-Xms512M -Xmx2G)
+- ✅ Configuration mémoire optimisée (`-Xms512M -Xmx2G`)
 
-## Support des couleurs dans les logs
+---
 
-Les logs du serveur affichent des **couleurs ANSI natifs** pour une meilleure lisibilité :
+## Logs colorés (ANSI)
 
-### Légende des couleurs
+Les logs du serveur affichent des **couleurs ANSI** pour une meilleure lisibilité :
 
-```
-🔴 FATAL  - Rouge foncé (erreur critique)
-🔴 ERROR  - Rouge (erreur)
-🟡 WARN   - Jaune (avertissement)
-🟢 INFO   - Vert (information)
-🔵 DEBUG  - Cyan (debug)
-🟣 TRACE  - Magenta (trace)
-```
-
-### Configuration technique
+| Niveau | Couleur    |
+|--------|------------|
+| FATAL  | Rouge gras |
+| ERROR  | Rouge      |
+| WARN   | Jaune      |
+| INFO   | Vert       |
+| DEBUG  | Cyan       |
+| TRACE  | Magenta    |
 
 **Dépendances utilisées :**
-- **Logback 1.3.14** : Framework de logging Java avec support natif du `%clr()` converter
-- **Jansi 2.4.1** : Librairie Windows ANSI support pour la console Windows
-- **SLF4J 1.7.36** : Interface de logging standardisée
+- **Logback 1.3.14** — Framework de logging avec support natif `%clr()`
+- **Jansi 2.4.1** — Support ANSI Windows
+- **SLF4J 1.7.36** — Interface de logging standardisée
 
 **Fichier de configuration :** `src/logback.xml`
 
-Pattern utilisé :
 ```
-%d{HH:mm:ss.SSS} | %clr(%-5level){FATAL=1;31, ERROR=31, WARN=33, INFO=32, DEBUG=36, TRACE=35} | %logger{36} - %msg%n
-```
-
-### Personnalisation des couleurs
-
-Pour modifier les couleurs, éditez `src/logback.xml` et changez la propriété `LOG_PATTERN` :
-
-```xml
-<property name="LOG_PATTERN" value="%d{HH:mm:ss.SSS} | %clr(%-5level){FATAL=1;31, ERROR=31, WARN=33, INFO=32, DEBUG=36, TRACE=35} | %logger{36} - %msg%n"/>
+%d{HH:mm:ss.SSS}  %clr(%-5level){FATAL=1;31, ERROR=31, WARN=33, INFO=32, DEBUG=36, TRACE=35}  %logger{36} - %msg%n
 ```
 
-Codes ANSI disponibles :
-- `31` = Rouge
-- `32` = Vert
-- `33` = Jaune
-- `34` = Bleu
-- `35` = Magenta
-- `36` = Cyan
-- `1;31` = Rouge gras (pour le gras, préfixez avec `1;`)
+**Logs persistants** dans `Logs/` :
+- `server.log` — Tous les logs (rotatif par jour)
+- `errors.log` — Erreurs uniquement (rotatif par jour)
 
-### Logs persistants
-
-Les logs sont sauvegardés dans le dossier `Logs/` :
-- **server.log** : Tous les logs (rotatif par jour)
-- **errors.log** : Erreurs uniquement (rotatif par jour)
-
-Vous pouvez consulter l'historique même si la console ne l'affiche plus.
+---
 
 ## Arrêt gracieux du serveur (CTRL+C)
 
-### Comportement
+Quand vous appuyez sur **CTRL+C** dans la console :
 
-Quand vous appuyez sur **CTRL+C** dans la console du serveur :
+1. ✅ **Arrêt des nouvelles connexions** — Aucun nouveau joueur ne peut se connecter
+2. ✅ **Sauvegarde du monde** — Objets, montures, maisons, etc.
+3. ✅ **Déconnexion des joueurs** — Données sauvegardées en base
+4. ✅ **Fermeture des bases de données** — Connexions MySQL proprement fermées
 
-1. ✅ **Arrêt des nouvelles connexions** - Aucun nouveau joueur ne peut se connecter
-2. ✅ **Sauvegarde du monde** - Tous les objets, montures, maisons, etc. sont sauvegardés
-3. ✅ **Déconnexion des joueurs** - Les données de chaque joueur sont sauvegardées dans la base de données
-4. ✅ **Fermeture des bases de données** - Les connexions MySQL sont proprement fermées
-
-### Exemple de sortie de console
+**Avant** : CTRL+C = risque de rollback  
+**Après** : CTRL+C = sauvegarde complète + arrêt propre ✅
 
 ```
 ══════════════════════════════════════════════════════════
   SHUTDOWN SIGNAL RECEIVED - Saving data before closing...
 ══════════════════════════════════════════════════════════
-
-19:45:30.123 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
-19:45:30.124 | WARN  | org.starloco.locos.kernel.Main -   SERVER SHUTDOWN INITIATED - CTRL+C / Shutdown Signal
-19:45:30.125 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
-19:45:30.126 | INFO  | org.starloco.locos.kernel.Main - Step 1/4 - Stopping new connections...
-19:45:30.127 | INFO  | org.starloco.locos.kernel.Main - Step 2/4 - Saving world data (players, objects, mounts, etc)...
-19:45:30.500 | INFO  | org.starloco.locos.game.world.World - -> of accounts.
-19:45:30.600 | INFO  | org.starloco.locos.game.world.World - -> of players.
-19:45:30.750 | INFO  | org.starloco.locos.kernel.Main - Step 3/4 - Disconnecting all players and saving their data...
-19:45:31.000 | INFO  | org.starloco.locos.kernel.Main - Step 4/4 - Closing database connections...
-19:45:31.200 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
-19:45:31.201 | WARN  | org.starloco.locos.kernel.Main -   ✅ SERVER SHUTDOWN COMPLETE - All data saved
-19:45:31.202 | WARN  | org.starloco.locos.kernel.Main - ═══════════════════════════════════════════════════════════
-19:45:31.203 | INFO  | org.starloco.locos.kernel.Main - The server is now closed.
+Step 1/4 - Stopping new connections...
+Step 2/4 - Saving world data (players, objects, mounts, etc)...
+Step 3/4 - Disconnecting all players and saving their data...
+Step 4/4 - Closing database connections...
+  ✅ SERVER SHUTDOWN COMPLETE - All data saved
+══════════════════════════════════════════════════════════
 ```
 
-### Aucun risque de perte de données
-
-- **Avant** : Appuyer sur CTRL+C = risque de rollback (perte de données)
-- **Après** : Appuyer sur CTRL+C = sauvegarde complète + arrêt propre ✅
-
-Tous les changements effectués sur les joueurs, items, comptes, etc. avant l'arrêt sont **persistés en base de données**.
+---
 
 ## Documentation complémentaire
 
-Pour plus de détails sur l'arrêt du serveur, consultez :
-
-- 📄 **[GRACEFUL_SHUTDOWN.md](docs/GRACEFUL_SHUTDOWN.md)** - Guide complet d'arrêt (4 étapes, exemples, FAQ)
-- 📋 **[QUICK_SHUTDOWN.md](docs/QUICK_SHUTDOWN.md)** - Guide rapide en 30 secondes
-- 🔧 **[MODIFICATIONS_GRACEFUL_SHUTDOWN.md](docs/MODIFICATIONS_GRACEFUL_SHUTDOWN.md)** - Détails techniques des modifications
-- 📝 **[CHANGELOG_RECENT_COMMITS.md](docs/CHANGELOG_RECENT_COMMITS.md)** - Resume des 3 derniers commits
-
+- 📖 **[INDEX_DOCUMENTATION_V1.2.0.md](docs/INDEX_DOCUMENTATION_V1.2.0.md)** — Index complet de tous les documents
+- 📋 **[CHANGELOG_RECENT_COMMITS.md](docs/CHANGELOG_RECENT_COMMITS.md)** — Résumé des derniers commits
+- ⚡ **[CHANGELOG_PERF_V1.2.0.md](docs/CHANGELOG_PERF_V1.2.0.md)** — Détail des optimisations de performance v1.2.0
+- 🔄 **[QUICK_START_STAR_RESPAWN.md](docs/QUICK_START_STAR_RESPAWN.md)** — Système de respawn avec étoiles
+- 💾 **[SUMMARY_PERSISTENCE_STARS_V1.0.0.md](docs/SUMMARY_PERSISTENCE_STARS_V1.0.0.md)** — Persistance des étoiles après reboot
+- 🛑 **[GRACEFUL_SHUTDOWN.md](docs/GRACEFUL_SHUTDOWN.md)** — Guide complet d'arrêt propre (CTRL+C)
+- 📄 **[QUICK_SHUTDOWN.md](docs/QUICK_SHUTDOWN.md)** — Guide rapide d'arrêt en 30 secondes
+- 📝 **[README_LOGS.md](docs/README_LOGS.md)** — Logs colorés ANSI / Logback

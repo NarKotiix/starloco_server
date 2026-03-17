@@ -1,54 +1,39 @@
-# Changelog recent (3 derniers commits)
+# Changelog récent (4 derniers commits)
 
-Ce document resume les trois derniers commits appliques sur `main`.
+Ce document résume les quatre derniers commits appliqués sur `main`.
 
-## 1) `cd719aa` - Ajout de `*.snapshot` au `.gitignore`
+## 1) `f7837d1` — `perf: O(1) hash reverse lookup and simplify getCase`
 
-- **Type:** maintenance repository
-- **Fichier modifie:** `.gitignore`
-- **Impact:** les fichiers de snapshots locaux ne sont plus suivis par Git.
+- **Type :** performance
+- **Fichiers modifiés :** `CryptManager.java`, `GameMap.java`
+- **Impact :**
+  - Ajout d'une table inversée statique `HASH_REVERSE[128]` dans `CryptManager` : `getIntByHashedValue()` et `cellCode_To_ID()` passent de O(64) à **O(1)**.
+  - `getCase()` simplifié : suppression du fallback linéaire, accès direct au tableau `casesById[]`.
+  - Suppression de `ensureCaseCapacity()` (devenue inutile).
 
-## 2) `cbccc2a` - Ajout de `test_modifications.sh` au `.gitignore`
+## 2) `2e64144` — `perf: speed up map loading and case lookup`
 
-- **Type:** maintenance repository
-- **Fichier modifie:** `.gitignore`
-- **Impact:** le script de test local n'est plus pris en compte dans le versioning.
+- **Type :** performance
+- **Fichiers modifiés :** `GameMap.java`, `CryptManager.java`
+- **Impact :**
+  - Introduction du tableau `casesById[]` pour un lookup O(1) dans `getCase()`.
+  - Refactoring du constructeur `GameMap` : `loadMobPossibles()`, `extractMaxTeam()`, `parseMapPos()`, `applyForbidden()`.
+  - Parsing manuel par index (zéro allocation `String.split()`).
 
-## 3) `b35fc38` - Respawn etoiles + documentation v1.1.0
+## 3) `fa47140` — `perf: parallelize world monster group loading`
 
-- **Type:** fonctionnalite gameplay + documentation
-- **Fichiers applicatifs touches:**
-  - `src/org/starloco/locos/area/map/GameMap.java`
-  - `src/org/starloco/locos/fight/Fight.java`
-  - `src/org/starloco/locos/entity/monster/Monster.java`
-  - `src/org/starloco/locos/game/world/World.java`
-  - `src/org/starloco/locos/command/CommandAdmin.java`
-  - `src/org/starloco/locos/kernel/Main.java`
-- **Nouveaux documents:**
-  - `CHANGELOG_STAR_RESPAWN_V1.0.0.md`
-  - `QUICK_START_STAR_RESPAWN.md`
-  - `docs/INDEX_DOCUMENTATION_V1.1.0.md`
-  - `docs/MODIFICATIONS_STAR_RESPAWN.md`
-  - `docs/CONFIGURATION_STAR_RESPAWN.md`
-  - `docs/MAPS_CLASSIQUES_MULTIGROUPS.md`
-  - `docs/AMELIORATION_MAXGROUP.md`
-  - `docs/CHANGELOG_PERSISTENCE_STARS_V1.0.0.md`
-  - `docs/IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md`
-  - `docs/INDEX_PERSISTENCE_STARS_V1.0.0.md`
-  - `docs/SUMMARY_PERSISTENCE_STARS_V1.0.0.md`
-  - `docs/VERIFICATION_IMPLEMENTATION_V1.0.0.md`
-  - `docs/LOGIQUE_CORRIGÉE_V2.0.0.md`
-  - `docs/IMPLEMENTATION_FINALE_V3.0.0.md`
-  - `docs/V4_FINALE_SIMPLE.md`
-  - `docs/MANIFEST_PERSISTENCE_STARS_V1.0.0.md`
-  - `docs/TÂCHE_FINALE_COMPLÉTÉE.md`
-- **Impact fonctionnel:**
-  - gestion de sauvegarde/restauration des etoiles de groupes,
-  - gestion de delais de respawn selon etoiles,
-  - lot documentaire complet pour exploitation et debug.
+- **Type :** performance
+- **Fichiers modifiés :** `World.java`
+- **Impact :** chargement des groupes de monstres parallélisé via `ExecutorService` → démarrage multi-thread.
+
+## 4) `f48cf12` — `perf: accelerate database startup and fail-fast`
+
+- **Type :** performance
+- **Fichiers modifiés :** couche base de données, `World.java`
+- **Impact :** initialisation DB accélérée ; erreur de connexion MySQL détectée immédiatement (*fail-fast*).
 
 ---
 
-**Derniere mise a jour:** 2026-03-17
+> Détail complet dans [`CHANGELOG_PERF_V1.2.0.md`](CHANGELOG_PERF_V1.2.0.md).
 
-
+**Dernière mise à jour :** 17 Mars 2026
