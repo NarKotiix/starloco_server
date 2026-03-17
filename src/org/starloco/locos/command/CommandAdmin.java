@@ -2394,8 +2394,8 @@ public class CommandAdmin extends AdminUser {
             this.sendMessage("Vous avez envoyé un message à tout le serveur.");
             return;
         } else if (command.equalsIgnoreCase("MOVEMOB")) {
-            this.getPlayer().getCurMap().onMapMonsterDeplacement();
-            this.sendMessage("Vous avez deplacé un groupe de monstres.");
+            this.getPlayer().getCurMap().forceMapMonsterDeplacement();
+            this.sendMessage("Vous avez force le deplacement d'un groupe de monstres.");
             return;
         } else if (command.equalsIgnoreCase("ALLGIFTS")) {
             int template = -1, quantity = 0, jp = 0;

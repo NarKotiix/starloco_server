@@ -256,7 +256,18 @@ public class Config {
 
     private boolean getBool(Properties p, String key, boolean defaultValue) {
         String v = p.getProperty(key);
-        return (v != null) ? v.trim().equalsIgnoreCase("true") : defaultValue;
+        if (v == null) return defaultValue;
+
+        String value = v.trim().toLowerCase();
+        if (value.contains("#")) {
+            value = value.substring(0, value.indexOf('#')).trim();
+        }
+
+        if (value.equals("true") || value.equals("yes") || value.equals("oui") || value.equals("1"))
+            return true;
+        if (value.equals("false") || value.equals("no") || value.equals("non") || value.equals("0"))
+            return false;
+        return defaultValue;
     }
 
     private int[] parseIntArray(String[] parts) throws NumberFormatException {

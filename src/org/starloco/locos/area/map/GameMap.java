@@ -1664,6 +1664,16 @@ public class GameMap {
     }
 
     public void onMapMonsterDeplacement() {
+        this.onMapMonsterDeplacement(false);
+    }
+
+    public void forceMapMonsterDeplacement() {
+        this.onMapMonsterDeplacement(true);
+    }
+
+    private void onMapMonsterDeplacement(boolean force) {
+        if (!force && !Config.getInstance().mobGroupMovement)
+            return;
         if (getMobGroups().size() == 0)
             return;
         int RandNumb = Formulas.getRandomValue(1, getMobGroups().size());
