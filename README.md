@@ -95,6 +95,17 @@ Développé avec aide IA pour debugging et features.
 .\Start-Server.bat --debug
 ```
 
+### Option configuration : mouvement des groupes
+
+Vous pouvez activer/desactiver le mouvement automatique des groupes de monstres sur la map avec :
+
+```ini
+MOB_GROUP_MOVEMENT=true
+```
+
+- `true` = Oui (comportement normal)
+- `false` = Non (les groupes ne se deplacent plus automatiquement)
+
 **Le script `Start-Server.bat` active automatiquement :**
 - ✅ Encodage UTF-8 pour les caractères spéciaux (é, è, ê, etc.)
 - ✅ Support couleurs ANSI dans la console Windows

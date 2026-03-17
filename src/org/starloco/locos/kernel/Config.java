@@ -18,6 +18,7 @@ public class Config {
 
     // Gameplay rules
     public boolean autoReboot = true, allZaap = false, allEmote = false, onlyLocal = false, prestige = false;
+    public boolean mobGroupMovement = true;
     public int startMap = 0, startCell = 0;
 
     // Rates
@@ -105,6 +106,7 @@ public class Config {
         Main.mapAsBlocked    = getBool(p,  "MAP_AS_BLOCKED",   Main.mapAsBlocked);
         Main.fightAsBlocked  = getBool(p,  "FIGHT_AS_BLOCKED", Main.fightAsBlocked);
         Main.tradeAsBlocked  = getBool(p,  "TRADE_AS_BLOCKED", Main.tradeAsBlocked);
+        this.mobGroupMovement = getBool(p, "MOB_GROUP_MOVEMENT", this.mobGroupMovement);
 
         String startPlayer = p.getProperty("START_PLAYER");
         if (startPlayer != null) {
@@ -199,6 +201,7 @@ public class Config {
         props.setProperty("MAP_AS_BLOCKED",   "false");
         props.setProperty("FIGHT_AS_BLOCKED", "false");
         props.setProperty("TRADE_AS_BLOCKED", "false");
+        props.setProperty("MOB_GROUP_MOVEMENT", "true");
 
         // Configuration serveur
         props.setProperty("MESSAGE",        "Bienvenue dans l'émulation FREE d'entraide");

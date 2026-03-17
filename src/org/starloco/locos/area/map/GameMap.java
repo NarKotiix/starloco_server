@@ -87,7 +87,9 @@ public class GameMap {
                 }
 
                 for (GameMap map : World.world.getMaps()) {
-                    map.onMapMonsterDeplacement();
+                    if (Config.getInstance().mobGroupMovement) {
+                        map.onMapMonsterDeplacement();
+                    }
                     map.updateMobGroupsStars();
                     if (map.getMountPark() != null) map.getMountPark().startMoveMounts();
                 }
