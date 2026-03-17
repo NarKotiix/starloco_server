@@ -22,6 +22,13 @@ Réduire les risques de crash, états incohérents et flood CPU/logs via des paq
 - Les logs supprimés dans l'intervalle sont agrégés (`N suppression(s)`).
 - Permet la visibilité sécurité sans polluer les logs en cas de flood.
 
+### 4) Durcissement SQL (anti-injection)
+- Remplacement de requêtes concaténées par des `PreparedStatement` paramétrés sur les chemins exposés.
+- `PlayerData.exist(name)` passe de `getData("..." + name)` à `SELECT ... WHERE name = ?`.
+- `AccountData.loadPointsWithoutUsersDb(user)` passe de `getData("..." + user)` à `SELECT points ... WHERE account = ?`.
+- `AccountData.loadPointsWithUsersDb(account)` passe en double requête paramétrée (`account = ?`, puis `users.id = ?`).
+- Objectif : supprimer les vecteurs SQLi sur les entrées texte (`nom personnage`, `nom compte`).
+
 ## Impact attendu
 - Moins de NPE/erreurs liées aux cellules invalides.
 - Réduction du coût serveur sur spam de déplacements malformés.
@@ -31,6 +38,8 @@ Réduire les risques de crash, états incohérents et flood CPU/logs via des paq
 - `src/org/starloco/locos/game/GameClient.java`
 - `src/org/starloco/locos/common/CryptManager.java`
 - `src/org/starloco/locos/common/PathFinding.java`
+- `src/org/starloco/locos/database/statics/data/PlayerData.java`
+- `src/org/starloco/locos/database/statics/data/AccountData.java`
 
 ## Vérification rapide
 1. Envoyer des paquets déplacement valides: comportement identique.

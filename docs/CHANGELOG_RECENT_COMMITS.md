@@ -1,39 +1,51 @@
-# Changelog récent (4 derniers commits)
+# Changelog recent (5 derniers commits)
 
-Ce document résume les quatre derniers commits appliqués sur `main`.
+Ce document resume les cinq derniers commits appliques sur `main`.
 
-## 1) `f7837d1` — `perf: O(1) hash reverse lookup and simplify getCase`
+## 1) `adc64ef` - `security: harden movement parsing and add anti-flood guards`
 
-- **Type :** performance
-- **Fichiers modifiés :** `CryptManager.java`, `GameMap.java`
-- **Impact :**
-  - Ajout d'une table inversée statique `HASH_REVERSE[128]` dans `CryptManager` : `getIntByHashedValue()` et `cellCode_To_ID()` passent de O(64) à **O(1)**.
-  - `getCase()` simplifié : suppression du fallback linéaire, accès direct au tableau `casesById[]`.
-  - Suppression de `ensureCaseCapacity()` (devenue inutile).
+- **Type:** securite + performance
+- **Fichiers modifies:**
+  - `GameClient.java`
+  - `CryptManager.java`
+  - `PathFinding.java`
+  - `docs/SECURITY_HARDENING_V1.2.1.md`
+  - `docs/INDEX_DOCUMENTATION_V1.2.0.md`
+- **Impact:**
+  - fail-fast sur deplacements invalides,
+  - anti-flood leger cote client,
+  - logs de securite throttles,
+  - optimisation O(1) des cellules interdites.
 
-## 2) `2e64144` — `perf: speed up map loading and case lookup`
+## 2) `27321d2` - `docs: update README and docs for v1.2.0 perf release`
 
-- **Type :** performance
-- **Fichiers modifiés :** `GameMap.java`, `CryptManager.java`
-- **Impact :**
-  - Introduction du tableau `casesById[]` pour un lookup O(1) dans `getCase()`.
-  - Refactoring du constructeur `GameMap` : `loadMobPossibles()`, `extractMaxTeam()`, `parseMapPos()`, `applyForbidden()`.
-  - Parsing manuel par index (zéro allocation `String.split()`).
+- **Type:** documentation
+- **Impact:**
+  - README nettoye et modernise,
+  - nouvel index docs v1.2.0,
+  - nettoyage des anciens fichiers docs obsoletes.
 
-## 3) `fa47140` — `perf: parallelize world monster group loading`
+## 3) `f7837d1` - `perf: O(1) hash reverse lookup and simplify getCase`
 
-- **Type :** performance
-- **Fichiers modifiés :** `World.java`
-- **Impact :** chargement des groupes de monstres parallélisé via `ExecutorService` → démarrage multi-thread.
+- **Type:** performance
+- **Fichiers modifies:** `CryptManager.java`, `GameMap.java`
+- **Impact:** lookup HASH en O(1), simplification `getCase()`.
 
-## 4) `f48cf12` — `perf: accelerate database startup and fail-fast`
+## 4) `2e64144` - `perf: speed up map loading and case lookup`
 
-- **Type :** performance
-- **Fichiers modifiés :** couche base de données, `World.java`
-- **Impact :** initialisation DB accélérée ; erreur de connexion MySQL détectée immédiatement (*fail-fast*).
+- **Type:** performance
+- **Fichiers modifies:** `GameMap.java`, `CryptManager.java`
+- **Impact:** index des cases en O(1), parsing constructeur optimise.
+
+## 5) `fa47140` - `perf: parallelize world monster group loading`
+
+- **Type:** performance
+- **Fichier modifie:** `World.java`
+- **Impact:** chargement parallelise des groupes de monstres au demarrage.
 
 ---
 
-> Détail complet dans [`CHANGELOG_PERF_V1.2.0.md`](CHANGELOG_PERF_V1.2.0.md).
+- Detail perf: `CHANGELOG_PERF_V1.2.0.md`
+- Detail securite: `SECURITY_HARDENING_V1.2.1.md`
 
-**Dernière mise à jour :** 17 Mars 2026
+**Derniere mise a jour:** 17 Mars 2026

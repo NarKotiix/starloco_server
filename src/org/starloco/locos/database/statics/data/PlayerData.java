@@ -381,20 +381,22 @@ public class PlayerData extends AbstractDAO<Player> {
     }
 
     public boolean exist(String name) {
-        Result result = null;
+        PreparedStatement p = null;
+        ResultSet RS = null;
         boolean exist = false;
         try {
-            result = getData("SELECT COUNT(*) AS exist FROM players WHERE name LIKE '" + name + "';");
-            ResultSet RS = result.resultSet;
+            p = getPreparedStatement("SELECT COUNT(*) AS exist FROM players WHERE name = ?");
+            p.setString(1, name);
+            RS = p.executeQuery();
             if (RS.next()) {
                 if (RS.getInt("exist") > 0)
                     exist = true;
             }
-            System.out.println(exist);
         } catch (SQLException e) {
             super.sendError("PlayerData exist", e);
         } finally {
-            close(result);
+            close(RS);
+            close(p);
         }
         return exist;
     }

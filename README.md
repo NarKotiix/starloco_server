@@ -43,6 +43,7 @@ Développé avec aide IA pour debugging et features.
 - **Logs sécurité** : journalisation `WARN` throttlée (agrégation des suppressions) pour éviter le bruit en cas de flood.
 - **Parsing (`CryptManager`)** : garde-fous de bornes/format (hex, longueurs, cellules), réduction des chemins de crash.
 - **Pathfinding (`PathFinding`)** : vérification des cellules interdites en O(1) via masque `boolean[]`.
+- **SQL (`PlayerData`/`AccountData`)** : migration des points sensibles vers des requêtes paramétrées (`PreparedStatement`) pour limiter les risques d'injection SQL.
 
 ---
 

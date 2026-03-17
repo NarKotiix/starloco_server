@@ -168,19 +168,21 @@ public class AccountData extends AbstractDAO<Account> {
     }
 
     public int loadPointsWithoutUsersDb(String user) {
-        Result result = null;
+        PreparedStatement p = null;
+        ResultSet RS = null;
         int points = 0;
         try {
-            result = super.getData("SELECT * from accounts WHERE `account` LIKE '"
-                    + user + "'");
-            ResultSet RS = result.resultSet;
+            p = getPreparedStatement("SELECT `points` FROM `accounts` WHERE `account` = ?");
+            p.setString(1, user);
+            RS = p.executeQuery();
             if (RS.next()) {
                 points = RS.getInt("points");
             }
         } catch (SQLException e) {
             super.sendError("AccountData loadPoints", e);
         } finally {
-            close(result);
+            close(RS);
+            close(p);
         }
         return points;
     }
@@ -200,45 +202,58 @@ public class AccountData extends AbstractDAO<Account> {
     }
 
     public int loadPointsWithUsersDb(String account) {
-        Result result = null;
+        PreparedStatement p = null;
+        ResultSet RS = null;
         int points = 0, user = -1;
         try {
-            result = super.getData("SELECT account, users FROM `accounts` WHERE `account` LIKE '" + account + "'");
-            ResultSet RS = result.resultSet;
+            p = getPreparedStatement("SELECT `users` FROM `accounts` WHERE `account` = ?");
+            p.setString(1, account);
+            RS = p.executeQuery();
             if (RS.next()) user = RS.getInt("users");
-            close(result);
+            close(RS);
+            close(p);
+            RS = null;
+            p = null;
 
-            if(user == -1) {
-                result = super.getData("SELECT id, points FROM `users` WHERE `id` = " + user + ";");
-                RS = result.resultSet;
-                if (RS.next()) points = RS.getInt("users");
+            if(user != -1) {
+                p = getPreparedStatement("SELECT `points` FROM `users` WHERE `id` = ?");
+                p.setInt(1, user);
+                RS = p.executeQuery();
+                if (RS.next()) points = RS.getInt("points");
             }
         } catch (SQLException e) {
             super.sendError("AccountData loadPoints", e);
         } finally {
-            close(result);
+            close(RS);
+            close(p);
         }
         return points;
     }
 
     public void updatePointsWithUsersDb(int id, int points) {
         PreparedStatement p = null;
+        ResultSet RS = null;
         int user = -1;
         try {
-            Result result = super.getData("SELECT guid, users FROM `accounts` WHERE `guid` LIKE '" + id + "'");
-            ResultSet RS = result.resultSet;
+            p = getPreparedStatement("SELECT `users` FROM `accounts` WHERE `guid` = ?");
+            p.setInt(1, id);
+            RS = p.executeQuery();
             if (RS.next()) user = RS.getInt("users");
-            close(result);
+            close(RS);
+            close(p);
+            RS = null;
+            p = null;
 
             if(user != -1) {
                 p = getPreparedStatement("UPDATE `users` SET `points` = ? WHERE `id` = ?;");
                 p.setInt(1, points);
-                p.setInt(2, id);
+                p.setInt(2, user);
                 execute(p);
             }
         } catch (SQLException e) {
             super.sendError("AccountData updatePoints", e);
         } finally {
+            close(RS);
             close(p);
         }
     }
