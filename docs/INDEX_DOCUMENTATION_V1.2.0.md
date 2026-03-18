@@ -1,11 +1,17 @@
-# 📖 INDEX DOCUMENTATION — v1.2.0
+# 📖 INDEX DOCUMENTATION — v1.3.0
 
-> Dernière mise à jour : 17 Mars 2026  
+> Dernière mise à jour : 18 Mars 2026  
 > Version serveur : 1.0.0
 
 ---
 
 ## 📋 Documents actifs
+
+### 🧹 Qualité de code & Optimisations (v1.3.0 — nouveau)
+
+| Fichier | Description | Audience | Durée |
+|---------|-------------|----------|-------|
+| [`CHANGELOG_CODE_QUALITY_V1.3.0.md`](CHANGELOG_CODE_QUALITY_V1.3.0.md) | 27 corrections : bugs String `==`, StringBuilder, logging, refactoring | Dev | 15 min |
 
 ### ⚡ Performances (v1.2.0 — nouveau)
 
@@ -115,6 +121,5 @@ Ces fichiers ont été supprimés car obsolètes ou intermédiaires :
 
 ---
 
-**Version :** 1.2.0  
-**Date :** 17 Mars 2026
-
+**Version :** 1.3.0  
+**Date :** 18 Mars 2026

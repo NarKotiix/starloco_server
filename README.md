@@ -47,18 +47,42 @@ Développé avec aide IA pour debugging et features.
 
 ---
 
-## Mises à jour récentes (6 derniers commits)
+## Qualité de code [@NarKotiix — v1.3.0]
 
-| Commit | Type | Résumé |
-|--------|------|--------|
-| `9fccc52` | ✨ stars/debug | Traces détaillées du gain d'étoiles (map/groupe/elapsed/raison) |
-| `6d42388` | ✨ admin/debug | Logs DEBUG lors des commandes `STARS CLEARMAP` / `STARS CLEARALL` |
-| `7a0f4df` | ✨ exchange/logging | Filtrage conditionnel des logs Exchange selon le paquet |
-| `f558098` | ✨ admin | Ajout de `STARS CLEARMAP` (reset étoiles map courante) |
-| `028927d` | ✨ stars | Ajout de `resetStarBonus()` (étoiles + timestamp) |
-| `25e10ec` | ✨ admin | Ajout de `STARS CLEARALL` (reset global des étoiles) |
+Revue complète de `GameClient.java` (7 800 lignes) et `GameCase.java` (1 200 lignes) — **30 corrections** appliquées le 18 Mars 2026 :
 
-> Détail complet → [`docs/CHANGELOG_RECENT_COMMITS.md`](docs/CHANGELOG_RECENT_COMMITS.md), [`docs/CHANGELOG_PERF_V1.2.0.md`](docs/CHANGELOG_PERF_V1.2.0.md) et [`docs/SECURITY_HARDENING_V1.2.1.md`](docs/SECURITY_HARDENING_V1.2.1.md)
+### 🔴 Bugs corrigés
+- **`tchat()`** : `msg == lastMsg` (comparaison de références) → `msg.equals(lastMsg)` — la protection anti-doublon de messages privés n'avait **jamais** fonctionné.
+- **`movementItemOrKamas()`** : `split("\\|")[2] == "0"` → `"0".equals(...)` — vérification du prix de vente HDV toujours ignorée (mise en vente à 0 kamas possible).
+
+### ⚡ Performance
+- `generateKey()`, `getGifts()`, `ZaapiList`, `newStats` : concaténations `+=` en boucle (O(n²)) → `StringBuilder`.
+- `removePlayer()` / `removeFighter()` : double parcours `contains()` + `remove()` → `remove()` seul.
+- `getPlayers()` : `new ArrayList<>()` → `Collections.emptyList()` (zéro allocation).
+- `buy()` : `Integer.valueOf()` → `Integer.parseInt()` (élimination du boxing).
+
+### 🧹 Qualité
+- **27 `e.printStackTrace()`** remplacés par des appels logger Logback structurés avec contexte joueur.
+- 3 `System.out.println` de débogage → `logger.debug`.
+- 2 imports inutilisés supprimés (`javax.xml.crypto.Data`, `java.util.Collection`).
+- `worldInfos()` : cases `J`/`V` identiques fusionnées (fall-through).
+- `prismFight()` : 3 blocs `try-catch` séparés → 1 seul.
+- `InterruptedException` : ajout de `Thread.currentThread().interrupt()` (conformité threading).
+- `craftsmenJobIds` : `public static` → `private static final` + accesseur `getCraftsmenJobIds()`.
+- `isValidPlayerName()` extrait : ~70 lignes dupliquées entre `addCharacter()` et `changeName()` → méthode partagée.
+
+---
+
+## Mises à jour récentes
+
+| Date | Version | Type | Résumé |
+|------|---------|------|--------|
+| 18/03/2026 | **v1.3.0** | 🧹 qualité | 30 corrections GameClient + GameCase : bugs String `==`, StringBuilder, logging, refactoring |
+| 17/03/2026 | v1.2.1 | 🔐 sécurité | Fail-fast déplacements, anti-flood, logs throttlés |
+| 17/03/2026 | v1.2.0 | ⚡ perf | CryptManager O(1), GameMap lookup O(1), DB fail-fast |
+| — | v1.1.0 | ✨ feature | Respawn étoiles, persistance, commandes admin STARS |
+
+> Détail complet → [`docs/CHANGELOG_CODE_QUALITY_V1.3.0.md`](docs/CHANGELOG_CODE_QUALITY_V1.3.0.md)
 
 ---
 
@@ -172,6 +196,7 @@ Step 4/4 - Closing database connections...
 
 ## Documentation complémentaire
 
+- 🧹 **[CHANGELOG_CODE_QUALITY_V1.3.0.md](docs/CHANGELOG_CODE_QUALITY_V1.3.0.md)** — 30 corrections qualité : bugs String `==`, StringBuilder, logging, refactoring (v1.3.0)
 - 📖 **[INDEX_DOCUMENTATION_V1.2.0.md](docs/INDEX_DOCUMENTATION_V1.2.0.md)** — Index complet de tous les documents
 - 📋 **[CHANGELOG_RECENT_COMMITS.md](docs/CHANGELOG_RECENT_COMMITS.md)** — Résumé des derniers commits
 - ⚡ **[CHANGELOG_PERF_V1.2.0.md](docs/CHANGELOG_PERF_V1.2.0.md)** — Détail des optimisations de performance v1.2.0
