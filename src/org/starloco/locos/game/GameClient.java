@@ -1,12 +1,3 @@
-                // Ne pas ajouter l'action dans la file : le serveur a déjà traité le déplacement.
-                // Quand le client envoie GKA, l'action sera introuvable → retour immédiat sans erreur.
-                // Envoyer l'animation de déplacement à tout le monde (y compris le joueur)
-                // AVANT de déplacer, afin que la cellule de départ soit correcte dans le paquet
-                SocketManager.GAME_SEND_GA_PACKET_TO_MAP(this.player.getCurMap(), "" + GA.id, 1,
-                        this.player.getId() + "", "a" + World.world.getCryptManager().cellID_To_Code(this.player.getCurCell().getId()) + path);
-
-                // Mettre à jour la position côté serveur immédiatement (sans attendre le GKA client)
-                this.player.getCurCell().removePlayer(this.player);
 package org.starloco.locos.game;
 
 import org.apache.mina.core.session.IoSession;
@@ -4656,6 +4647,8 @@ public class GameClient {
                 removeAction(GA);
                 SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(this.player.getCurMap(), this.player.getId());
                 SocketManager.GAME_SEND_ADD_PLAYER_TO_MAP(this.player.getCurMap(), this.player);
+                if (targetCell.getObject() != null) {
+                    if (Main.modDebug) {
                         World.world.logger.error("#3# Object Interactif : " + targetCell.getObject().getId());
                         World.world.logger.error("#3# On cellule : " + targetCell.getId());
                     }
