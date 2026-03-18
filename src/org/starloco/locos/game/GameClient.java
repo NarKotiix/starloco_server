@@ -4636,12 +4636,13 @@ public class GameClient {
                     return;
                 }
 
-                //On définie la case et on ajthise le this.playernnage sur la case
+                // Déplacement instantané : pas d'animation de marche.
                 this.player.setCurCell(nextCell);
                 this.player.set_orientation(orientation);
                 this.player.getCurCell().addPlayer(this.player);
                 if (!this.player.isGhost())
                     this.player.setAway(false);
+                this.player.setSitted(false);
                 this.player.getCurMap().onPlayerArriveOnCell(this.player, this.player.getCurCell().getId());
                 if (targetCell.getObject() != null) {
                     if (Main.modDebug) {

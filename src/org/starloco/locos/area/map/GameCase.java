@@ -1042,11 +1042,16 @@ public class GameCase {
 
                 GameMap mapHouse = World.world.getMap((short) house.getHouseMapId());
                 if (mapHouse == null) {
+                    World.world.logger.warn("[HOUSE_DEBUG] Entrée impossible: map destination introuvable houseId={} doorMap={} doorCell={} destMap={} destCell={} player={}",
+                            house.getId(), house.getMapId(), house.getCellId(), house.getHouseMapId(), house.getHouseCellId(), player.getName());
                     SocketManager.GAME_SEND_MESSAGE(player, "La maison est cassée.. Contactez un administrateur sur le forum.");
                     return;
                 }
                 GameCase caseHouse = mapHouse.getCase(house.getHouseCellId());
                 if (caseHouse == null || !caseHouse.isWalkable(true)) {
+                    World.world.logger.warn("[HOUSE_DEBUG] Entrée impossible: case destination invalide houseId={} doorMap={} doorCell={} destMap={} destCell={} caseExists={} walkable={} player= {}",
+                            house.getId(), house.getMapId(), house.getCellId(), house.getHouseMapId(), house.getHouseCellId(),
+                            caseHouse != null, caseHouse != null && caseHouse.isWalkable(true), player.getName());
                     SocketManager.GAME_SEND_MESSAGE(player, "La maison est cassée.. Contactez un administrateur sur le forum.");
                     return;
                 }
