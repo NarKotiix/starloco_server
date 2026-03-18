@@ -1,3 +1,12 @@
+                // Ne pas ajouter l'action dans la file : le serveur a déjà traité le déplacement.
+                // Quand le client envoie GKA, l'action sera introuvable → retour immédiat sans erreur.
+                // Envoyer l'animation de déplacement à tout le monde (y compris le joueur)
+                // AVANT de déplacer, afin que la cellule de départ soit correcte dans le paquet
+                SocketManager.GAME_SEND_GA_PACKET_TO_MAP(this.player.getCurMap(), "" + GA.id, 1,
+                        this.player.getId() + "", "a" + World.world.getCryptManager().cellID_To_Code(this.player.getCurCell().getId()) + path);
+
+                // Mettre à jour la position côté serveur immédiatement (sans attendre le GKA client)
+                this.player.getCurCell().removePlayer(this.player);
 package org.starloco.locos.game;
 
 import org.apache.mina.core.session.IoSession;
@@ -4612,6 +4621,8 @@ public class GameClient {
             if (result != -1000 && result < 0)
                 result = -result;
 
+                this.player.getCurCell().removePlayer(this.player);
+                SocketManager.GAME_SEND_BN(this);
             //On prend en compte le nouveau path
             path = pathRef.get();
             //Si le path est invalide
@@ -4621,22 +4632,19 @@ public class GameClient {
             //On sauvegarde le path dans la variable
             GA.args = path;
             if (this.player.walkFast || this.isConfiguredFastWalkEnabled()) {
-                this.player.getCurCell().removePlayer(this.player);
-                SocketManager.GAME_SEND_BN(this);
-                //On prend la case ciblée
                 GameCase nextCell = this.resolveMovementCell(this.player.getCurMap(), path.substring(path.length() - 2));
                 targetCell = this.resolveMovementCell(this.player.getCurMap(), GA.packet.substring(GA.packet.length() - 2));
                 int orientation = this.resolveOrientationFromPath(path);
 
-                if (nextCell == null || targetCell == null || orientation < 0) {
-                    this.recordInvalidMove();
-                    this.logInvalidMove("walkfast_invalid_cell_or_orientation");
-                    SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
-                    removeAction(GA);
-                    return;
-                }
-
                 // Déplacement instantané : pas d'animation de marche.
+
+                // Envoyer l'animation de déplacement à tout le monde (y compris le joueur)
+                // AVANT de déplacer, afin que la cellule de départ soit correcte dans le paquet
+                SocketManager.GAME_SEND_GA_PACKET_TO_MAP(this.player.getCurMap(), "" + GA.id, 1,
+                        this.player.getId() + "", "a" + World.world.getCryptManager().cellID_To_Code(this.player.getCurCell().getId()) + path);
+
+                // Mettre à jour la position côté serveur immédiatement (sans attendre le GKA client)
+                this.player.getCurCell().removePlayer(this.player);
                 this.player.setCurCell(nextCell);
                 this.player.set_orientation(orientation);
                 this.player.getCurCell().addPlayer(this.player);
@@ -4644,18 +4652,18 @@ public class GameClient {
                     this.player.setAway(false);
                 this.player.setSitted(false);
                 this.player.getCurMap().onPlayerArriveOnCell(this.player, this.player.getCurCell().getId());
-                if (targetCell.getObject() != null) {
-                    if (Main.modDebug) {
+                SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
+                removeAction(GA);
+                SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(this.player.getCurMap(), this.player.getId());
+                SocketManager.GAME_SEND_ADD_PLAYER_TO_MAP(this.player.getCurMap(), this.player);
                         World.world.logger.error("#3# Object Interactif : " + targetCell.getObject().getId());
                         World.world.logger.error("#3# On cellule : " + targetCell.getId());
                     }
                     InteractiveObject.getActionIO(this.player, targetCell, targetCell.getObject().getId());
                     InteractiveObject.getSignIO(this.player, targetCell.getId(), targetCell.getObject().getId());
                 }
-                SocketManager.GAME_SEND_GA_PACKET(this, "", "0", "", "");
-                removeAction(GA);
-                SocketManager.GAME_SEND_ERASE_ON_MAP_TO_MAP(this.player.getCurMap(), this.player.getId());
-                SocketManager.GAME_SEND_ADD_PLAYER_TO_MAP(this.player.getCurMap(), this.player);
+                // Ne pas ajouter l'action dans la file : le serveur a déjà traité le déplacement.
+                // Quand le client envoie GKA, l'action sera introuvable → retour immédiat sans erreur.
                 return;
             } else
                 SocketManager.GAME_SEND_GA_PACKET_TO_MAP(this.player.getCurMap(), "" + GA.id, 1, this.player.getId() + "", "a" + World.world.getCryptManager().cellID_To_Code(this.player.getCurCell().getId()) + path);
