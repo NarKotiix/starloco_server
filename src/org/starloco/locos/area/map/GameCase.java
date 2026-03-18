@@ -43,7 +43,7 @@ public class GameCase {
     private boolean _activo;
     
     // By Coding Mestre - [FIX] Professions runes are now properly working Close #35
-    public static Map<List<Integer>, List<Integer>> craftsmenJobIds = new HashMap<>(); // keys are the map's ids and the values are the jobs/professions ids
+    private static final Map<List<Integer>, List<Integer>> craftsmenJobIds = new HashMap<>(); // keys are the map's ids and the values are the jobs/professions ids
 
     static {
         craftsmenJobIds.put(Arrays.asList(8708, 1350, 898, 1076, 6152), Collections.singletonList(2)); // Lumberjacks workshops
@@ -66,6 +66,11 @@ public class GameCase {
         craftsmenJobIds.put(Collections.singletonList(2198), Arrays.asList(43,46,47,45,44,48,49,50)); // mage workshop, but only for weapons
     }
 
+
+    /** Retourne la Map immuable des ateliers d'artisans (clés = IDs de map, valeurs = IDs de métier). */
+    public static Map<List<Integer>, List<Integer>> getCraftsmenJobIds() {
+        return craftsmenJobIds;
+    }
 
     public GameCase(GameMap map, int id, boolean walkable, boolean loS, int objId) {
         this.id = id;
@@ -143,15 +148,10 @@ public class GameCase {
         return this.loS;
     }
 
-    public boolean blockLoS()
-    {
-      if(this.fighters==null)
-        return this.loS;
-      boolean hide=true;
-      for(Fighter fighter : this.fighters)
-        if(!fighter.isHide())
-          hide=false;
-      return hide;
+    public boolean blockLoS() {
+        if (this.fighters == null)
+            return this.loS;
+        return this.fighters.stream().allMatch(Fighter::isHide);
     }
 
     public void addPlayer(Player player) {
@@ -163,15 +163,14 @@ public class GameCase {
 
     public void removePlayer(Player player) {
         if (this.players != null) {
-            if(this.players.contains(player))
-                this.players.remove(player);
+            this.players.remove(player);
             if (this.players.isEmpty()) this.players = null;
         }
     }
 
     public List<Player> getPlayers() {
         if (this.players == null)
-            return new ArrayList<>();
+            return Collections.emptyList();
         return players;
     }
 
@@ -184,8 +183,7 @@ public class GameCase {
 
     public void removeFighter(Fighter fighter) {
         if (this.fighters != null) {
-            if(this.fighters.contains(fighter))
-                this.fighters.remove(fighter);
+            this.fighters.remove(fighter);
             if (this.fighters.isEmpty())
             	this.fighters = null;
         }
@@ -825,7 +823,7 @@ public class GameCase {
             actionID = Integer.parseInt(GA.args.split(";")[1]);
             CcellID = Short.parseShort(GA.args.split(";")[0]);
         } catch (Exception e) {
-            e.printStackTrace();
+            World.world.logger.error("startAction: erreur lecture actionID/cellID pour joueur {} : {}", player.getName(), e.getMessage());
         }
         if (actionID == -1) {
             SocketManager.GAME_SEND_MESSAGE(player, "Erreur action id null.");
@@ -925,7 +923,6 @@ public class GameCase {
                 break;
 
             case 157: //Zaapis
-                String ZaapiList = "";
                 String[] Zaapis;
                 int count = 0;
                 int price = 20;
@@ -946,13 +943,12 @@ public class GameCase {
                 }
 
                 if (Zaapis.length > 0) {
+                    StringBuilder sbZaapi = new StringBuilder();
                     for (String s : Zaapis) {
-                        if (count == Zaapis.length)
-                            ZaapiList += s + ";" + price;
-                        else
-                            ZaapiList += s + ";" + price + "|";
+                        sbZaapi.append(s).append(";").append(price).append("|");
                         count++;
                     }
+                    String ZaapiList = sbZaapi.toString();
                     player.setExchangeAction(new ExchangeAction<>(ExchangeAction.IN_ZAPPI, 0));
                     SocketManager.GAME_SEND_ZAAPI_PACKET(player, ZaapiList);
                 }
@@ -966,7 +962,7 @@ public class GameCase {
                     park.getEtable().stream().filter(mount -> mount != null).forEach(mount -> mount.checkBaby(player));
                     park.getListOfRaising().stream().filter(integer -> World.world.getMountById(integer) != null).forEach(integer -> World.world.getMountById(integer).checkBaby(player));
                 } catch(Exception e) {
-                    e.printStackTrace();
+                    World.world.logger.error("startAction: erreur vérification bébé enclos pour {} : {}", player.getName(), e.getMessage(), e);
                 }
 
                 if(park.getGuild() != null)
@@ -1133,8 +1129,8 @@ public class GameCase {
 
     // By Coding Mestre - [FIX] - Craftmens list now shows the appropriate jobs/professions Close #34
     private String getCraftsmenJobIdsByMap(short mapId) {
-        Integer mapIdAsInteger = Integer.valueOf(mapId);
-        
+        int mapIdAsInteger = mapId;
+
         List<String> availableJobsForCurrentMap = craftsmenJobIds
                 .entrySet()
                 .stream().
@@ -1152,7 +1148,7 @@ public class GameCase {
         try {
             actionID = Integer.parseInt(GA.args.split(";")[1]);
         } catch (Exception e) {
-            e.printStackTrace();
+            World.world.logger.error("finishAction: erreur lecture actionID pour joueur {} : {}", perso.getName(), e.getMessage());
         }
         if (actionID == -1)
             return;

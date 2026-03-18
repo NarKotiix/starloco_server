@@ -60,10 +60,8 @@ import org.starloco.locos.util.NameGenerator;
 import org.starloco.locos.util.TimerWaiter;
 import org.starloco.locos.util.lang.Lang;
 
-import javax.xml.crypto.Data;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.HashMap;
@@ -301,7 +299,7 @@ public class GameClient {
 
     // Equipement rapide
     private void parseQuickSetPacket(String packet) {
-        System.out.println(packet);
+        World.world.logger.debug("[QuickSet] packet reçu: {}", packet);
         switch (packet.charAt(1)) {
             case 'E': // création d'un equipement rapide
                 createQuickSet(packet);
@@ -341,7 +339,7 @@ public class GameClient {
         Map<Integer, GameObject> newAO = new HashMap<Integer, GameObject>();
         StringBuilder stringObj = new StringBuilder();
         if(oldQS == null){
-            System.out.println("Création");
+            World.world.logger.debug("[QuickSet] Création pour joueur {}", this.player.getName());
             QuickSet newQS = new QuickSet(this.player,posid,iconid,"",name);
             for(GameObject obj : this.player.GetequipedObjects().values()){
                 if(obj!=null) {
@@ -358,7 +356,7 @@ public class GameClient {
             SocketManager.GAME_SEND_xC_PAQUET(player,newQS);
         }
         else{
-            System.out.println("Modification");
+            World.world.logger.debug("[QuickSet] Modification pour joueur {}", this.player.getName());
             oldQS.setName(name);
             oldQS.setIconId(iconid);
             for(GameObject obj : this.player.GetequipedObjects().values()){
@@ -691,52 +689,46 @@ public class GameClient {
 		SocketManager.GAME_SEND_Im_PACKET(this.player, "021;" + 1 + "~" + mimibiote.getTemplate().getId());
     }
 
+    /**
+     * Valide le nom d'un personnage selon les règles du serveur.
+     * @param name           nom à valider (en minuscules pour addCharacter, mixte pour changeName)
+     * @param allowUpperCase si true, les lettres majuscules sont acceptées
+     * @return true si le nom respecte toutes les contraintes
+     */
+    private static boolean isValidPlayerName(String name, boolean allowUpperCase) {
+        if (name.length() > 20 || name.length() < 3
+                || name.contains("modo") || name.contains("admin")
+                || name.contains("putain") || name.contains("administrateur") || name.contains("puta")) {
+            return false;
+        }
+        int tiretCount = 0;
+        char exLetterA = ' ';
+        char exLetterB = ' ';
+        for (char curLetter : name.toCharArray()) {
+            boolean isLetter = (curLetter >= 'a' && curLetter <= 'z')
+                    || (allowUpperCase && curLetter >= 'A' && curLetter <= 'Z');
+            if (!isLetter && curLetter != '-') return false;
+            if (curLetter == exLetterA && curLetter == exLetterB) return false;
+            if (curLetter >= 'a' && curLetter <= 'z') {
+                exLetterA = exLetterB;
+                exLetterB = curLetter;
+            }
+            if (curLetter == '-') {
+                if (tiretCount >= 1) return false;
+                tiretCount++;
+            }
+        }
+        return true;
+    }
+
     private void addCharacter(String packet) {
         String[] infos = packet.substring(2).split("\\|");
         if (Database.getStatics().getPlayerData().exist(infos[0])) {
             SocketManager.GAME_SEND_NAME_ALREADY_EXIST(this);
             return;
         }
-        //Validation du nom du this.playernnage
-        boolean isValid = true;
-        String name = infos[0].toLowerCase();
-        //Vérifie d'abord si il contient des termes définit
-        if (name.length() > 20 || name.length() < 3 || name.contains("modo")
-                || name.contains("admin") || name.contains("putain")
-                || name.contains("administrateur") || name.contains("puta")) {
-            isValid = false;
-        }
-
-        //Si le nom passe le test, on vérifie que les caractére entré sont correct.
-        if (isValid) {
-            int tiretCount = 0;
-            char exLetterA = ' ';
-            char exLetterB = ' ';
-            for (char curLetter : name.toCharArray()) {
-                if (!((curLetter >= 'a' && curLetter <= 'z') || curLetter == '-')) {
-                    isValid = false;
-                    break;
-                }
-                if (curLetter == exLetterA && curLetter == exLetterB) {
-                    isValid = false;
-                    break;
-                }
-                if (curLetter >= 'a' && curLetter <= 'z') {
-                    exLetterA = exLetterB;
-                    exLetterB = curLetter;
-                }
-                if (curLetter == '-') {
-                    if (tiretCount >= 1) {
-                        isValid = false;
-                        break;
-                    } else {
-                        tiretCount++;
-                    }
-                }
-            }
-        }
-        //Si le nom est invalide
-        if (!isValid) {
+        // Validation du nom en minuscules (lettres a-z et tiret uniquement)
+        if (!isValidPlayerName(infos[0].toLowerCase(), false)) {
             SocketManager.GAME_SEND_NAME_ALREADY_EXIST(this);
             return;
         }
@@ -787,7 +779,7 @@ public class GameClient {
 
             }
         } catch (NumberFormatException e) {
-            e.printStackTrace();
+            World.world.logger.error("boost: format invalide pour joueur {} : {}", this.player != null ? this.player.getName() : "inconnu", e.getMessage());
         }
     }
 
@@ -824,16 +816,17 @@ public class GameClient {
         if (gifts == null)
             return;
         if (!gifts.isEmpty()) {
-            String data = "";
+            StringBuilder dataBuilder = new StringBuilder();
             int item = -1;
             for (String object : gifts.split(";")) {
                 int id = Integer.parseInt(object.split(",")[0]), qua = Integer.parseInt(object.split(",")[1]);
-
-                if (data.isEmpty()) data = "1~" + Integer.toString(id, 16) + "~" + Integer.toString(qua, 16) + "~~" + World.world.getObjTemplate(id).getStrTemplate();
-                else data += ";1~" + Integer.toString(id, 16) + "~" + Integer.toString(qua, 16) + "~~" + World.world.getObjTemplate(id).getStrTemplate();
+                if (dataBuilder.length() > 0) dataBuilder.append(";");
+                dataBuilder.append("1~").append(Integer.toString(id, 16))
+                        .append("~").append(Integer.toString(qua, 16))
+                        .append("~~").append(World.world.getObjTemplate(id).getStrTemplate());
                 if (item == -1) item = id;
             }
-            SocketManager.GAME_SEND_Ag_PACKET(this, item, data);
+            SocketManager.GAME_SEND_Ag_PACKET(this, item, dataBuilder.toString());
         }
     }
 
@@ -987,7 +980,7 @@ public class GameClient {
                 this.getSession().write("ATK0");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            World.world.logger.error("sendTicket: erreur authentification : {}", e.getMessage(), e);
             SocketManager.GAME_SEND_ATTRIBUTE_FAILED(this);
             this.kick();
         }
@@ -998,10 +991,10 @@ public class GameClient {
     }
 
     private static String generateKey() {
-        String key = "";
+        StringBuilder key = new StringBuilder(32);
         for (int i = 0; i < 32; i++)
-            key = key.concat(String.valueOf(CryptManager.HASH[Formulas.random.nextInt(CryptManager.HASH.length - 1)]));
-        return key;
+            key.append(CryptManager.HASH[Formulas.random.nextInt(CryptManager.HASH.length - 1)]);
+        return key.toString();
     }
     /** Fin Account Packet **/
 
@@ -1317,7 +1310,7 @@ public class GameClient {
                                 + target.getName());
                         return;
                     }
-                    if (msg == lastMsg) {
+                    if (msg.equals(lastMsg)) {
                         SocketManager.GAME_SEND_Im_PACKET(this.player, "184");
                         return;
                     }
@@ -1482,9 +1475,6 @@ public class GameClient {
     private void worldInfos(String packet) {
         switch (packet.charAt(2)) {
             case 'J':
-                SocketManager.SEND_CW_INFO_WORLD_CONQUETE(this.player, World.world.PrismesGeoposition(1));
-                SocketManager.SEND_CW_INFO_WORLD_CONQUETE(this.player, World.world.PrismesGeoposition(2));
-                break;
             case 'V':
                 SocketManager.SEND_CW_INFO_WORLD_CONQUETE(this.player, World.world.PrismesGeoposition(1));
                 SocketManager.SEND_CW_INFO_WORLD_CONQUETE(this.player, World.world.PrismesGeoposition(2));
@@ -1517,22 +1507,14 @@ public class GameClient {
                 if (prism == null)
                     return;
                 int FightID = -1;
-                try {
-                    FightID = prism.getFightId();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
                 short MapID = -1;
-                try {
-                    MapID = prism.getMap();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
                 int cellID = -1;
                 try {
+                    FightID = prism.getFightId();
+                    MapID = prism.getMap();
                     cellID = prism.getCell();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    World.world.logger.error("prismFight: erreur récupération données prisme {} : {}", PrismeID, e.getMessage(), e);
                 }
                 if (PrismeID == -1 || FightID == -1 || MapID == -1 || cellID == -1)
                     return;
@@ -1787,14 +1769,18 @@ public class GameClient {
                         }
                     }
                 } catch(Exception e) {
-                    e.printStackTrace();
+                    World.world.logger.error("response: erreur traitement trousseau pour {} : {}", this.player.getName(), e.getMessage(), e);
                 }
 
                 if (answerId == 6605 && !statsReplace.isEmpty()) {
-                    String newStats = "";
-                    for (String i : stats.split(","))
-                        if (!i.equals(statsReplace))
-                            newStats += (newStats.isEmpty() ? i : "," + i);
+                    StringBuilder newStatsBuilder = new StringBuilder();
+                    for (String i : stats.split(",")) {
+                        if (!i.equals(statsReplace)) {
+                            if (newStatsBuilder.length() > 0) newStatsBuilder.append(",");
+                            newStatsBuilder.append(i);
+                        }
+                    }
+                    String newStats = newStatsBuilder.toString();
                     this.player.getItemTemplate(10207).getTxtStat().remove(Constant.STATS_NAME_DJ);
                     this.player.getItemTemplate(10207).getTxtStat().put(Constant.STATS_NAME_DJ, newStats);
                 }
@@ -1826,7 +1812,7 @@ public class GameClient {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            World.world.logger.error("response: erreur traitement réponse NPC pour {} : {}", this.player != null ? this.player.getName() : "inconnu", e.getMessage(), e);
             this.player.setIsOnDialogAction(-1);
             this.player.setExchangeAction(null);
             SocketManager.GAME_SEND_END_DIALOG_PACKET(this);
@@ -1980,10 +1966,10 @@ public class GameClient {
                 int qua = 0;
                 int price = 0;
                 try {
-                    itemID = Integer.valueOf(infos[0]);
-                    qua = Integer.valueOf(infos[1]);
+                    itemID = Integer.parseInt(infos[0]);
+                    qua = Integer.parseInt(infos[1]);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    World.world.logger.error("buy: format invalide pour {} : {}", this.player.getName(), e.getMessage());
                     return;
                 }
 
@@ -2236,9 +2222,8 @@ public class GameClient {
                 templateID = Integer.parseInt(packet.substring(3));
                 try {
                     SocketManager.GAME_SEND_EHl(this.player, World.world.getHdv(Math.abs(exchangeAction.getValue())), templateID);
-                } catch (NullPointerException e)//Si erreur il y a, retire le template de la liste chez le client
-                {
-                    e.printStackTrace();
+                } catch (NullPointerException e) {
+                    World.world.logger.error("bigStore: HDV null pour template {} : {}", templateID, e.getMessage());
                     SocketManager.GAME_SEND_EHM_PACKET(this.player, "-", templateID + "");
                 }
 
@@ -2267,7 +2252,7 @@ public class GameClient {
                     try {
                         SocketManager.GAME_SEND_EHl(this.player, World.world.getHdv(Math.abs(exchangeAction.getValue())), id);
                     } catch (NullPointerException e) {
-                        e.printStackTrace();
+                        World.world.logger.error("bigStore: HDV null pour recherche id {} : {}", id, e.getMessage());
                         SocketManager.GAME_SEND_EHM_PACKET(this.player, "-", String.valueOf(id));
                     }
                 }
@@ -2575,7 +2560,8 @@ public class GameClient {
                             try {
                                 Thread.sleep(1000);
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                Thread.currentThread().interrupt();
+                                World.world.logger.error("runeLambda: interruption thread : {}", e.getMessage());
                             }
                             this.player.send("EA" + (breakingObject.getCount() - (i + 1)));
                             this.ready();
@@ -2873,9 +2859,9 @@ public class GameClient {
 
                         if (amount <= 0 || price <= 0)
                             return;
-                        if (packet.substring(1).split("\\|")[2] == "0"
-                                || packet.substring(2).split("\\|")[2] == "0"
-                                || packet.substring(3).split("\\|")[2] == "0")
+                        if ("0".equals(packet.substring(1).split("\\|")[2])
+                                || "0".equals(packet.substring(2).split("\\|")[2])
+                                || "0".equals(packet.substring(3).split("\\|")[2]))
                             return;
 
                         Hdv curHdv = World.world.getHdv(Math.abs((Integer) this.player.getExchangeAction().getValue()));
@@ -3851,7 +3837,7 @@ public class GameClient {
                     int map = artissant.getCurMap().getId();
                     //int inJob = (map == 8731 || map == 8732) ? 1 : 0;
                     // Lets check if the crafter is inside a workshop of the specific job we are looking for
-                    int inJob = GameCase.craftsmenJobIds.entrySet().stream().anyMatch(entry -> entry.getKey().contains(map) && entry.getValue().contains(jobId)) ? 1 : 0;
+                    int inJob = GameCase.getCraftsmenJobIds().entrySet().stream().anyMatch(entry -> entry.getKey().contains(map) && entry.getValue().contains(jobId)) ? 1 : 0;
 
                     int classe = artissant.getClasse();
                     /*for (JobStat SM : artissant.getMetiers().values()) {
@@ -7793,39 +7779,9 @@ public class GameClient {
         }
 
         final String name = packet;
-        boolean isValid = true;
 
-        if (name.length() > 20 || name.length() < 3 || name.contains("modo") || name.contains("admin") || name.contains("putain") || name.contains("administrateur") || name.contains("puta"))
-            isValid = false;
-        if (isValid) {
-            int tiretCount = 0;
-            char exLetterA = ' ';
-            char exLetterB = ' ';
-            for (char curLetter : name.toCharArray()) {
-                if (!(((curLetter >= 'a' && curLetter <= 'z') || (curLetter >= 'A' && curLetter <= 'Z')) || curLetter == '-')) {
-                    isValid = false;
-                    break;
-                }
-                if (curLetter == exLetterA && curLetter == exLetterB) {
-                    isValid = false;
-                    break;
-                }
-                if (curLetter >= 'a' && curLetter <= 'z') {
-                    exLetterA = exLetterB;
-                    exLetterB = curLetter;
-                }
-                if (curLetter == '-') {
-                    if (tiretCount >= 1) {
-                        isValid = false;
-                        break;
-                    } else {
-                        tiretCount++;
-                    }
-                }
-            }
-        }
-
-        if(Database.getStatics().getPlayerData().exist(name) || !isValid) {
+        // Validation du nom (lettres a-z, A-Z et tiret, mêmes contraintes que la création)
+        if (!isValidPlayerName(name, true) || Database.getStatics().getPlayerData().exist(name)) {
             this.player.send("AlEs");
             return;
         }
@@ -7840,8 +7796,7 @@ public class GameClient {
         try {
             this.getSession().write(packet);
         } catch(Exception e) {
-            Logging.getInstance().write("Error", "Send fail : " + packet);
-            e.printStackTrace();
+            World.world.logger.error("send: échec envoi paquet '{}' : {}", packet, e.getMessage());
         }
     }
 }
