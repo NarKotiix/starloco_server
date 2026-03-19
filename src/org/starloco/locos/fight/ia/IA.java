@@ -13,7 +13,7 @@ public interface IA {
     Fighter getFighter();
     boolean isStop();
     void setStop(boolean stop);
-    void addNext(Runnable runnable, Integer time);
+    void addNext(Runnable runnable, int time);
 
     void apply();
     void endTurn();

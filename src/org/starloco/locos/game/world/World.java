@@ -2113,7 +2113,19 @@ public class World {
     }
 
     public void reloadItems() {
+        // Clear the old templates before reloading
+        ObjTemplates.clear();
+        // Reload all templates from database
         Database.getDynamics().getObjectTemplateData().load();
+        // Notify all connected players that their items have changed
+        for (Player player : getOnlinePlayers()) {
+            // Update all equipped items for each player
+            for (GameObject item : player.GetequipedObjects().values()) {
+                if (item != null) {
+                    SocketManager.GAME_SEND_UPDATE_OBJECT_DISPLAY_PACKET(player, item);
+                }
+            }
+        }
     }
 
     public void addSeller(Player player) {

@@ -51,6 +51,71 @@ public class CommandAdmin extends AdminUser {
         super(player);
     }
 
+    private boolean isNumeric(String value) {
+        if (value == null || value.trim().isEmpty())
+            return false;
+        try {
+            Integer.parseInt(value.trim());
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private String normalizeSpawnData(String raw, List<Integer> invalidMonsterIds) {
+        if (raw == null)
+            return null;
+
+        String value = raw.trim();
+        if (value.isEmpty())
+            return null;
+
+        // Legacy format: id,min,max;id,min,max
+        if (value.contains(";"))
+            return value;
+
+        String[] tokens = value.split(",");
+
+        // Keep single legacy tuple support: SPAWN 1295,120,200
+        if (tokens.length == 3 && isNumeric(tokens[0]) && isNumeric(tokens[1]) && isNumeric(tokens[2]))
+            return value;
+
+        // Simple format: SPAWN 1295,1295,....
+        StringBuilder groupData = new StringBuilder();
+        for (String token : tokens) {
+            if (!isNumeric(token))
+                continue;
+
+            int monsterId = Integer.parseInt(token.trim());
+            Monster monster = World.world.getMonstre(monsterId);
+            if (monster == null || monster.getGrades() == null || monster.getGrades().isEmpty()) {
+                invalidMonsterIds.add(monsterId);
+                continue;
+            }
+
+            int minLevel = Integer.MAX_VALUE;
+            int maxLevel = Integer.MIN_VALUE;
+            for (MobGrade grade : monster.getGrades().values()) {
+                int level = grade.getLevel();
+                if (level < minLevel)
+                    minLevel = level;
+                if (level > maxLevel)
+                    maxLevel = level;
+            }
+
+            if (minLevel == Integer.MAX_VALUE || maxLevel == Integer.MIN_VALUE) {
+                invalidMonsterIds.add(monsterId);
+                continue;
+            }
+
+            if (groupData.length() > 0)
+                groupData.append(';');
+            groupData.append(monsterId).append(',').append(minLevel).append(',').append(maxLevel);
+        }
+
+        return groupData.length() > 0 ? groupData.toString() : null;
+    }
+
     private String formatDurationCompact(long durationMillis) {
         long totalSeconds = Math.max(0L, durationMillis / 1000L);
         long hours = totalSeconds / 3600L;
@@ -2401,12 +2466,27 @@ public class CommandAdmin extends AdminUser {
                 // ok
             }
 
-            if (Mob == null) {
+            if (Mob == null || Mob.trim().isEmpty()) {
                 this.sendMessage("Les paramètres sont invalides.");
                 return;
             }
-            this.getPlayer().getCurMap().spawnGroupOnCommand(this.getPlayer().getCurCell().getId(), Mob, true);
-            this.sendMessage("Vous avez ajouté un groupe de monstres.");
+
+            List<Integer> invalidMonsterIds = new ArrayList<>();
+            String normalizedGroupData = normalizeSpawnData(Mob, invalidMonsterIds);
+            if (normalizedGroupData == null) {
+                this.sendMessage("Aucun monstre valide. Format accepte: SPAWN id,min,max;id,min,max OU SPAWN id,id,id (niveau aleatoire auto). Exemple: SPAWN 1295,1295");
+                return;
+            }
+
+            boolean spawned = this.getPlayer().getCurMap().spawnGroupOnCommand(this.getPlayer().getCurCell().getId(), normalizedGroupData, true);
+            if (spawned) {
+                StringBuilder spawnMessage = new StringBuilder("Groupe spawn sur votre cellule.");
+                if (!invalidMonsterIds.isEmpty())
+                    spawnMessage.append(" IDs ignores: ").append(invalidMonsterIds.toString());
+                this.sendMessage(spawnMessage.toString());
+            } else {
+                this.sendMessage("Aucun groupe n'a ete cree. Verifiez le format id,min,max;id,min,max et les niveaux disponibles (commande LINEM). Exemple: SPAWN 1295,120,200;1295,120,200");
+            }
             return;
         } else if (command.equalsIgnoreCase("SHUTDOWN")) {
             int time = 30, OffOn = 0;

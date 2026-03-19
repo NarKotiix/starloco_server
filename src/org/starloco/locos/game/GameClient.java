@@ -4679,10 +4679,10 @@ public class GameClient {
 
             if (fight != null) {
                 Spell.SortStats SS = this.player.getSortStatBySortIfHas(id);
+                final Fighter fighter = fight.getFighterByPerso(this.player);
 
-                if (SS != null)
-                    if(!this.player.getFight().isCurAction() && !this.player.getFight().isTraped())
-                        this.player.getFight().cast(this.player.getFight().getFighterByPerso(this.player), () -> this.player.getFight().tryCastSpell(this.player.getFight().getFighterByPerso(this.player), SS, cellId));
+                if (SS != null && fighter != null)
+                    fight.queueAction(fighter, () -> fight.tryCastSpell(fighter, SS, cellId));
             }
         } catch (NumberFormatException e) {
             System.err.println(packet + "\n" + e);
@@ -4693,8 +4693,12 @@ public class GameClient {
         try {
             if(packet.contains("undefined")) return;
             final int cell = Integer.parseInt(packet.substring(5));
-            if (this.player.getFight() != null && !this.player.getFight().isCurAction() && !this.player.getFight().isTraped())
-                this.player.getFight().cast(this.player.getFight().getFighterByPerso(this.player), () -> this.player.getFight().tryCaC(this.player, cell));
+            final Fight fight = this.player.getFight();
+            if (fight != null) {
+                final Fighter fighter = fight.getFighterByPerso(this.player);
+                if (fighter != null)
+                    fight.queueAction(fighter, () -> fight.tryCaC(this.player, cell));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

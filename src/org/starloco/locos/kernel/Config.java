@@ -33,7 +33,17 @@ public class Config {
     public static int[] START_ITEM = new int[0];
 
     // AI delays (ms)
-    public int AIDelay = 100, AIMovementCellDelay = 180, AIMovementFlatDelay = 700;
+    public int AIDelay = 100, AIMovementCellDelay = 100, AIMovementFlatDelay = 500;
+    /** Délai maximum autorisé pour l'animation d'un sort côté IA (plafond de getDuration()). */
+    public int AISpellMaxDelay = 600;
+    // Invocation-specific overrides (kept conservative by default)
+    public int AIInvocationDelay = 50;
+    public int AIInvocationSpellMaxDelay = 220;
+    public int AIInvocationMovementBaseDelay = 220;
+    public int AIInvocationMovementStepDelay = 55;
+    public boolean AIProfiling = false;
+    public boolean AIProfilingInvocationOnly = true;
+    public int AIProfilingWarnMs = 60;
 
     public static Config getInstance() {
         return singleton;
@@ -135,14 +145,25 @@ public class Config {
     }
 
     private void applyConfiguration(Properties p) {
-        this.startMessage = get(p,   "MESSAGE",     this.startMessage);
-        this.url          = get(p,   "URL",         this.url);
-        this.NAME         = get(p,   "NAME",        this.NAME);
-        this.autoReboot   = getBool(p, "AUTO_REBOOT", this.autoReboot);
-        Main.serverId     = getInt(p,  "SERVER_ID",  Main.serverId);
-        Main.key          = get(p,   "SERVER_KEY",  Main.key);
-        Main.modDebug     = getBool(p, "DEBUG",      Main.modDebug);
-        Logging.USE_LOG   = getBool(p, "USE_LOG",    Logging.USE_LOG);
+        this.startMessage        = get(p,    "MESSAGE",                  this.startMessage);
+        this.url                 = get(p,    "URL",                      this.url);
+        this.NAME                = get(p,    "NAME",                     this.NAME);
+        this.autoReboot          = getBool(p, "AUTO_REBOOT",             this.autoReboot);
+        Main.serverId            = getInt(p,  "SERVER_ID",               Main.serverId);
+        Main.key                 = get(p,    "SERVER_KEY",               Main.key);
+        Main.modDebug            = getBool(p, "DEBUG",                   Main.modDebug);
+        Logging.USE_LOG          = getBool(p, "USE_LOG",                 Logging.USE_LOG);
+        this.AIDelay             = getInt(p,  "AI_DELAY",                this.AIDelay);
+        this.AIMovementCellDelay = getInt(p,  "AI_MOVEMENT_CELL_DELAY",  this.AIMovementCellDelay);
+        this.AIMovementFlatDelay = getInt(p,  "AI_MOVEMENT_FLAT_DELAY",  this.AIMovementFlatDelay);
+        this.AISpellMaxDelay     = getInt(p,  "AI_SPELL_MAX_DELAY",      this.AISpellMaxDelay);
+        this.AIInvocationDelay = getInt(p, "AI_INVOCATION_DELAY", this.AIInvocationDelay);
+        this.AIInvocationSpellMaxDelay = getInt(p, "AI_INVOCATION_SPELL_MAX_DELAY", this.AIInvocationSpellMaxDelay);
+        this.AIInvocationMovementBaseDelay = getInt(p, "AI_INVOCATION_MOVEMENT_BASE_DELAY", this.AIInvocationMovementBaseDelay);
+        this.AIInvocationMovementStepDelay = getInt(p, "AI_INVOCATION_MOVEMENT_STEP_DELAY", this.AIInvocationMovementStepDelay);
+        this.AIProfiling         = getBool(p, "AI_PROFILING",            this.AIProfiling);
+        this.AIProfilingInvocationOnly = getBool(p, "AI_PROFILING_INVOCATIONS_ONLY", this.AIProfilingInvocationOnly);
+        this.AIProfilingWarnMs   = getInt(p,  "AI_PROFILING_WARN_MS",    this.AIProfilingWarnMs);
     }
 
     private void applyRates(Properties p) {
@@ -217,6 +238,17 @@ public class Config {
         props.setProperty("SERVER_KEY",     "eratz");
         props.setProperty("DEBUG",          "true");
         props.setProperty("USE_LOG",        "true");
+        props.setProperty("AI_DELAY", "100");
+        props.setProperty("AI_MOVEMENT_CELL_DELAY", "100");
+        props.setProperty("AI_MOVEMENT_FLAT_DELAY", "500");
+        props.setProperty("AI_SPELL_MAX_DELAY", "600");
+        props.setProperty("AI_INVOCATION_DELAY", "50");
+        props.setProperty("AI_INVOCATION_SPELL_MAX_DELAY", "220");
+        props.setProperty("AI_INVOCATION_MOVEMENT_BASE_DELAY", "220");
+        props.setProperty("AI_INVOCATION_MOVEMENT_STEP_DELAY", "55");
+        props.setProperty("AI_PROFILING", "false");
+        props.setProperty("AI_PROFILING_INVOCATIONS_ONLY", "true");
+        props.setProperty("AI_PROFILING_WARN_MS", "60");
 
         // Rates
         props.setProperty("RATE_XP",    "1");

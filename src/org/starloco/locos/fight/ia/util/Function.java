@@ -8,6 +8,7 @@ import org.starloco.locos.common.PathFinding;
 import org.starloco.locos.common.SocketManager;
 import org.starloco.locos.fight.Fight;
 import org.starloco.locos.fight.Fighter;
+import org.starloco.locos.fight.ia.IAProfiler;
 import org.starloco.locos.fight.spells.LaunchedSpell;
 import org.starloco.locos.fight.spells.Spell;
 import org.starloco.locos.fight.spells.Spell.SortStats;
@@ -26,12 +27,24 @@ import java.util.*;
 
 public class Function {
 	
-	
 	private final static Function instance=new Function();
 
 	  public static Function getInstance()
 	  {
 	    return instance;
+	  }
+
+	  /**
+	   * Retourne le délai (en ms) à passer à {@code addNext} après le lancement d'un sort.
+	   * Plafonne {@code spell.getDuration()} au maximum configuré (AI_SPELL_MAX_DELAY)
+	   * pour éviter que des sorts avec de longues animations ralentissent excessivement l'IA.
+	   * Garantit au minimum {@code AIDelay} ms pour la lisibilité côté client.
+	   */
+	  public static int iaSpellDelay(org.starloco.locos.fight.spells.Spell spell) {
+	    int duration = (spell != null) ? spell.getDuration() : 0;
+	    int ai       = Config.getInstance().AIDelay;
+	    int cap      = Config.getInstance().AISpellMaxDelay;
+	    return duration > 0 ? Math.max(ai, Math.min(duration, cap)) : ai;
 	  }
 
 	  public int attackIfPossiblerat(Fight fight, Fighter fighter, Fighter target, boolean loin)// 0 = Rien, 5 = EC, 666 = NULL, 10 = SpellNull ou ActionEnCour ou Can'tCastSpell, 0 = AttaqueOK
@@ -296,8 +309,9 @@ public class Function {
         int curCaseID=fighter.getCell().getId();
         int curDir=0;
         path.add(fight.getMapOld().getCase(CellDest));
-        for(GameCase c : path)
+        for (int pathIndex = 0; pathIndex < path.size(); pathIndex++)
         {
+          GameCase c = path.get(pathIndex);
           if(curCaseID==c.getId())
             continue; // Empêche le d == 0
           char d=PathFinding.getDirBetweenTwoCase(curCaseID,c.getId(),fight.getMap(),true);
@@ -305,7 +319,7 @@ public class Function {
             return -1;//Ne devrait pas arriver :O
           if(curDir!=d)
           {
-            if(path.indexOf(c)!=0)
+            if(pathIndex!=0)
               pathstr+=World.world.getCryptManager().cellID_To_Code(curCaseID);
             pathstr+=d;
           }
@@ -1076,7 +1090,7 @@ public class Function {
       {
         int attack=fight.tryCastSpell(fighter,SS2,cell);
         if(attack!=0)
-          return SS2.getSpell().getDuration();
+          return iaSpellDelay(SS2.getSpell());
       }
       else
       {
@@ -1084,7 +1098,7 @@ public class Function {
           return 0;
         int attack=fight.tryCastSpell(fighter,SS2,cell);
         if(attack!=0)
-          return SS2.getSpell().getDuration();
+          return iaSpellDelay(SS2.getSpell());
       }
       return 0;
     }
@@ -1631,7 +1645,7 @@ public class Function {
         return 0;
       int heal=fight.tryCastSpell(f,SS,target.getCell().getId());
       if(heal!=0)
-        return SS.getSpell().getDuration();
+        return iaSpellDelay(SS.getSpell());
 
       return 0;
     }
@@ -1650,7 +1664,7 @@ public class Function {
         return 0;
       int heal=fight.tryCastSpell(f,SS,target.getCell().getId());
       if(heal!=0)
-        return SS.getSpell().getDuration();
+        return iaSpellDelay(SS.getSpell());
       return 0;
     }
 
@@ -1666,7 +1680,7 @@ public class Function {
         return 0;
       int heal=fight.tryCastSpell(f,SS,A.getCell().getId());
       if(heal!=0)
-        return SS.getSpell().getDuration();
+        return iaSpellDelay(SS.getSpell());
       return 0;
     }
 
@@ -2409,28 +2423,33 @@ public class Function {
 
     public Fighter getNearestEnnemy(Fight fight, Fighter fighter)
     {
-      if(fight==null||fighter==null)
-        return null;
-      int dist=1000;
-      Fighter curF=null;
-      for(Fighter f : fight.getFighters(3))
-      {
-          if(f.isHide()) {
-              continue;
-          }
-        if(f.isDead())
-          continue;
-        if(f.getTeam2()!=fighter.getTeam2())//Si c'est un ennemis
+      final long profileStart = IAProfiler.methodStart(fighter, "Function.getNearestEnnemy");
+      try {
+        if(fight==null||fighter==null)
+          return null;
+        int dist=1000;
+        Fighter curF=null;
+        for(Fighter f : fight.getFighters(3))
         {
-          int d=PathFinding.getDistanceBetween(fight.getMap(),fighter.getCell().getId(),f.getCell().getId());
-          if(d<dist)
+            if(f.isHide()) {
+                continue;
+            }
+          if(f.isDead())
+            continue;
+          if(f.getTeam2()!=fighter.getTeam2())//Si c'est un ennemis
           {
-            dist=d;
-            curF=f;
+            int d=PathFinding.getDistanceBetween(fight.getMap(),fighter.getCell().getId(),f.getCell().getId());
+            if(d<dist)
+            {
+              dist=d;
+              curF=f;
+            }
           }
         }
+        return curF;
+      } finally {
+        IAProfiler.methodEnd(fighter, "Function.getNearestEnnemy", profileStart, null);
       }
-      return curF;
     }
     
     
@@ -2769,42 +2788,33 @@ public class Function {
 
     public Map<Integer, Fighter> getLowHpEnnemyList(Fight fight, Fighter fighter)
     {
-      if(fight==null||fighter==null)
-        return null;
-      Map<Integer, Fighter> list=new HashMap<Integer, Fighter>();
-      Map<Integer, Fighter> ennemy=new HashMap<Integer, Fighter>();
-      for(Fighter f : fight.getFighters(3))
-      {
-        if(f.isDead())
-          continue;
-        if(f==fighter)
-          continue;
-        if(f.getTeam2()!=fighter.getTeam2())
-        {
-          ennemy.put(f.getId(),f);
-        }
-      }
-      int i=0,i2=ennemy.size();
-      int curHP=10000;
-      Fighter curEnnemy=null;
+      final long profileStart = IAProfiler.methodStart(fighter, "Function.getLowHpEnnemyList");
+      try {
+        if(fight==null||fighter==null)
+          return null;
 
-      while(i<i2)
-      {
-        curHP=200000;
-        curEnnemy=null;
-        for(Map.Entry<Integer, Fighter> t : ennemy.entrySet())
+        List<Fighter> ennemies = new ArrayList<>();
+        for(Fighter f : fight.getFighters(3))
         {
-          if(t.getValue().getPdv()<curHP)
+          if(f.isDead())
+            continue;
+          if(f==fighter)
+            continue;
+          if(f.getTeam2()!=fighter.getTeam2())
           {
-            curHP=t.getValue().getPdv();
-            curEnnemy=t.getValue();
+            ennemies.add(f);
           }
         }
-        list.put(curEnnemy.getId(),curEnnemy);
-        ennemy.remove(curEnnemy.getId());
-        i++;
+
+        ennemies.sort(Comparator.comparingInt(Fighter::getPdv));
+        Map<Integer, Fighter> list = new LinkedHashMap<>();
+        for (Fighter enemy : ennemies) {
+          list.put(enemy.getId(), enemy);
+        }
+        return list;
+      } finally {
+        IAProfiler.methodEnd(fighter, "Function.getLowHpEnnemyList", profileStart, null);
       }
-      return list;
     }
     
     
@@ -2849,7 +2859,7 @@ public class Function {
       {
         int attack=fight.tryCastSpell(fighter, SS2, cell);
         if(attack == 0)
-          return SS2.getSpell().getDuration();
+          return iaSpellDelay(SS2.getSpell());
       }
 
       else
@@ -2858,7 +2868,7 @@ public class Function {
           return -1;
         int attack = fight.tryCastSpell(fighter,SS,target.getCell().getId());
         if(attack==0)
-          return SS.getSpell().getDuration();
+          return iaSpellDelay(SS.getSpell());
       }
       return -1;
     }
@@ -2894,7 +2904,7 @@ public class Function {
       {
         int attack=fight.tryCastSpell(fighter,SS2,cell);
         if(attack!=0)
-          return SS2.getSpell().getDuration();
+          return iaSpellDelay(SS2.getSpell());
       }
       return 0;
     }
@@ -2944,7 +2954,7 @@ public class Function {
       {
         int attack=fight.tryCastSpell(fighter,SS2,cell);
         if(attack!=0)
-          return SS2.getSpell().getDuration();
+          return iaSpellDelay(SS2.getSpell());
       }
       return 0;
     }
@@ -2960,7 +2970,7 @@ public class Function {
         return 0;
       int attack=fight.tryCastSpell(fighter,SS,target.getCell().getId());
       if(attack!=0)
-        return SS.getSpell().getDuration();
+        return iaSpellDelay(SS.getSpell());
       return -1;
     }
 
@@ -2999,7 +3009,7 @@ public class Function {
       {
         int attack=fight.tryCastSpell(fighter, SS2, cell);
         if(attack != 0)
-          return SS2.getSpell().getDuration();
+          return iaSpellDelay(SS2.getSpell());
       }
       else
       {
@@ -3007,7 +3017,7 @@ public class Function {
           return 0;
         int attack = fight.tryCastSpell(fighter, SS, target.getCell().getId());
         if(attack != 0)
-          return SS.getSpell().getDuration();
+          return iaSpellDelay(SS.getSpell());
       }
       return 0;
     }
@@ -3240,14 +3250,15 @@ public class Function {
                 int curCaseID = fighter.getCell().getId();
                 int curDir = 0;
                 path.add(fight.getMapOld().getCase(CellDest));
-                for (GameCase c : path) {
+                for (int pathIndex = 0; pathIndex < path.size(); pathIndex++) {
+                    GameCase c = path.get(pathIndex);
                     if (curCaseID == c.getId())
                         continue; // Empêche le d == 0
                     char d = PathFinding.getDirBetweenTwoCase(curCaseID, c.getId(), m, true);
                     if (d == 0)
                         return -1;//Ne devrait pas arriver :O
                     if (curDir != d) {
-                        if (path.indexOf(c) != 0)
+                        if (pathIndex != 0)
                             pathstr += World.world.getCryptManager().cellID_To_Code(curCaseID);
                         pathstr += d;
                     }
@@ -3811,131 +3822,136 @@ public class Function {
 
     public SortStats getBestSpellForTarget(Fight fight, Fighter F, Fighter T, int launch)
     {
-      if(fight==null||F==null||T==null)
-        return null;
-      int inflMax=0;
-      SortStats ss=null;
-      if(F.isCollector())
-      {
-        for(Map.Entry<Integer, SortStats> SS : World.world.getGuild(F.getCollector().getGuildId()).getSpells().entrySet())
+      final long profileStart = IAProfiler.methodStart(F, "Function.getBestSpellForTarget");
+      try {
+        if(fight==null||F==null||T==null)
+          return null;
+        int inflMax=0;
+        SortStats ss=null;
+        if(F.isCollector())
         {
-          if(SS.getValue()==null)
-            continue;
-          int curInfl=0,Infl1=0,Infl2=0;
-          int PA=6;
-          int usedPA[]= { 0, 0 };
-          if(!fight.canCastSpell1(F,SS.getValue(),F.getCell(),T.getCell().getId()))
-            continue;
-          curInfl=calculInfluence(SS.getValue(),F,T);
-          if(curInfl==0)
-            continue;
-          if(curInfl>inflMax)
+          for(Map.Entry<Integer, SortStats> SS : World.world.getGuild(F.getCollector().getGuildId()).getSpells().entrySet())
           {
-            ss=SS.getValue();
-            usedPA[0]=ss.getPACost();
-            Infl1=curInfl;
-            inflMax=Infl1;
-          }
-
-          for(Map.Entry<Integer, SortStats> SS2 : World.world.getGuild(F.getCollector().getGuildId()).getSpells().entrySet())
-          {
-            if(SS2.getValue()==null)
+            if(SS.getValue()==null)
               continue;
-            if((PA-usedPA[0])<SS2.getValue().getPACost())
+            int curInfl=0,Infl1=0,Infl2=0;
+            int PA=6;
+            int usedPA[]= { 0, 0 };
+            if(!fight.canCastSpell1(F,SS.getValue(),F.getCell(),T.getCell().getId()))
               continue;
-            if(!fight.canCastSpell1(F,SS2.getValue(),F.getCell(),T.getCell().getId()))
-              continue;
-            curInfl=calculInfluence(SS2.getValue(),F,T);
+            curInfl=calculInfluence(SS.getValue(),F,T);
             if(curInfl==0)
               continue;
-            if((Infl1+curInfl)>inflMax)
+            if(curInfl>inflMax)
             {
               ss=SS.getValue();
-              usedPA[1]=SS2.getValue().getPACost();
-              Infl2=curInfl;
-              inflMax=Infl1+Infl2;
+              usedPA[0]=ss.getPACost();
+              Infl1=curInfl;
+              inflMax=Infl1;
             }
-            for(Map.Entry<Integer, SortStats> SS3 : World.world.getGuild(F.getCollector().getGuildId()).getSpells().entrySet())
+
+            for(Map.Entry<Integer, SortStats> SS2 : World.world.getGuild(F.getCollector().getGuildId()).getSpells().entrySet())
             {
-              if(SS3.getValue()==null)
+              if(SS2.getValue()==null)
                 continue;
-              if((PA-usedPA[0]-usedPA[1])<SS3.getValue().getPACost())
+              if((PA-usedPA[0])<SS2.getValue().getPACost())
                 continue;
-              if(!fight.canCastSpell1(F,SS3.getValue(),F.getCell(),T.getCell().getId()))
+              if(!fight.canCastSpell1(F,SS2.getValue(),F.getCell(),T.getCell().getId()))
                 continue;
-              curInfl=calculInfluence(SS3.getValue(),F,T);
+              curInfl=calculInfluence(SS2.getValue(),F,T);
               if(curInfl==0)
                 continue;
-              if((curInfl+Infl1+Infl2)>inflMax)
+              if((Infl1+curInfl)>inflMax)
               {
                 ss=SS.getValue();
-                inflMax=curInfl+Infl1+Infl2;
+                usedPA[1]=SS2.getValue().getPACost();
+                Infl2=curInfl;
+                inflMax=Infl1+Infl2;
+              }
+              for(Map.Entry<Integer, SortStats> SS3 : World.world.getGuild(F.getCollector().getGuildId()).getSpells().entrySet())
+              {
+                if(SS3.getValue()==null)
+                  continue;
+                if((PA-usedPA[0]-usedPA[1])<SS3.getValue().getPACost())
+                  continue;
+                if(!fight.canCastSpell1(F,SS3.getValue(),F.getCell(),T.getCell().getId()))
+                  continue;
+                curInfl=calculInfluence(SS3.getValue(),F,T);
+                if(curInfl==0)
+                  continue;
+                if((curInfl+Infl1+Infl2)>inflMax)
+                {
+                  ss=SS.getValue();
+                  inflMax=curInfl+Infl1+Infl2;
+                }
               }
             }
           }
         }
-      }
-      else
-      {
-        for(Map.Entry<Integer, SortStats> SS : F.getMob().getSpells().entrySet())
+        else
         {
-          if(SS==null)
-            continue;
-          if(SS.getValue().getSpell().getType()!=0)
-            continue;
-          int curInfl=0,Infl1=0,Infl2=0;
-          int PA=F.getMob().getPa();
-          int usedPA[]= { 0, 0 };
-          if(!fight.canCastSpell1(F,SS.getValue(),T.getCell(),launch))
-            continue;
-          curInfl=getInfl(fight,SS.getValue());
-          //if(curInfl == 0)continue;
-          if(curInfl>inflMax)
+          for(Map.Entry<Integer, SortStats> SS : F.getMob().getSpells().entrySet())
           {
-            ss=SS.getValue();
-            usedPA[0]=ss.getPACost();
-            Infl1=curInfl;
-            inflMax=Infl1;
-          }
-
-          for(Map.Entry<Integer, SortStats> SS2 : F.getMob().getSpells().entrySet())
-          {
-            if(SS2.getValue().getSpell().getType()!=0)
+            if(SS==null)
               continue;
-            if((PA-usedPA[0])<SS2.getValue().getPACost())
+            if(SS.getValue().getSpell().getType()!=0)
               continue;
-            if(!fight.canCastSpell1(F,SS2.getValue(),T.getCell(),launch))
+            int curInfl=0,Infl1=0,Infl2=0;
+            int PA=F.getMob().getPa();
+            int usedPA[]= { 0, 0 };
+            if(!fight.canCastSpell1(F,SS.getValue(),T.getCell(),launch))
               continue;
-            curInfl=getInfl(fight,SS2.getValue());
+            curInfl=getInfl(fight,SS.getValue());
             //if(curInfl == 0)continue;
-            if((Infl1+curInfl)>inflMax)
+            if(curInfl>inflMax)
             {
               ss=SS.getValue();
-              usedPA[1]=SS2.getValue().getPACost();
-              Infl2=curInfl;
-              inflMax=Infl1+Infl2;
+              usedPA[0]=ss.getPACost();
+              Infl1=curInfl;
+              inflMax=Infl1;
             }
-            for(Map.Entry<Integer, SortStats> SS3 : F.getMob().getSpells().entrySet())
-            {
-              if(SS3.getValue().getSpell().getType()!=0)
-                continue;
-              if((PA-usedPA[0]-usedPA[1])<SS3.getValue().getPACost())
-                continue;
-              if(!fight.canCastSpell1(F,SS3.getValue(),T.getCell(),launch))
-                continue;
 
-              curInfl=getInfl(fight,SS3.getValue());
+            for(Map.Entry<Integer, SortStats> SS2 : F.getMob().getSpells().entrySet())
+            {
+              if(SS2.getValue().getSpell().getType()!=0)
+                continue;
+              if((PA-usedPA[0])<SS2.getValue().getPACost())
+                continue;
+              if(!fight.canCastSpell1(F,SS2.getValue(),T.getCell(),launch))
+                continue;
+              curInfl=getInfl(fight,SS2.getValue());
               //if(curInfl == 0)continue;
-              if((curInfl+Infl1+Infl2)>inflMax)
+              if((Infl1+curInfl)>inflMax)
               {
                 ss=SS.getValue();
-                inflMax=curInfl+Infl1+Infl2;
+                usedPA[1]=SS2.getValue().getPACost();
+                Infl2=curInfl;
+                inflMax=Infl1+Infl2;
+              }
+              for(Map.Entry<Integer, SortStats> SS3 : F.getMob().getSpells().entrySet())
+              {
+                if(SS3.getValue().getSpell().getType()!=0)
+                  continue;
+                if((PA-usedPA[0]-usedPA[1])<SS3.getValue().getPACost())
+                  continue;
+                if(!fight.canCastSpell1(F,SS3.getValue(),T.getCell(),launch))
+                  continue;
+
+                curInfl=getInfl(fight,SS3.getValue());
+                //if(curInfl == 0)continue;
+                if((curInfl+Infl1+Infl2)>inflMax)
+                {
+                  ss=SS.getValue();
+                  inflMax=curInfl+Infl1+Infl2;
+                }
               }
             }
           }
         }
+        return ss;
+      } finally {
+        IAProfiler.methodEnd(F, "Function.getBestSpellForTarget", profileStart, null);
       }
-      return ss;
     }
 
     public SortStats getBestSpellForTargetDopeul(Fight fight, Fighter F, Fighter T, int launch, List<SortStats> listspell)

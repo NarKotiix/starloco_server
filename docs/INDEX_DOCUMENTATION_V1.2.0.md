@@ -1,4 +1,4 @@
-# 📖 INDEX DOCUMENTATION — v1.3.1
+# 📖 INDEX DOCUMENTATION — v1.4.0
 
 > Dernière mise à jour : 19 Mars 2026  
 > Version serveur : 1.0.0
@@ -6,6 +6,12 @@
 ---
 
 ## 📋 Documents actifs
+
+### ⚙ Admin / IA / runtime (v1.4.0 — nouveau)
+
+| Fichier | Description | Audience | Durée |
+|---------|-------------|----------|-------|
+| [`CHANGELOG_ADMIN_IA_DB_V1.4.0.md`](CHANGELOG_ADMIN_IA_DB_V1.4.0.md) | `RELOADITEM`, `SPAWN`, profiling/accélération invocations, correctif driver MySQL | Dev / Admin / Ops | 12 min |
 
 ### 🛠 Correctifs mouvement (v1.3.1 — nouveau)
 
@@ -95,6 +101,7 @@
 
 | Je veux… | → Document |
 |----------|-----------|
+| Comprendre les derniers changements admin/IA/runtime | [`CHANGELOG_ADMIN_IA_DB_V1.4.0.md`](CHANGELOG_ADMIN_IA_DB_V1.4.0.md) |
 | Comprendre les dernières optis de perfs | [`CHANGELOG_PERF_V1.2.0.md`](CHANGELOG_PERF_V1.2.0.md) |
 | Comprendre le durcissement sécurité récent | [`SECURITY_HARDENING_V1.2.1.md`](SECURITY_HARDENING_V1.2.1.md) |
 | Comprendre les derniers correctifs de mouvement | [`CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md`](CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md) |
@@ -128,5 +135,5 @@ Ces fichiers ont été supprimés car obsolètes ou intermédiaires :
 
 ---
 
-**Version :** 1.3.1  
+**Version :** 1.4.0  
 **Date :** 19 Mars 2026

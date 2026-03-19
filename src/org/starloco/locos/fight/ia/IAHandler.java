@@ -4,6 +4,7 @@ import org.starloco.locos.entity.monster.Monster.MobGrade;
 import org.starloco.locos.fight.Fight;
 import org.starloco.locos.fight.Fighter;
 import org.starloco.locos.fight.ia.type.*;
+import org.starloco.locos.kernel.Config;
 
 /**
  * Created by Locos on 18/09/2015.
@@ -23,7 +24,7 @@ public class IAHandler {
                 ia = new Blank(fight, fighter);
 
             final IA finalIA = ia;
-            ia.addNext(finalIA::endTurn, 2000);
+            ia.addNext(finalIA::endTurn, Config.getInstance().AIDelay);
         } else if(mobGrade.getTemplate() == null) {
             ia.setStop(true);
             ia.endTurn();
@@ -229,7 +230,12 @@ public class IAHandler {
 
         final IA finalIA = ia;
         ia.addNext(() -> {
-            finalIA.apply();
+            final long profilingStart = IAProfiler.methodStart(fighter, "IAHandler.apply");
+            try {
+                finalIA.apply();
+            } finally {
+                IAProfiler.methodEnd(fighter, "IAHandler.apply", profilingStart, null);
+            }
             finalIA.addNext(finalIA::endTurn, 0); // 1000 to 0 by coding mestre (vérifier si à induit des bugs)
         }, 0);
     }

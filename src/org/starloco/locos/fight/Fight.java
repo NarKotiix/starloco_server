@@ -16,6 +16,8 @@ import org.starloco.locos.entity.Prism;
 import org.starloco.locos.entity.monster.Monster;
 import org.starloco.locos.entity.monster.boss.Bandit;
 import org.starloco.locos.fight.ia.IAHandler;
+import org.starloco.locos.fight.ia.IAProfiler;
+import org.starloco.locos.fight.ia.util.Function;
 import org.starloco.locos.fight.spells.LaunchedSpell;
 import org.starloco.locos.fight.spells.Spell.SortStats;
 import org.starloco.locos.fight.spells.SpellEffect;
@@ -47,6 +49,7 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -83,6 +86,9 @@ public class Fight {
     private boolean curAction = false;
     private boolean traped = false;
     private String walkingPacket = "";
+    private static final int MAX_QUEUED_ACTIONS_PER_FIGHTER = 3;
+    private final Map<Integer, ArrayDeque<Runnable>> queuedActionsByFighter = new ConcurrentHashMap<>();
+    private final AtomicBoolean queueDrainInProgress = new AtomicBoolean(false);
     private Monster.MobGroup mobGroup;
     private Collector collector;
     private Prism prism;
@@ -827,6 +833,76 @@ public class Fight {
 
     public void setCurAction(boolean action) {
         this.curAction = action;
+    }
+
+    public void queueAction(Fighter fighter, Runnable action) {
+        if (fighter == null || action == null || this.isFinish())
+            return;
+        final Fighter current = this.getFighterByOrdreJeu();
+        if (current == null || current.getId() != fighter.getId() || !current.canPlay())
+            return;
+
+        ArrayDeque<Runnable> queue = queuedActionsByFighter.computeIfAbsent(fighter.getId(), id -> new ArrayDeque<>());
+        synchronized (queue) {
+            if (queue.size() >= MAX_QUEUED_ACTIONS_PER_FIGHTER)
+                queue.pollFirst();
+            queue.offerLast(action);
+        }
+        drainQueuedActions();
+    }
+
+    private void drainQueuedActions() {
+        if (this.isCurAction() || this.isTraped() || this.isFinish())
+            return;
+        if (!queueDrainInProgress.compareAndSet(false, true))
+            return;
+
+        try {
+            while (!this.isCurAction() && !this.isTraped() && !this.isFinish()) {
+                Fighter current = this.getFighterByOrdreJeu();
+                if (current == null || !current.canPlay())
+                    return;
+
+                ArrayDeque<Runnable> queue = queuedActionsByFighter.get(current.getId());
+                if (queue == null)
+                    return;
+
+                Runnable next;
+                synchronized (queue) {
+                    next = queue.pollFirst();
+                    if (next == null) {
+                        queuedActionsByFighter.remove(current.getId());
+                        return;
+                    }
+                }
+
+                // Une action à la fois: le prochain item sera rejoué quand curAction repasse à false.
+                cast(current, next);
+                if (this.isCurAction() || this.isTraped())
+                    return;
+            }
+        } finally {
+            queueDrainInProgress.set(false);
+        }
+    }
+
+    private void clearQueuedActions(Fighter fighter) {
+        if (fighter != null)
+            queuedActionsByFighter.remove(fighter.getId());
+    }
+
+    private int getActionReleaseDelay(Fighter fighter, SortStats spell) {
+        if (fighter != null && fighter.getPersonnage() == null) {
+            Config config = Config.getInstance();
+            int aiDelay = fighter.isInvocation() ? config.AIInvocationDelay : config.AIDelay;
+            int maxDelay = fighter.isInvocation() ? config.AIInvocationSpellMaxDelay : config.AISpellMaxDelay;
+            if (spell != null && spell.getSpell() != null) {
+                int duration = Math.max(0, spell.getSpell().getDuration());
+                return duration > 0 ? Math.max(aiDelay, Math.min(duration, maxDelay)) : aiDelay;
+            }
+            return aiDelay;
+        }
+        return Math.max(50, Config.getInstance().AIDelay);
     }
 
     Monster.MobGroup getMobGroup() {
@@ -1675,8 +1751,10 @@ public class Fight {
           return;
         }
 	
-      if(current.getPersonnage()==null||current.getDouble()!=null||current.getCollector()!=null)
+      if(current.getPersonnage()==null||current.getDouble()!=null||current.getCollector()!=null) {
+        IAProfiler.startTurn(this, current);
         IAHandler.select(this,current);
+      }
     }
 
     public synchronized void endTurn(boolean onAction, Fighter f) {
@@ -1712,7 +1790,9 @@ public class Fight {
 
 
             SocketManager.GAME_SEND_GAMETURNSTOP_PACKET_TO_FIGHT(this, 7, current.getId());
+            IAProfiler.endTurn(this, current, "turn.end");
             current.setCanPlay(false);
+            clearQueuedActions(current);
             setCurAction(false);
 
             if(onAction)
@@ -2539,29 +2619,17 @@ public class Fight {
                     }
                 }
             } else if (fighter.getMob() != null || fighter.isInvocation()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 setCurAction(false);
                 return 10;
             }
 
             this.verifIfTeamAllDead();
-            if (fighter.getPersonnage() != null) {
-                TimerWaiter.addNext(() -> {
-                    setCurAction(false);
-                    SocketManager.GAME_SEND_GA_PACKET_TO_FIGHT(this, 7, 102, fighter.getId() + "", fighter.getId() + ",-0");
-                }, 1000, TimerWaiter.DataType.FIGHT);
-            } else {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            final int releaseDelay = getActionReleaseDelay(fighter, spell);
+            TimerWaiter.addNext(() -> {
                 setCurAction(false);
-            }
+                SocketManager.GAME_SEND_GA_PACKET_TO_FIGHT(this, 7, 102, fighter.getId() + "", fighter.getId() + ",-0");
+                drainQueuedActions();
+            }, releaseDelay, TimerWaiter.DataType.FIGHT);
 
             return 0;
         }
@@ -2871,15 +2939,25 @@ public class Fight {
 
       if(fighter.getPersonnage()==null)
       {
-        try
-        {
-          Thread.sleep((int)(400+(100*Math.sqrt(nStep))));
+        final Config config = Config.getInstance();
+        final int movementDelay;
+        if (fighter.isInvocation()) {
+            movementDelay = Math.max(
+                    config.AIInvocationDelay,
+                    (int) (config.AIInvocationMovementBaseDelay + (config.AIInvocationMovementStepDelay * Math.sqrt(Math.max(1, nStep))))
+            );
+        } else {
+            movementDelay = Math.max(
+                    config.AIDelay,
+                    (int) (400 + (100 * Math.sqrt(Math.max(1, nStep))))
+            );
         }
-        catch(final Exception e)
-        {
-        }
-        this.setWalkingPacket("");
-        Trap.doTraps(this, fighter);
+        TimerWaiter.addNext(() -> {
+            this.setWalkingPacket("");
+            Trap.doTraps(this, fighter);
+            this.setCurAction(false);
+            drainQueuedActions();
+        }, movementDelay, TimerWaiter.DataType.FIGHT);
         return true;
       }
 
@@ -4062,7 +4140,8 @@ public class Fight {
         
         this.setWalkingPacket("");
         this.setCurAction(false);
-        
+        drainQueuedActions();
+
         
     }
 

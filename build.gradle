@@ -37,6 +37,14 @@ repositories {
     mavenCentral()
 }
 
+configurations.configureEach {
+    // Avoid legacy MySQL artifact conflicts on runtime classpath.
+    exclude group: 'mysql', module: 'mysql-connector-java'
+    resolutionStrategy {
+        force 'com.mysql:mysql-connector-j:8.0.33'
+    }
+}
+
 dependencies {
     // Dépendances Maven - Logback avec couleurs
     implementation 'ch.qos.logback:logback-core:1.3.14'
@@ -54,7 +62,8 @@ dependencies {
     implementation 'org.javassist:javassist:3.29.2-GA'
     implementation 'joda-time:joda-time:2.6'
     implementation 'org.apache.mina:mina-core:2.2.1'
-    implementation 'com.mysql:mysql-connector-j:9.4.0'
+    // Java 8 compatible and stable with this codebase/Hikari stack.
+    implementation 'com.mysql:mysql-connector-j:8.0.33'
     implementation 'org.apache.commons:commons-jexl3:3.4.0'
 
     testImplementation 'junit:junit:4.13.2'

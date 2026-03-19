@@ -15,7 +15,7 @@
 
 Double-cliquez sur :
 ```
-Start-Server-UTF8.bat
+Start-Server.bat
 ```
 
 Cela va :
@@ -30,17 +30,17 @@ Cela va :
 
 **Méthode 2 : PowerShell**
 ```powershell
-PS> .\Start-Server-UTF8.bat
+PS> .\Start-Server.bat
 ```
 
 **Méthode 3 : Ligne de commande Windows**
 ```batch
-chcp 65001 && java -Dfile.encoding=UTF-8 -jar Server-1.0.0.jar
+chcp 65001 && java -Dfile.encoding=UTF-8 -jar build\libs\Server-1.0.0.jar
 ```
 
 **Méthode 4 : Ligne de commande simple (moins bon)**
 ```batch
-java -jar Server-1.0.0.jar
+java -jar build\libs\Server-1.0.0.jar
 ```
 
 ---
@@ -68,8 +68,8 @@ Couleurs :
 
 | Fichier | Utilité |
 |---------|---------|
-| `Start-Server-UTF8.bat` | ⭐ **À UTILISER** - Lance le serveur correctement |
-| `Server-1.0.0.jar` | Le serveur compilé |
+| `Start-Server.bat` | ⭐ **À UTILISER** - Lance le serveur correctement |
+| `build/libs/Server-1.0.0.jar` | Le serveur compilé |
 | `config.properties` | Configuration (port, BDD, rates, etc.) |
 | `Logs/` | Dossier des logs persistants |
 | `docs/` | Documentation complète |
@@ -116,13 +116,24 @@ ALLOW_PRESTIGE=false      # Prestige autorisé
 HEROIC=false              # Mode héroïque
 ```
 
+### IA / Invocations / Profiling
+```properties
+AI_PROFILING=false
+AI_PROFILING_INVOCATIONS_ONLY=true
+AI_PROFILING_WARN_MS=60
+AI_INVOCATION_DELAY=50
+AI_INVOCATION_SPELL_MAX_DELAY=220
+AI_INVOCATION_MOVEMENT_BASE_DELAY=220
+AI_INVOCATION_MOVEMENT_STEP_DELAY=55
+```
+
 ---
 
 ## 🧪 Vérifier que Tout Fonctionne
 
 ### 1. Démarrer le serveur
 ```batch
-Start-Server-UTF8.bat
+Start-Server.bat
 ```
 
 ### 2. Vérifier les logs
@@ -154,7 +165,7 @@ Start-Server-UTF8.bat
 ## 🆘 Dépannage Rapide
 
 ### ❌ Les couleurs ne s'affichent pas
-→ Utiliser `Start-Server-UTF8.bat`
+→ Utiliser `Start-Server.bat`
 
 ### ❌ Les accents sont mal affichés
 → Vérifier : `chcp` → doit afficher `65001`  
@@ -163,6 +174,10 @@ Start-Server-UTF8.bat
 ### ❌ Le serveur ne démarre pas
 → Vérifier le fichier `config.properties`  
 → Vérifier la BDD (connexion, droits)
+
+### ❌ Erreur `NullValueEncoder`
+→ Rebuild puis redémarrer avec le jar mis à jour  
+→ Vérifier que le runtime utilise bien le driver MySQL embarqué
 
 ### ❌ Les logs fichiers sont vides
 → Vérifier l'accès en écriture sur `Logs/`  
@@ -187,10 +202,10 @@ Voir les fichiers dans `docs/` :
 - [ ] BDD exchange accessible
 - [ ] Port 5555 disponible (si utilisé)
 - [ ] Dossier `Logs/` accessible en écriture
-- [ ] JAR `Server-1.0.0.jar` présent
+- [ ] JAR `build/libs/Server-1.0.0.jar` présent
 
 **Puis :**
-- [ ] Exécuter `Start-Server-UTF8.bat`
+- [ ] Exécuter `Start-Server.bat`
 - [ ] Vérifier console : couleurs + accents
 - [ ] Vérifier "Server is ready" dans les logs
 - [ ] Connecter un client pour tester

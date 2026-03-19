@@ -77,13 +77,54 @@ Revue complète de `GameClient.java` (7 800 lignes) et `GameCase.java` (1 200 li
 
 | Date | Version | Type | Résumé |
 |------|---------|------|--------|
+| 19/03/2026 | **v1.4.0** | ⚙ admin / IA / DB | `RELOADITEM` synchronisé client, `SPAWN 1295,1295`, profiling/accélération invocations, fix runtime MySQL 8.0.33 |
 | 19/03/2026 | **v1.3.1** | 🛠 fix | Toggle global `NPC_MOVEMENT` + correctif regression deplacement joueur (`BN` premature retire) |
 | 18/03/2026 | **v1.3.0** | 🧹 qualité | 30 corrections GameClient + GameCase : bugs String `==`, StringBuilder, logging, refactoring |
 | 17/03/2026 | v1.2.1 | 🔐 sécurité | Fail-fast déplacements, anti-flood, logs throttlés |
 | 17/03/2026 | v1.2.0 | ⚡ perf | CryptManager O(1), GameMap lookup O(1), DB fail-fast |
 | — | v1.1.0 | ✨ feature | Respawn étoiles, persistance, commandes admin STARS |
 
-> Détail complet → [`docs/CHANGELOG_CODE_QUALITY_V1.3.0.md`](docs/CHANGELOG_CODE_QUALITY_V1.3.0.md)
+> Détail complet → [`docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md`](docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md)
+
+---
+
+## Nouveautés admin / IA / runtime [@NarKotiix — v1.4.0]
+
+### Commandes admin
+
+- **`RELOADITEM`** : vide le cache des templates d'items, recharge la base et notifie les joueurs connectés pour forcer la mise à jour côté client.
+- **`SPAWN`** accepte maintenant 2 formats :
+
+```text
+SPAWN 1295,120,200;1295,120,200
+SPAWN 1295,1295
+```
+
+- Le format simple `id,id,id` récupère automatiquement les niveaux disponibles en base et choisit un grade aléatoire compatible.
+- Le spawn se fait sur la cellule courante de l'admin avec fallback sur cellule libre si nécessaire.
+
+### IA d'invocations
+
+- Profiling activable via logs `[AI-PROF]`.
+- Résumés périodiques + logs de tours lents.
+- Réduction des délais artificiels sur les sorts et déplacements d'invocations.
+
+Configuration utile :
+
+```ini
+AI_PROFILING=true
+AI_PROFILING_INVOCATIONS_ONLY=true
+AI_PROFILING_WARN_MS=60
+AI_INVOCATION_DELAY=50
+AI_INVOCATION_SPELL_MAX_DELAY=220
+AI_INVOCATION_MOVEMENT_BASE_DELAY=220
+AI_INVOCATION_MOVEMENT_STEP_DELAY=55
+```
+
+### Runtime MySQL
+
+- Driver JDBC verrouillé sur **`com.mysql:mysql-connector-j:8.0.33`** pour stabiliser le runtime Java 8/Hikari.
+- Correction du `NoClassDefFoundError: com/mysql/cj/protocol/a/NullValueEncoder`.
 
 ---
 
@@ -116,10 +157,9 @@ Revue complète de `GameClient.java` (7 800 lignes) et `GameCase.java` (1 200 li
 
 # Windows — mode normal
 .\Start-Server.bat
-
-# Windows — mode debug (plus de logs)
-.\Start-Server.bat --debug
 ```
+
+> Le lanceur Windows actuel est `Start-Server.bat`.
 
 ### Option configuration : mouvement des groupes
 
@@ -144,6 +184,33 @@ NPC_MOVEMENT=false
 - `false` = Non (PNJ statiques sur toutes les maps)
 
 > Recommande en production si vous souhaitez un comportement stable sans deplacement PNJ.
+
+### Option configuration : profiling et vitesse des invocations
+
+```ini
+AI_PROFILING=false
+AI_PROFILING_INVOCATIONS_ONLY=true
+AI_PROFILING_WARN_MS=60
+AI_INVOCATION_DELAY=50
+AI_INVOCATION_SPELL_MAX_DELAY=220
+AI_INVOCATION_MOVEMENT_BASE_DELAY=220
+AI_INVOCATION_MOVEMENT_STEP_DELAY=55
+```
+
+- `AI_PROFILING=true` : active les logs `[AI-PROF]`
+- `AI_PROFILING_INVOCATIONS_ONLY=true` : cible uniquement les invocations
+- `AI_INVOCATION_DELAY` : délai minimal entre actions d'invocation
+- `AI_INVOCATION_SPELL_MAX_DELAY` : plafond de délai après un sort d'invocation
+- `AI_INVOCATION_MOVEMENT_*` : tuning du temps de déplacement des invocations
+
+### Commandes admin utiles
+
+```text
+RELOADITEM
+LINEM 1295
+SPAWN 1295,1295
+SPAWN 1295,120,200;1295,120,200
+```
 
 **Le script `Start-Server.bat` active automatiquement :**
 - ✅ Encodage UTF-8 pour les caractères spéciaux (é, è, ê, etc.)
@@ -210,6 +277,7 @@ Step 4/4 - Closing database connections...
 
 ## Documentation complémentaire
 
+- ⚙ **[CHANGELOG_ADMIN_IA_DB_V1.4.0.md](docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md)** — `RELOADITEM`, `SPAWN`, profiling/optimisation invocations, correctif driver MySQL (v1.4.0)
 - 🧹 **[CHANGELOG_CODE_QUALITY_V1.3.0.md](docs/CHANGELOG_CODE_QUALITY_V1.3.0.md)** — 30 corrections qualité : bugs String `==`, StringBuilder, logging, refactoring (v1.3.0)
 - 🛠 **[CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md](docs/CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md)** — Toggle `NPC_MOVEMENT` + correctif blocage deplacement joueur (v1.3.1)
 - 📖 **[INDEX_DOCUMENTATION_V1.2.0.md](docs/INDEX_DOCUMENTATION_V1.2.0.md)** — Index complet de tous les documents

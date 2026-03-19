@@ -1129,12 +1129,19 @@ public class GameMap {
             group.startCondTimer();
     }
 
-    public void spawnGroupOnCommand(int cellID, String groupData, boolean send) {
+    public boolean spawnGroupOnCommand(int cellID, String groupData, boolean send) {
+        if (groupData == null || groupData.trim().isEmpty())
+            return false;
+
         while(this.mobGroups.get(this.nextObjectId) != null)
             this.nextObjectId--;
+
+        while (this.containsForbiddenCellSpawn(cellID))
+            cellID = this.getRandomFreeCellId();
+
         Monster.MobGroup group = new Monster.MobGroup(this.nextObjectId, cellID, groupData);
         if (group.getMobs().isEmpty())
-            return;
+            return false;
         group.setStarBonus(0);
         this.mobGroups.put(this.nextObjectId, group);
         group.setIsFix(false);
@@ -1142,6 +1149,7 @@ public class GameMap {
             SocketManager.GAME_SEND_MAP_MOBS_GM_PACKET(this, group);
 
         this.nextObjectId--;
+        return true;
     }
 
     public void addStaticGroup(int cellID, String groupData, boolean b) {
