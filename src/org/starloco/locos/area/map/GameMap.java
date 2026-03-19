@@ -94,7 +94,9 @@ public class GameMap {
                     if (map.getMountPark() != null) map.getMountPark().startMoveMounts();
                 }
 
-                NpcMovable.moveAll();
+                if (Config.getInstance().npcMovement) {
+                    NpcMovable.moveAll();
+                }
             }
         }
 

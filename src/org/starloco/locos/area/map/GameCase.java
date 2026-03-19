@@ -1130,7 +1130,7 @@ public class GameCase {
     // By Coding Mestre - [FIX] - Craftmens list now shows the appropriate jobs/professions Close #34
     private String getCraftsmenJobIdsByMap(short mapId) {
         int mapIdAsInteger = mapId;
-
+        
         List<String> availableJobsForCurrentMap = craftsmenJobIds
                 .entrySet()
                 .stream().

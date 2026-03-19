@@ -4598,8 +4598,6 @@ public class GameClient {
             if (result != -1000 && result < 0)
                 result = -result;
 
-                this.player.getCurCell().removePlayer(this.player);
-                SocketManager.GAME_SEND_BN(this);
             //On prend en compte le nouveau path
             path = pathRef.get();
             //Si le path est invalide

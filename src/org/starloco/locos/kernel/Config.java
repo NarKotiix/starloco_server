@@ -19,6 +19,7 @@ public class Config {
     // Gameplay rules
     public boolean autoReboot = true, allZaap = false, allEmote = false, onlyLocal = false, prestige = false;
     public boolean mobGroupMovement = true;
+    public boolean npcMovement = true;
     public float playerMoveSpeedMultiplier = 1.0f;
     public int startMap = 0, startCell = 0;
 
@@ -108,6 +109,7 @@ public class Config {
         Main.fightAsBlocked  = getBool(p,  "FIGHT_AS_BLOCKED", Main.fightAsBlocked);
         Main.tradeAsBlocked  = getBool(p,  "TRADE_AS_BLOCKED", Main.tradeAsBlocked);
         this.mobGroupMovement = getBool(p, "MOB_GROUP_MOVEMENT", this.mobGroupMovement);
+        this.npcMovement = getBool(p, "NPC_MOVEMENT", this.npcMovement);
         this.playerMoveSpeedMultiplier = Math.max(1.0f, getFloat(p, "PLAYER_MOVE_SPEED_MULTIPLIER", this.playerMoveSpeedMultiplier));
 
         String startPlayer = getSanitized(p, "START_PLAYER");
