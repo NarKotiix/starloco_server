@@ -77,6 +77,7 @@ Revue complète de `GameClient.java` (7 800 lignes) et `GameCase.java` (1 200 li
 
 | Date | Version | Type | Résumé |
 |------|---------|------|--------|
+| 19/03/2026 | **v1.3.1** | 🛠 fix | Toggle global `NPC_MOVEMENT` + correctif regression deplacement joueur (`BN` premature retire) |
 | 18/03/2026 | **v1.3.0** | 🧹 qualité | 30 corrections GameClient + GameCase : bugs String `==`, StringBuilder, logging, refactoring |
 | 17/03/2026 | v1.2.1 | 🔐 sécurité | Fail-fast déplacements, anti-flood, logs throttlés |
 | 17/03/2026 | v1.2.0 | ⚡ perf | CryptManager O(1), GameMap lookup O(1), DB fail-fast |
@@ -130,6 +131,19 @@ MOB_GROUP_MOVEMENT=true
 
 - `true` = Oui (comportement normal)
 - `false` = Non (les groupes ne se deplacent plus automatiquement)
+
+### Option configuration : mouvement des PNJ
+
+Vous pouvez activer/desactiver le mouvement automatique des PNJ sur toutes les maps avec :
+
+```ini
+NPC_MOVEMENT=false
+```
+
+- `true` = Oui (PNJ mobiles selon leur path)
+- `false` = Non (PNJ statiques sur toutes les maps)
+
+> Recommande en production si vous souhaitez un comportement stable sans deplacement PNJ.
 
 **Le script `Start-Server.bat` active automatiquement :**
 - ✅ Encodage UTF-8 pour les caractères spéciaux (é, è, ê, etc.)
@@ -197,6 +211,7 @@ Step 4/4 - Closing database connections...
 ## Documentation complémentaire
 
 - 🧹 **[CHANGELOG_CODE_QUALITY_V1.3.0.md](docs/CHANGELOG_CODE_QUALITY_V1.3.0.md)** — 30 corrections qualité : bugs String `==`, StringBuilder, logging, refactoring (v1.3.0)
+- 🛠 **[CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md](docs/CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md)** — Toggle `NPC_MOVEMENT` + correctif blocage deplacement joueur (v1.3.1)
 - 📖 **[INDEX_DOCUMENTATION_V1.2.0.md](docs/INDEX_DOCUMENTATION_V1.2.0.md)** — Index complet de tous les documents
 - 📋 **[CHANGELOG_RECENT_COMMITS.md](docs/CHANGELOG_RECENT_COMMITS.md)** — Résumé des derniers commits
 - ⚡ **[CHANGELOG_PERF_V1.2.0.md](docs/CHANGELOG_PERF_V1.2.0.md)** — Détail des optimisations de performance v1.2.0

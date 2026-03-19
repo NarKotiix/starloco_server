@@ -1,6 +1,21 @@
-# Changelog recent (6 derniers commits)
+# Changelog recent (6 derniers commits + derniere mise a jour)
 
 Ce document resume les six derniers commits appliques sur `main`.
+
+## Derniere mise a jour locale (v1.3.1)
+
+- **Type:** correctif + configuration
+- **Fichiers modifies:**
+  - `src/org/starloco/locos/kernel/Config.java`
+  - `src/org/starloco/locos/area/map/GameMap.java`
+  - `src/org/starloco/locos/game/GameClient.java`
+  - `README.md`
+  - `docs/INDEX_DOCUMENTATION_V1.2.0.md`
+  - `docs/CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md`
+- **Impact:**
+  - ajout du flag `NPC_MOVEMENT` pour desactiver les PNJ mobiles globalement,
+  - correction d'une regression de deplacement joueur liee a un `BN` premature,
+  - documentation synchronisee avec les changements.
 
 ## 1) `9fccc52` - `feat(star tracing): add debug logging for star bonus updates and implement tracing logic`
 
@@ -47,4 +62,4 @@ Ce document resume les six derniers commits appliques sur `main`.
 - Detail perf: `CHANGELOG_PERF_V1.2.0.md`
 - Detail securite: `SECURITY_HARDENING_V1.2.1.md`
 
-**Derniere mise a jour:** 17 Mars 2026
+**Derniere mise a jour:** 19 Mars 2026

@@ -1,11 +1,17 @@
-# 📖 INDEX DOCUMENTATION — v1.3.0
+# 📖 INDEX DOCUMENTATION — v1.3.1
 
-> Dernière mise à jour : 18 Mars 2026  
+> Dernière mise à jour : 19 Mars 2026  
 > Version serveur : 1.0.0
 
 ---
 
 ## 📋 Documents actifs
+
+### 🛠 Correctifs mouvement (v1.3.1 — nouveau)
+
+| Fichier | Description | Audience | Durée |
+|---------|-------------|----------|-------|
+| [`CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md`](CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md) | Toggle `NPC_MOVEMENT` + correctif blocage deplacement joueur | Dev / Ops | 8 min |
 
 ### 🧹 Qualité de code & Optimisations (v1.3.0 — nouveau)
 
@@ -91,6 +97,7 @@
 |----------|-----------|
 | Comprendre les dernières optis de perfs | [`CHANGELOG_PERF_V1.2.0.md`](CHANGELOG_PERF_V1.2.0.md) |
 | Comprendre le durcissement sécurité récent | [`SECURITY_HARDENING_V1.2.1.md`](SECURITY_HARDENING_V1.2.1.md) |
+| Comprendre les derniers correctifs de mouvement | [`CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md`](CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md) |
 | Déployer le système de respawn | [`QUICK_START_STAR_RESPAWN.md`](QUICK_START_STAR_RESPAWN.md) |
 | Configurer les délais de respawn | [`CONFIGURATION_STAR_RESPAWN.md`](CONFIGURATION_STAR_RESPAWN.md) |
 | Déboguer un problème de respawn | [`MAPS_CLASSIQUES_MULTIGROUPS.md`](MAPS_CLASSIQUES_MULTIGROUPS.md) |
@@ -121,5 +128,5 @@ Ces fichiers ont été supprimés car obsolètes ou intermédiaires :
 
 ---
 
-**Version :** 1.3.0  
-**Date :** 18 Mars 2026
+**Version :** 1.3.1  
+**Date :** 19 Mars 2026
