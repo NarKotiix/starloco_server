@@ -4682,7 +4682,7 @@ public class GameClient {
                 final Fighter fighter = fight.getFighterByPerso(this.player);
 
                 if (SS != null && fighter != null)
-                    fight.queueAction(fighter, () -> fight.tryCastSpell(fighter, SS, cellId));
+                    fight.cast(fighter, () -> fight.tryCastSpell(fighter, SS, cellId));
             }
         } catch (NumberFormatException e) {
             System.err.println(packet + "\n" + e);
@@ -4697,7 +4697,7 @@ public class GameClient {
             if (fight != null) {
                 final Fighter fighter = fight.getFighterByPerso(this.player);
                 if (fighter != null)
-                    fight.queueAction(fighter, () -> fight.tryCaC(this.player, cell));
+                    fight.cast(fighter, () -> fight.tryCaC(this.player, cell));
             }
         } catch (Exception e) {
             e.printStackTrace();

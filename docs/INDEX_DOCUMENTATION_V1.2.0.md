@@ -1,11 +1,17 @@
 # 📖 INDEX DOCUMENTATION — v1.4.0
 
-> Dernière mise à jour : 19 Mars 2026  
+> Dernière mise à jour : 20 Mars 2026  
 > Version serveur : 1.0.0
 
 ---
 
 ## 📋 Documents actifs
+
+### 🔐 Exchange security (v1.4.1 - nouveau)
+
+| Fichier | Description | Audience | Durée |
+|---------|-------------|----------|-------|
+| [`CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md`](CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md) | Durcissement `PlayerExchange` + correctif compilation IA/profiling | Dev / Ops | 10 min |
 
 ### ⚙ Admin / IA / runtime (v1.4.0 — nouveau)
 
@@ -101,6 +107,7 @@
 
 | Je veux… | → Document |
 |----------|-----------|
+| Comprendre le durcissement des echanges et le fix compile associe | [`CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md`](CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md) |
 | Comprendre les derniers changements admin/IA/runtime | [`CHANGELOG_ADMIN_IA_DB_V1.4.0.md`](CHANGELOG_ADMIN_IA_DB_V1.4.0.md) |
 | Comprendre les dernières optis de perfs | [`CHANGELOG_PERF_V1.2.0.md`](CHANGELOG_PERF_V1.2.0.md) |
 | Comprendre le durcissement sécurité récent | [`SECURITY_HARDENING_V1.2.1.md`](SECURITY_HARDENING_V1.2.1.md) |
@@ -136,4 +143,4 @@ Ces fichiers ont été supprimés car obsolètes ou intermédiaires :
 ---
 
 **Version :** 1.4.0  
-**Date :** 19 Mars 2026
+**Date :** 20 Mars 2026

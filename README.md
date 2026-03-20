@@ -45,6 +45,12 @@ Développé avec aide IA pour debugging et features.
 - **Pathfinding (`PathFinding`)** : vérification des cellules interdites en O(1) via masque `boolean[]`.
 - **SQL (`PlayerData`/`AccountData`)** : migration des points sensibles vers des requêtes paramétrées (`PreparedStatement`) pour limiter les risques d'injection SQL.
 
+### Correctif sécurité échange + build [@NarKotiix — v1.4.1]
+
+- **`PlayerExchange`** : validation stricte acteur/quantité/kamas, clamp des quantités réelles, garde-fous anti-NPE (joueur + NPC).
+- **Anti-duplication** : revalidation des soldes kamas avant `apply()` et bornage des transferts d'objets selon stock réel.
+- **Build** : correction compilation IA/profiling (`Config` + appels combat `GameClient`).
+
 ---
 
 ## Qualité de code [@NarKotiix — v1.3.0]
@@ -77,6 +83,7 @@ Revue complète de `GameClient.java` (7 800 lignes) et `GameCase.java` (1 200 li
 
 | Date | Version | Type | Résumé |
 |------|---------|------|--------|
+| 20/03/2026 | **v1.4.1** | 🔐 fix sécurité / build | durcissement `PlayerExchange` + fix compilation (`Config` AI profiling, `GameClient` combat cast) |
 | 19/03/2026 | **v1.4.0** | ⚙ admin / IA / DB | `RELOADITEM` synchronisé client, `SPAWN 1295,1295`, profiling/accélération invocations, fix runtime MySQL 8.0.33 |
 | 19/03/2026 | **v1.3.1** | 🛠 fix | Toggle global `NPC_MOVEMENT` + correctif regression deplacement joueur (`BN` premature retire) |
 | 18/03/2026 | **v1.3.0** | 🧹 qualité | 30 corrections GameClient + GameCase : bugs String `==`, StringBuilder, logging, refactoring |
@@ -84,7 +91,7 @@ Revue complète de `GameClient.java` (7 800 lignes) et `GameCase.java` (1 200 li
 | 17/03/2026 | v1.2.0 | ⚡ perf | CryptManager O(1), GameMap lookup O(1), DB fail-fast |
 | — | v1.1.0 | ✨ feature | Respawn étoiles, persistance, commandes admin STARS |
 
-> Détail complet → [`docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md`](docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md)
+> Détails complets → [`docs/CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md`](docs/CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md), [`docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md`](docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md)
 
 ---
 

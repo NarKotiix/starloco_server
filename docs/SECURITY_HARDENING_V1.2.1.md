@@ -46,3 +46,26 @@ Réduire les risques de crash, états incohérents et flood CPU/logs via des paq
 2. Envoyer des paquets invalides (cellule non décodable): rejet propre, pas de crash.
 3. Flood invalide: cooldown actif + logs `WARN` agrégés.
 
+---
+
+## Addendum v1.4.1 - Echanges joueurs/PNJ
+
+### Durcissement applique (`PlayerExchange`)
+- Validation stricte de l'acteur d'echange avant toute mutation (`getActorIndex`).
+- Remise a zero centralisee des statuts de validation (`resetReadyState`).
+- Validation de quantites ajoutees (bornes reelles d'inventaire, quantite > 0).
+- Clamp de quantite au moment du transfert pour eviter depassements/duplication si inventaire change en cours d'echange.
+- Clamp des kamas proposes au solde reel du joueur.
+- Revalidation des soldes kamas dans `apply()` avant transfert final.
+- Garde-fous anti-NPE dans les flux NPC (`NpcExchange`, `NpcExchangePets`, `NpcRessurectPets`).
+
+### Correctif compilation associe
+- `Config` expose de nouveau les cles de profiling IA attendues par `IAProfiler`:
+  - `AIProfiling`
+  - `AIProfilingInvocationOnly`
+  - `AIProfilingWarnMs`
+- `GameClient` remplace les appels a `fight.queueAction(...)` (inexistant) par `fight.cast(...)`.
+
+### Details
+- Voir `docs/CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md`.
+

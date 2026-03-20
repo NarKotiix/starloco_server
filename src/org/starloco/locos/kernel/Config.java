@@ -36,6 +36,10 @@ public class Config {
     public int AIDelay = 100, AIMovementCellDelay = 100, AIMovementFlatDelay = 500;
     /** Délai maximum autorisé pour l'animation d'un sort côté IA (plafond de getDuration()). */
     public int AISpellMaxDelay = 600;
+    // AI profiling
+    public boolean AIProfiling = false;
+    public boolean AIProfilingInvocationOnly = true;
+    public int AIProfilingWarnMs = 60;
 
     public static Config getInstance() {
         return singleton;
@@ -149,6 +153,9 @@ public class Config {
         this.AIMovementCellDelay = getInt(p,  "AI_MOVEMENT_CELL_DELAY",  this.AIMovementCellDelay);
         this.AIMovementFlatDelay = getInt(p,  "AI_MOVEMENT_FLAT_DELAY",  this.AIMovementFlatDelay);
         this.AISpellMaxDelay     = getInt(p,  "AI_SPELL_MAX_DELAY",      this.AISpellMaxDelay);
+        this.AIProfiling         = getBool(p, "AI_PROFILING",            this.AIProfiling);
+        this.AIProfilingInvocationOnly = getBool(p, "AI_PROFILING_INVOCATIONS_ONLY", this.AIProfilingInvocationOnly);
+        this.AIProfilingWarnMs   = Math.max(1, getInt(p, "AI_PROFILING_WARN_MS", this.AIProfilingWarnMs));
     }
 
     private void applyRates(Properties p) {
@@ -223,6 +230,11 @@ public class Config {
         props.setProperty("SERVER_KEY",     "eratz");
         props.setProperty("DEBUG",          "true");
         props.setProperty("USE_LOG",        "true");
+
+        // IA profiling
+        props.setProperty("AI_PROFILING", "false");
+        props.setProperty("AI_PROFILING_INVOCATIONS_ONLY", "true");
+        props.setProperty("AI_PROFILING_WARN_MS", "60");
 
         // Rates
         props.setProperty("RATE_XP",    "1");
