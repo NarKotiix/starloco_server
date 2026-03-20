@@ -174,7 +174,7 @@ public class AstarPathfinding {
 
     private int getCostG(Node node) {
         int costG = 0;
-        while (node != null && node.getCellId() != getCellStart()) {
+        while (node.getCellId() == getCellStart()) {
             node = node.getParent();
             costG += 10;
         }
