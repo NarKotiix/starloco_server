@@ -230,12 +230,7 @@ public class IAHandler {
 
         final IA finalIA = ia;
         ia.addNext(() -> {
-            final long profilingStart = IAProfiler.methodStart(fighter, "IAHandler.apply");
-            try {
-                finalIA.apply();
-            } finally {
-                IAProfiler.methodEnd(fighter, "IAHandler.apply", profilingStart, null);
-            }
+            finalIA.apply();
             finalIA.addNext(finalIA::endTurn, 0); // 1000 to 0 by coding mestre (vérifier si à induit des bugs)
         }, 0);
     }
