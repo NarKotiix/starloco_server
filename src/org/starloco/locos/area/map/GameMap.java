@@ -410,27 +410,9 @@ public class GameMap {
                 continue;
             int id1, lvl;
             try {
-                String[] parts = mob.split(",");
-                if (parts.length < 2) {
-                    System.err.println("ERROR: Malformed mob entry: '" + mob + "' (expected id,level format)");
-                    continue;
-                }
-                
-                String idStr = parts[0].trim();
-                String lvlStr = parts[1].trim();
-                
-                // Handle malformed data with extra commas (French locale decimal separator issue)
-                if (idStr.contains(",")) {
-                    String[] subParts = idStr.split(",");
-                    if (subParts.length > 0 && subParts[0].matches("\\d+")) {
-                        idStr = subParts[0];
-                    }
-                }
-                
-                id1 = Integer.parseInt(idStr);
-                lvl = Integer.parseInt(lvlStr);
+                id1 = Integer.parseInt(mob.split(",")[0]);
+                lvl = Integer.parseInt(mob.split(",")[1]);
             } catch (NumberFormatException e) {
-                System.err.println("ERROR: Failed to parse mob entry: '" + mob + "'");
                 e.printStackTrace();
                 continue;
             }
@@ -557,24 +539,9 @@ public class GameMap {
         final int id1;
         final int lvl;
         try {
-            String idStr = monsters.substring(start, commaIndex).trim();
-            String lvlStr = monsters.substring(commaIndex + 1, end).trim();
-            
-            // Handle malformed data: if idStr contains a decimal separator (comma in French locale)
-            // Try to extract the integer part
-            if (idStr.contains(",") && !idStr.contains(";")) {
-                String[] parts = idStr.split(",");
-                if (parts.length > 0 && parts[0].matches("\\d+")) {
-                    idStr = parts[0];
-                }
-            }
-            
-            id1 = Integer.parseInt(idStr);
-            lvl = Integer.parseInt(lvlStr);
+            id1 = Integer.parseInt(monsters.substring(start, commaIndex));
+            lvl = Integer.parseInt(monsters.substring(commaIndex + 1, end));
         } catch (NumberFormatException e) {
-            // Log detailed error information for debugging
-            String problematicData = monsters.substring(start, end);
-            System.err.println("ERROR: Failed to parse mob data: '" + problematicData + "'");
             e.printStackTrace();
             return;
         }
