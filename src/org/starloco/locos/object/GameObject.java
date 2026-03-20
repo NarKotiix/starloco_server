@@ -366,6 +366,15 @@ public class GameObject {
         this.template = World.world.getObjTemplate(Tid);
     }
 
+    /** Refreshes the template reference from the current ObjTemplates map without marking the item as modified. */
+    public void refreshTemplate() {
+        if (this.template == null) return;
+        ObjectTemplate updated = World.world.getObjTemplate(this.template.getId());
+        if (updated != null) {
+            this.template = updated;
+        }
+    }
+
     public int getGuid() {
         return guid;
     }
