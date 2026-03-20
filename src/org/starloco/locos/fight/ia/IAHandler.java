@@ -4,6 +4,7 @@ import org.starloco.locos.entity.monster.Monster.MobGrade;
 import org.starloco.locos.fight.Fight;
 import org.starloco.locos.fight.Fighter;
 import org.starloco.locos.fight.ia.type.*;
+import org.starloco.locos.game.world.World;
 import org.starloco.locos.kernel.Config;
 
 /**
@@ -14,6 +15,8 @@ public class IAHandler {
     // TODO : Changer le switch en map, passer le IAHandler en singleton
 
     public static void select(final Fight fight, final Fighter fighter) {
+        IAProfiler.startTurn(fight, fighter);
+        final long selectStart = IAProfiler.methodStart(fighter, "ia.select");
         IA ia = new Blank(fight, fighter);
         MobGrade mobGrade = fighter.getMob();
 
@@ -228,10 +231,26 @@ public class IAHandler {
             }
         }
 
+        IAProfiler.methodEnd(fighter, "ia.select", selectStart,
+                "mobIa=" + (mobGrade != null && mobGrade.getTemplate() != null ? mobGrade.getTemplate().getIa() : -1));
+
         final IA finalIA = ia;
         ia.addNext(() -> {
-            finalIA.apply();
-            finalIA.addNext(finalIA::endTurn, 0); // 1000 to 0 by coding mestre (vérifier si à induit des bugs)
+            final long applyStart = IAProfiler.methodStart(fighter, "ia.apply");
+            try {
+                finalIA.apply();
+            } catch (Exception e) {
+                World.world.logger.error("[AI-PROF] ia.apply crash fight={} fighter={} mobIa={}",
+                        fight != null ? fight.getId() : -1,
+                        fighter != null ? fighter.getId() : -1,
+                        mobGrade != null && mobGrade.getTemplate() != null ? mobGrade.getTemplate().getIa() : -1,
+                        e);
+                finalIA.setStop(true);
+            } finally {
+                IAProfiler.methodEnd(fighter, "ia.apply", applyStart, "phase=decision");
+                // Même en cas de crash d'IA, on force un passage de tour propre.
+                finalIA.addNext(finalIA::endTurn, 0);
+            }
         }, 0);
     }
 }

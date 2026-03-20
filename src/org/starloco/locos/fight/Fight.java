@@ -16,6 +16,7 @@ import org.starloco.locos.entity.Prism;
 import org.starloco.locos.entity.monster.Monster;
 import org.starloco.locos.entity.monster.boss.Bandit;
 import org.starloco.locos.fight.ia.IAHandler;
+import org.starloco.locos.fight.ia.IAProfiler;
 import org.starloco.locos.fight.spells.LaunchedSpell;
 import org.starloco.locos.fight.spells.Spell.SortStats;
 import org.starloco.locos.fight.spells.SpellEffect;
@@ -2567,6 +2568,8 @@ public class Fight {
         }
         catch (Exception ex)
         {
+            // Evite de bloquer tout le tour en cas d'exception pendant un cast.
+            setCurAction(false);
             Logging.getInstance().write("Error", ex.getMessage() + "\n" + Arrays.toString(ex.getStackTrace()));
             return 10;
         }
@@ -2880,6 +2883,8 @@ public class Fight {
         }
         this.setWalkingPacket("");
         Trap.doTraps(this, fighter);
+        // Les IA n'envoient pas d'ACK de déplacement client (GK), on libère donc ici.
+        this.setCurAction(false);
         return true;
       }
 
@@ -5739,9 +5744,21 @@ public class Fight {
     }
 
     public void cast(Fighter fighter, Runnable runnable) {
-        if(this.turn != null && System.currentTimeMillis() - this.turn.getStartTime() >= 30000) return;
+        if(this.turn != null && System.currentTimeMillis() - this.turn.getStartTime() >= 30000) {
+            if (Config.getInstance().AIProfiling && fighter != null) {
+                World.world.logger.info("[AI-PROF] cast skipped timeout fight={} fighter={} elapsed={}ms",
+                        this.getId(),
+                        fighter.getId(),
+                        System.currentTimeMillis() - this.turn.getStartTime());
+            }
+            return;
+        }
+        long castStart = IAProfiler.methodStart(fighter, "fight.cast");
         SocketManager.GAME_SEND_GAS_PACKET_TO_FIGHT(this, 7, fighter.getId());
         try { runnable.run(); } catch(Exception e) { e.printStackTrace(); }
+        finally {
+            IAProfiler.methodEnd(fighter, "fight.cast", castStart, "fight=" + this.getId());
+        }
         SocketManager.GAME_SEND_GAF_PACKET_TO_FIGHT(this, 7, 0, fighter.getId());
     }
 
