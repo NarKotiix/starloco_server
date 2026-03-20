@@ -2113,17 +2113,15 @@ public class World {
     }
 
     public void reloadItems() {
-        // Clear the old templates before reloading
         ObjTemplates.clear();
-        // Reload all templates from database
         Database.getDynamics().getObjectTemplateData().load();
-        // Notify all connected players that their items have changed
-        for (Player player : getOnlinePlayers()) {
-            // Update all equipped items for each player
-            for (GameObject item : player.GetequipedObjects().values()) {
-                if (item != null) {
-                    SocketManager.GAME_SEND_UPDATE_OBJECT_DISPLAY_PACKET(player, item);
-                }
+        // Refresh template references on all in-memory GameObjects so server-side
+        // calculations immediately use the newly loaded template data.
+        // No client packet is sent: template data is server-side only and the
+        // OCO/OC packets were causing client-side display corruption.
+        for (GameObject obj : getGameObjects()) {
+            if (obj != null) {
+                obj.refreshTemplate();
             }
         }
     }
