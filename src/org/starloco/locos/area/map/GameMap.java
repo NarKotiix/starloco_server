@@ -919,6 +919,8 @@ public class GameMap {
     }
 
     public boolean isAggroByMob(Player perso, int cell) {
+        if (!Config.singleton.mobAggression)
+            return false;
         if (placesStr.equalsIgnoreCase("|"))
             return false;
         if (perso.getCurMap().getId() != id || !perso.canAggro())

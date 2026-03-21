@@ -22,6 +22,8 @@ public class Config {
     public boolean autoReboot = true, allZaap = false, allEmote = false, onlyLocal = false, prestige = false;
     public boolean mobGroupMovement = true;
     public boolean npcMovement = true;
+    /** Si false, aucun groupe de mobs n'agressa les joueurs (utile pour les serveurs PvE-only ou les phases de test). */
+    public boolean mobAggression = true;
     public float playerMoveSpeedMultiplier = 1.0f;
     public int startMap = 0, startCell = 0;
 
@@ -123,6 +125,7 @@ public class Config {
         Main.tradeAsBlocked  = getBool(p,  "TRADE_AS_BLOCKED", Main.tradeAsBlocked);
         this.mobGroupMovement = getBool(p, "MOB_GROUP_MOVEMENT", this.mobGroupMovement);
         this.npcMovement = getBool(p, "NPC_MOVEMENT", this.npcMovement);
+        this.mobAggression = getBool(p, "MOB_AGGRESSION", this.mobAggression);
         this.playerMoveSpeedMultiplier = Math.max(1.0f, getFloat(p, "PLAYER_MOVE_SPEED_MULTIPLIER", this.playerMoveSpeedMultiplier));
 
         String startPlayer = getSanitized(p, "START_PLAYER");
@@ -230,6 +233,7 @@ public class Config {
         props.setProperty("FIGHT_AS_BLOCKED", "false");
         props.setProperty("TRADE_AS_BLOCKED", "false");
         props.setProperty("MOB_GROUP_MOVEMENT", "true");
+        props.setProperty("MOB_AGGRESSION",     "true");
         props.setProperty("PLAYER_MOVE_SPEED_MULTIPLIER", "2.0");
 
         // Configuration serveur

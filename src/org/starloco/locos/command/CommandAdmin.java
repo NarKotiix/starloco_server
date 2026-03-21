@@ -156,6 +156,19 @@ public class CommandAdmin extends AdminUser {
                 + " | " + nextStep;
     }
 
+    private double getDropPercentForGrade(World.Drop drop, int grade) {
+        World.Drop gradeDrop = drop.copy(grade);
+        return gradeDrop == null ? 0D : gradeDrop.getLocalPercent();
+    }
+
+    private double getBestDropPercent(World.Drop drop) {
+        double best = 0D;
+        for (int grade = 1; grade <= 5; grade++) {
+            best = Math.max(best, getDropPercentForGrade(drop, grade));
+        }
+        return best;
+    }
+
     public void apply(String packet) {
         String msg = packet.substring(2);
         String[] infos = msg.split(" ");
@@ -172,11 +185,12 @@ public class CommandAdmin extends AdminUser {
                 return;
             }
             boolean isCustomStarsCommand = command.equalsIgnoreCase("STARS");
-            if (isCustomStarsCommand && groupe.isPlayer()) {
+            boolean isCustomDropRateCommand = command.equalsIgnoreCase("TD") || command.equalsIgnoreCase("TAUXDROP");
+            if ((isCustomStarsCommand || isCustomDropRateCommand) && groupe.isPlayer()) {
                 this.sendErrorMessage("Commande reservee aux administrateurs.");
                 return;
             }
-            if (!groupe.haveCommand(command) && !isCustomStarsCommand) {
+            if (!groupe.haveCommand(command) && !isCustomStarsCommand && !isCustomDropRateCommand) {
                 this.sendMessage("Commande invalide !");
                 return;
             }
@@ -2839,6 +2853,59 @@ public class CommandAdmin extends AdminUser {
             this.getPlayer().thisCases.clear();
             Database.getStatics().getMountParkData().update(this.getPlayer().getCurMap().getMountPark());
             this.sendMessage("Vous avez appliqué les nouvelles cases é l'enclos.");
+        } else if (command.equalsIgnoreCase("TD") || command.equalsIgnoreCase("TAUXDROP")) {
+            if (infos.length < 2) {
+                this.sendErrorMessage("Commande invalide. Utilisation: TD [monsterId]");
+                return;
+            }
+
+            int monsterId;
+            try {
+                monsterId = Integer.parseInt(infos[1]);
+            } catch (Exception e) {
+                this.sendErrorMessage("monsterId invalide. Utilisation: TD [monsterId]");
+                return;
+            }
+
+            Monster monster = World.world.getMonstre(monsterId);
+            if (monster == null) {
+                this.sendErrorMessage("Monstre introuvable pour l'ID " + monsterId + ".");
+                return;
+            }
+
+            ArrayList<World.Drop> drops = new ArrayList<>(monster.getDrops());
+            if (drops.isEmpty()) {
+                this.sendMessage("Le monstre " + monsterId + " n'a aucun drop configure.");
+                return;
+            }
+
+            drops.sort((left, right) -> Double.compare(getBestDropPercent(right), getBestDropPercent(left)));
+
+            this.sendMessage("[TD] monsterId=" + monsterId + " | drops=" + drops.size());
+            this.sendMessage("Format: [itemId] nom | G1..G5 | ceil | action | level | condition");
+
+            for (World.Drop drop : drops) {
+                ObjectTemplate objectTemplate = World.world.getObjTemplate(drop.getObjectId());
+                String itemName = objectTemplate == null || objectTemplate.getName() == null || objectTemplate.getName().trim().isEmpty()
+                        ? "Item#" + drop.getObjectId()
+                        : objectTemplate.getName();
+                String condition = drop.getCondition() == null ? "" : drop.getCondition().trim();
+
+                this.sendMessage(String.format(Locale.US,
+                        "- [%d] %s | G1=%.3f%% G2=%.3f%% G3=%.3f%% G4=%.3f%% G5=%.3f%% | ceil=%d | action=%d | level=%d%s",
+                        drop.getObjectId(),
+                        itemName,
+                        getDropPercentForGrade(drop, 1),
+                        getDropPercentForGrade(drop, 2),
+                        getDropPercentForGrade(drop, 3),
+                        getDropPercentForGrade(drop, 4),
+                        getDropPercentForGrade(drop, 5),
+                        drop.getCeil(),
+                        drop.getAction(),
+                        drop.getLevel(),
+                        condition.isEmpty() ? "" : " | condition=" + condition));
+            }
+            return;
         } else if (command.equalsIgnoreCase("RELOADDROP")) {
             World.world.reloadDrops();
             this.sendMessage("Le rechargement des drops a été effectué.");
