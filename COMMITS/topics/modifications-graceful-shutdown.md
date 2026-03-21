@@ -1,4 +1,4 @@
-# Modifications - Arrêt Gracieux du Serveur
+﻿# Modifications - Arrêt Gracieux du Serveur
 
 ## Date : 16/03/2026
 
@@ -136,7 +136,7 @@ public static void stop(String reason) {
 
 ## 📄 Fichiers créés
 
-### 2. `docs/GRACEFUL_SHUTDOWN.md`
+### 2. `docs/graceful-shutdown.md`
 
 Un guide complet incluant :
 - 🛑 Comment arrêter le serveur proprement
@@ -235,9 +235,10 @@ System.exit(0) → Process killed proprement
 
 - **Classe modifiée** : `org.starloco.locos.kernel.Main`
 - **Shutdown Hook Java** : `Runtime.getRuntime().addShutdownHook()`
-- **Documentation** : `/docs/GRACEFUL_SHUTDOWN.md`
+- **Documentation** : `/docs/graceful-shutdown.md`
 
 ---
 
 **Statut** : ✅ COMPLÉTÉ ET TESTÉ
+
 

@@ -1,4 +1,4 @@
-# 📋 RAPPORT D'ANALYSE - PROBLÈME DES IA QUI NE JOUENT PLUS
+﻿# 📋 RAPPORT D'ANALYSE - PROBLÈME DES IA QUI NE JOUENT PLUS
 
 Date: 20 Mars 2026  
 Statut: **RÉSOLU** ✅
@@ -155,7 +155,7 @@ ERROR | For input string: "130527,140"
 
 ```
 📄 SQL_FIX_MONSTERS.sql          - Requêtes de diagnostic et correction
-📄 RAPPORT_ANALYSE_IA.md          - Ce rapport
+📄 rapport-analyse-ia.md          - Ce rapport
 📄 GameMap.java (modifié)         - Code amélioré avec meilleur parsing
 ```
 
@@ -169,5 +169,6 @@ ERROR | For input string: "130527,140"
 **Diagnostic Final:** ✅ PROBLÈME IDENTIFIÉ ET PARTIELLEMENT RÉSOLU
 
 Les améliorations du parsing empêcheront un crash immédiat, mais les données corrompues doivent être nettoyées à la source.
+
 
 

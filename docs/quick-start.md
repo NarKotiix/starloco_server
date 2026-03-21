@@ -1,4 +1,4 @@
-# 🚀 Guide de Démarrage - Serveur avec Couleurs et UTF-8
+﻿# 🚀 Guide de Démarrage - Serveur avec Couleurs et UTF-8
 
 ## 📌 Situation Actuelle
 
@@ -188,10 +188,10 @@ Start-Server.bat
 ## 📚 Documentation Complète
 
 Voir les fichiers dans `docs/` :
-- **README_LOGS.md** - Système de logging détaillé
-- **UTF8_ACCENTS_FIX.md** - Correction UTF-8
-- **QUICK_START_LOGGING.md** - Guide rapide
-- **MODIFICATIONS_LOGGING.md** - Détail des changements
+- **readme-logs.md** - Système de logging détaillé
+- **utf8-accents-fix.md** - Correction UTF-8
+- **quick-start-logging.md** - Guide rapide
+- **modifications-logging.md** - Détail des changements
 
 ---
 
@@ -221,4 +221,5 @@ Voir les fichiers dans `docs/` :
 ✅ Scripts de lancement optimisés  
 
 **Bonne chance ! 🎮**
+
 

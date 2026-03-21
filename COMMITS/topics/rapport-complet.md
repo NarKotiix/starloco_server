@@ -1,4 +1,4 @@
-# 📋 RAPPORT COMPLET - ANALYSE ET CORRECTION DU PROBLÈME DES IA
+﻿# 📋 RAPPORT COMPLET - ANALYSE ET CORRECTION DU PROBLÈME DES IA
 
 **Date:** 20 Mars 2026  
 **Problème:** Certaines IA ne jouent plus du tout  
@@ -130,11 +130,11 @@ UPDATE maps SET monsters = REGEXP_REPLACE(monsters, '[ ]*\\|[ ]*', '|');
 ### 3. Documentation Fournie
 
 **Fichiers créés:**
-- ✅ `GUIDE_CORRECTION_IA.md` - Guide complet pour l'admin
-- ✅ `RAPPORT_ANALYSE_IA.md` - Rapport technique détaillé
+- ✅ `guide-correction-ia.md` - Guide complet pour l'admin
+- ✅ `rapport-analyse-ia.md` - Rapport technique détaillé
 - ✅ `SQL_FIX_MONSTERS.sql` - Script SQL de correction
 - ✅ `fix-ia-clean.ps1` - Script PowerShell d'automatisation
-- ✅ `RAPPORT_COMPLET.md` - Ce fichier
+- ✅ `rapport-complet.md` - Ce fichier
 
 ---
 
@@ -251,9 +251,9 @@ SELECT COUNT(*) as maps_with_monsters FROM maps WHERE monsters != '' AND monster
 - `SQL_FIX_MONSTERS.sql` - Script de correction
 
 ### Fichiers de Documentation
-- `GUIDE_CORRECTION_IA.md` - Guide pour l'admin
-- `RAPPORT_ANALYSE_IA.md` - Analyse technique
-- `RAPPORT_COMPLET.md` - Ce fichier
+- `guide-correction-ia.md` - Guide pour l'admin
+- `rapport-analyse-ia.md` - Analyse technique
+- `rapport-complet.md` - Ce fichier
 
 ### Fichiers d'Automatisation
 - `fix-ia-clean.ps1` - Script PowerShell
@@ -301,8 +301,8 @@ SELECT COUNT(*) as maps_with_monsters FROM maps WHERE monsters != '' AND monster
 - **"Data corrompue"** → Restaurer depuis `maps_monsters_backup_2026_03_20`
 
 **Plus d'informations:**
-- Voir `GUIDE_CORRECTION_IA.md` pour les détails
-- Voir `RAPPORT_ANALYSE_IA.md` pour l'analyse technique
+- Voir `guide-correction-ia.md` pour les détails
+- Voir `rapport-analyse-ia.md` pour l'analyse technique
 
 ---
 
@@ -330,4 +330,5 @@ Le problème a été **identifié**, **analysé** et **résolu** techniquement.
 **Par:** GitHub Copilot  
 **Version:** 1.0  
 **Statut:** 🟢 PRÊT POUR DÉPLOIEMENT
+
 

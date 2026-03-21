@@ -1,4 +1,4 @@
-# Security Hardening v1.2.1
+﻿# Security Hardening v1.2.1
 
 ## Objectif
 Réduire les risques de crash, états incohérents et flood CPU/logs via des paquets de déplacement malformés.
@@ -67,5 +67,6 @@ Réduire les risques de crash, états incohérents et flood CPU/logs via des paq
 - `GameClient` remplace les appels a `fight.queueAction(...)` (inexistant) par `fight.cast(...)`.
 
 ### Details
-- Voir `docs/CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md`.
+- Voir [`changelog-exchange-security-v1-4-1.md`](./changelog-exchange-security-v1-4-1.md).
+
 

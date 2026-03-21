@@ -1,4 +1,4 @@
-# Changelog recent (6 derniers commits + derniere mise a jour)
+﻿# Changelog recent (6 derniers commits + derniere mise a jour)
 
 Ce document resume les six derniers commits appliques sur `main`.
 
@@ -10,10 +10,10 @@ Ce document resume les six derniers commits appliques sur `main`.
   - `src/org/starloco/locos/kernel/Config.java`
   - `src/org/starloco/locos/game/GameClient.java`
   - `README.md`
-  - `docs/SECURITY_HARDENING_V1.2.1.md`
-  - `docs/INDEX_DOCUMENTATION_V1.2.0.md`
-  - `docs/CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md`
-  - `docs/CHANGELOG_RECENT_COMMITS.md`
+  - `COMMITS/releases/security-hardening-v1-2-1.md`
+  - `COMMITS/releases/index-documentation-v1-2-0.md`
+  - `COMMITS/releases/changelog-exchange-security-v1-4-1.md`
+  - `COMMITS/releases/changelog-recent-commits.md`
 - **Impact:**
   - durcissement des echanges (validation acteur/quantite/kamas, anti-NPE, anti-duplication),
   - correction des erreurs de compilation (`AIProfiling*` dans `Config`, `queueAction` -> `cast` dans `GameClient`),
@@ -61,7 +61,8 @@ Ce document resume les six derniers commits appliques sur `main`.
 
 ---
 
-- Detail perf: `CHANGELOG_PERF_V1.2.0.md`
-- Detail securite: `SECURITY_HARDENING_V1.2.1.md`
+- Detail perf: `changelog-perf-v1-2-0.md`
+- Detail securite: `security-hardening-v1-2-1.md`
 
 **Derniere mise a jour:** 20 Mars 2026
+

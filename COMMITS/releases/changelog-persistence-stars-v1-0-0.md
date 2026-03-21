@@ -1,4 +1,4 @@
-# CHANGELOG - Persistence des Étoiles des Groupes V1.0.0
+﻿# CHANGELOG - Persistence des Étoiles des Groupes V1.0.0
 
 ## Mise a jour V1.2.0 (Mars 2026)
 
@@ -178,8 +178,8 @@ Combat débute sans étoiles
 
 ## 📚 Documentation Associée
 
-- `IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md` - Doc technique détaillée
-- `CHANGELOG_STAR_RESPAWN_V1.0.0.md` - Évolutions antérieures
+- `implementation-persistence-stars-v1-0-0.md` - Doc technique détaillée
+- `changelog-star-respawn-v1-0-0.md` - Évolutions antérieures
 
 ---
 
@@ -288,5 +288,6 @@ Toute question ou bug report sur:
 ---
 
 **Version finale et testée ✓**
+
 
 

@@ -1,4 +1,4 @@
-# 🚀 QUICK START - Respawn avec Gestion des Étoiles
+﻿# 🚀 QUICK START - Respawn avec Gestion des Étoiles
 
 ## Résumé rapide
 
@@ -78,9 +78,9 @@ Puis recompilez avec `./gradlew.bat build`
 
 ## Documentation
 
-- **MODIFICATIONS_STAR_RESPAWN.md** - Détails complets
-- **CONFIGURATION_STAR_RESPAWN.md** - Guide de configuration
-- **CHANGELOG_STAR_RESPAWN_V1.0.0.md** - Historique des changements
+- **modifications-star-respawn.md** - Détails complets
+- **configuration-star-respawn.md** - Guide de configuration
+- **changelog-star-respawn-v1-0-0.md** - Historique des changements
 
 ## Support rapide
 
@@ -103,9 +103,9 @@ Server/
 ├── src/org/starloco/locos/area/map/GameMap.java      ← Modifié
 ├── src/org/starloco/locos/fight/Fight.java          ← Modifié
 ├── docs/
-│   ├── MODIFICATIONS_STAR_RESPAWN.md                 ← 📖 Lisez-moi
-│   └── CONFIGURATION_STAR_RESPAWN.md                 ← ⚙️ Config
-└── CHANGELOG_STAR_RESPAWN_V1.0.0.md                  ← 📝 Changelog
+│   ├── modifications-star-respawn.md                 ← 📖 Lisez-moi
+│   └── configuration-star-respawn.md                 ← ⚙️ Config
+└── changelog-star-respawn-v1-0-0.md                  ← 📝 Changelog
 ```
 
 ## Checklist avant production
@@ -163,7 +163,7 @@ A: Oui! Une seule méthode, quelques nombres à changer.
 
 ## 🎯 Prochaines étapes
 
-1. ✅ **Lire**: `MODIFICATIONS_STAR_RESPAWN.md`
+1. ✅ **Lire**: `modifications-star-respawn.md`
 2. ✅ **Compiler**: `./gradlew.bat build`
 3. ✅ **Tester**: Tuez des groupes et vérifiez les logs
 4. ✅ **Déployer**: Copier le JAR en production
@@ -172,9 +172,9 @@ A: Oui! Une seule méthode, quelques nombres à changer.
 ## Besoin d'aide?
 
 Consultez:
-- 📖 `MODIFICATIONS_STAR_RESPAWN.md` - Explication technique complète
-- ⚙️ `CONFIGURATION_STAR_RESPAWN.md` - Comment configurer les délais
-- 📝 `CHANGELOG_STAR_RESPAWN_V1.0.0.md` - Historique et détails
+- 📖 `modifications-star-respawn.md` - Explication technique complète
+- ⚙️ `configuration-star-respawn.md` - Comment configurer les délais
+- 📝 `changelog-star-respawn-v1-0-0.md` - Historique et détails
 
 ---
 
@@ -183,4 +183,5 @@ Consultez:
 **Tests**: ✅ **PASSED**
 
 **Vous pouvez déployer en confiance!** 🚀
+
 

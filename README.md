@@ -1,4 +1,4 @@
-# Starloco-Fun Server (Dofus 1.29+)
+﻿# Starloco-Fun Server (Dofus 1.29+)
 
 **Reprise et optimisation du projet Starloco par [@NarKotiix](https://github.com/NarKotiix)**  
 Améliorations : refactoring code, fix UTF-8, optimisations performance (démarrage DB, chargement maps, pathfinding, respawn), build Gradle propre.  
@@ -91,7 +91,7 @@ Revue complète de `GameClient.java` (7 800 lignes) et `GameCase.java` (1 200 li
 | 17/03/2026 | v1.2.0 | ⚡ perf | CryptManager O(1), GameMap lookup O(1), DB fail-fast |
 | — | v1.1.0 | ✨ feature | Respawn étoiles, persistance, commandes admin STARS |
 
-> Détails complets → [`docs/CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md`](docs/CHANGELOG_EXCHANGE_SECURITY_V1.4.1.md), [`docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md`](docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md)
+> Détails complets → [`COMMITS/README.md`](COMMITS/README.md), [`COMMITS/releases/changelog-exchange-security-v1-4-1.md`](COMMITS/releases/changelog-exchange-security-v1-4-1.md), [`COMMITS/releases/changelog-admin-ia-db-v1-4-0.md`](COMMITS/releases/changelog-admin-ia-db-v1-4-0.md)
 
 ---
 
@@ -284,15 +284,20 @@ Step 4/4 - Closing database connections...
 
 ## Documentation complémentaire
 
-- ⚙ **[CHANGELOG_ADMIN_IA_DB_V1.4.0.md](docs/CHANGELOG_ADMIN_IA_DB_V1.4.0.md)** — `RELOADITEM`, `SPAWN`, profiling/optimisation invocations, correctif driver MySQL (v1.4.0)
-- 🧹 **[CHANGELOG_CODE_QUALITY_V1.3.0.md](docs/CHANGELOG_CODE_QUALITY_V1.3.0.md)** — 30 corrections qualité : bugs String `==`, StringBuilder, logging, refactoring (v1.3.0)
-- 🛠 **[CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md](docs/CHANGELOG_NPC_MOVEMENT_PLAYER_FIX_V1.3.1.md)** — Toggle `NPC_MOVEMENT` + correctif blocage deplacement joueur (v1.3.1)
-- 📖 **[INDEX_DOCUMENTATION_V1.2.0.md](docs/INDEX_DOCUMENTATION_V1.2.0.md)** — Index complet de tous les documents
-- 📋 **[CHANGELOG_RECENT_COMMITS.md](docs/CHANGELOG_RECENT_COMMITS.md)** — Résumé des derniers commits
-- ⚡ **[CHANGELOG_PERF_V1.2.0.md](docs/CHANGELOG_PERF_V1.2.0.md)** — Détail des optimisations de performance v1.2.0
-- 🔐 **[SECURITY_HARDENING_V1.2.1.md](docs/SECURITY_HARDENING_V1.2.1.md)** — Durcissement sécurité des déplacements (fail-fast, anti-flood, logs throttlés)
-- 🔄 **[QUICK_START_STAR_RESPAWN.md](docs/QUICK_START_STAR_RESPAWN.md)** — Système de respawn avec étoiles
-- 💾 **[SUMMARY_PERSISTENCE_STARS_V1.0.0.md](docs/SUMMARY_PERSISTENCE_STARS_V1.0.0.md)** — Persistance des étoiles après reboot
-- 🛑 **[GRACEFUL_SHUTDOWN.md](docs/GRACEFUL_SHUTDOWN.md)** — Guide complet d'arrêt propre (CTRL+C)
-- 📄 **[QUICK_SHUTDOWN.md](docs/QUICK_SHUTDOWN.md)** — Guide rapide d'arrêt en 30 secondes
-- 📝 **[README_LOGS.md](docs/README_LOGS.md)** — Logs colorés ANSI / Logback
+### Guides stables
+
+- 📖 **[docs/README.md](docs/README.md)** — point d'entrée des guides d'exploitation et de configuration
+- 🔄 **[quick-start-star-respawn.md](docs/quick-start-star-respawn.md)** — système de respawn avec étoiles
+- 🛑 **[graceful-shutdown.md](docs/graceful-shutdown.md)** — guide complet d'arrêt propre (CTRL+C)
+- 📄 **[quick-shutdown.md](docs/quick-shutdown.md)** — guide rapide d'arrêt en 30 secondes
+- 📝 **[readme-logs.md](docs/readme-logs.md)** — logs colorés ANSI / Logback
+
+### Historique / changelogs
+
+- 📚 **[COMMITS/README.md](COMMITS/README.md)** — index principal de l'historique projet
+- ⚙ **[changelog-admin-ia-db-v1-4-0.md](COMMITS/releases/changelog-admin-ia-db-v1-4-0.md)** — `RELOADITEM`, `SPAWN`, profiling/optimisation invocations, correctif driver MySQL
+- 🧹 **[changelog-code-quality-v1-3-0.md](COMMITS/releases/changelog-code-quality-v1-3-0.md)** — corrections qualité : bugs String `==`, StringBuilder, logging, refactoring
+- 🛠 **[changelog-npc-movement-player-fix-v1-3-1.md](COMMITS/releases/changelog-npc-movement-player-fix-v1-3-1.md)** — toggle `NPC_MOVEMENT` + correctif blocage déplacement joueur
+- ⚡ **[changelog-perf-v1-2-0.md](COMMITS/releases/changelog-perf-v1-2-0.md)** — détail des optimisations de performance
+- 🔐 **[security-hardening-v1-2-1.md](COMMITS/releases/security-hardening-v1-2-1.md)** — durcissement sécurité des déplacements
+

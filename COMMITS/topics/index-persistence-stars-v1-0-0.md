@@ -1,17 +1,17 @@
-# 📚 INDEX - Persistence des Étoiles des Groupes V1.0.0
+﻿# 📚 INDEX - Persistence des Étoiles des Groupes V1.0.0
 
 ## 🎯 Guide de Navigation
 
 ### Pour Comprendre le Système
-1. **Débutants**: Lire `SUMMARY_PERSISTENCE_STARS_V1.0.0.md` (5 min)
-2. **Développeurs**: Lire `IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md` (15 min)
-3. **Détails**: Consulter `CHANGELOG_PERSISTENCE_STARS_V1.0.0.md` (20 min)
+1. **Débutants**: Lire `summary-persistence-stars-v1-0-0.md` (5 min)
+2. **Développeurs**: Lire `implementation-persistence-stars-v1-0-0.md` (15 min)
+3. **Détails**: Consulter `changelog-persistence-stars-v1-0-0.md` (20 min)
 
 ---
 
 ## 📄 Documents Créés
 
-### 1. SUMMARY_PERSISTENCE_STARS_V1.0.0.md
+### 1. summary-persistence-stars-v1-0-0.md
 **Contenu**: Vue d'ensemble du projet  
 **Durée de lecture**: 5-10 minutes  
 **Pour qui**: Tous les développeurs
@@ -25,7 +25,7 @@
 - ✨ Avantages
 - 🚀 État de Production
 
-### 2. IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md
+### 2. implementation-persistence-stars-v1-0-0.md
 **Contenu**: Architecture et design détaillés  
 **Durée de lecture**: 15-20 minutes  
 **Pour qui**: Architectes, leads techniques
@@ -40,7 +40,7 @@
 - Fichiers modifiés
 - Limitations et notes
 
-### 3. CHANGELOG_PERSISTENCE_STARS_V1.0.0.md
+### 3. changelog-persistence-stars-v1-0-0.md
 **Contenu**: Journal des modifications détaillé  
 **Durée de lecture**: 20-30 minutes  
 **Pour qui**: Testeurs, déployeurs
@@ -344,4 +344,5 @@ A: Les étoiles seront perdues (comportement acceptable)
 Créé: Mars 2026  
 Version: 1.0.0  
 Système: Starloco Fun - Star Respawn System V2
+
 

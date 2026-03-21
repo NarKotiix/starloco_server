@@ -1,4 +1,4 @@
-# 🚀 GUIDE RAPIDE - Système de Logging Colorisé
+﻿# 🚀 GUIDE RAPIDE - Système de Logging Colorisé
 
 ## 📌 Ce qui a été fait
 
@@ -51,8 +51,8 @@ ColoredLog.printTitle("== TITRE ==");
 | `Main.java` | Modifié pour initialiser AnsiConsole |
 | `Logging.java` | Modifié pour compatibilité |
 | `LoggingExample.java` | Exemples d'utilisation |
-| `README_LOGS.md` | Documentation détaillée |
-| `MODIFICATIONS_LOGGING.md` | Résumé des modifications |
+| `readme-logs.md` | Documentation détaillée |
+| `modifications-logging.md` | Résumé des modifications |
 
 ---
 
@@ -166,9 +166,9 @@ Les logs apparaîtront **automatiquement en couleur** ! 🎨
 
 ## 🆘 Support
 
-- 📖 Voir `README_LOGS.md` pour la documentation complète
+- 📖 Voir `readme-logs.md` pour la documentation complète
 - 📋 Voir `LoggingExample.java` pour des exemples de code
-- 📝 Voir `MODIFICATIONS_LOGGING.md` pour le détail des changements
+- 📝 Voir `modifications-logging.md` pour le détail des changements
 
 ---
 
@@ -185,4 +185,5 @@ Votre console est maintenant **propre, colorée et lisible** ! 🎉
 ```
 
 **Prêt à démarrer le serveur !** 🚀
+
 

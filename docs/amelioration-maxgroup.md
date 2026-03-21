@@ -1,4 +1,4 @@
-# 🎯 AMÉLIORATION APPORTÉE - Gestion correcte des maps classiques multi-groupes
+﻿# 🎯 AMÉLIORATION APPORTÉE - Gestion correcte des maps classiques multi-groupes
 
 ## ⚡ Correction appliquée
 
@@ -186,9 +186,9 @@ Puis redémarrez le serveur pour charger les nouvelles valeurs.
 
 ## 📚 Documentation liée
 
-- `MAPS_CLASSIQUES_MULTIGROUPS.md` → Explique en détail les maps multi-groupes
-- `MODIFICATIONS_STAR_RESPAWN.md` → Explique les étoiles et délais
-- `CONFIGURATION_STAR_RESPAWN.md` → Comment configurer les délais
+- `maps-classiques-multigroupes.md` → Explique en détail les maps multi-groupes
+- `modifications-star-respawn.md` → Explique les étoiles et délais
+- `configuration-star-respawn.md` → Comment configurer les délais
 
 ## 🎓 Point fondamental compris
 
@@ -225,4 +225,5 @@ java -jar Server-1.0.0.jar
 **Status**: ✅ **PRODUCTION READY**
 **Compilation**: ✅ **BUILD SUCCESSFUL**
 **Tests**: ✅ **PASSED**
+
 

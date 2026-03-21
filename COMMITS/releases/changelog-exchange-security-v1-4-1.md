@@ -1,4 +1,4 @@
-# Changelog Exchange Security v1.4.1
+﻿# Changelog Exchange Security v1.4.1
 
 ## Objectif
 Durcir le flux d'echange joueur<->joueur / PNJ pour reduire les risques de duplication, d'etats incoherents et de crash, puis retablir la compilation sur le lot IA/profiling.
@@ -55,7 +55,8 @@ Fichier principal : `src/org/starloco/locos/entity/exchange/PlayerExchange.java`
 - `src/org/starloco/locos/kernel/Config.java`
 - `src/org/starloco/locos/game/GameClient.java`
 - `README.md`
-- `docs/SECURITY_HARDENING_V1.2.1.md`
-- `docs/INDEX_DOCUMENTATION_V1.2.0.md`
-- `docs/CHANGELOG_RECENT_COMMITS.md`
+- `COMMITS/releases/security-hardening-v1-2-1.md`
+- `COMMITS/releases/index-documentation-v1-2-0.md`
+- `COMMITS/releases/changelog-recent-commits.md`
+
 

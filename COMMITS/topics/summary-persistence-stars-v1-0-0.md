@@ -1,4 +1,4 @@
-# 📋 RÉSUMÉ DES MODIFICATIONS - Persistence des Étoiles V1.0.0
+﻿# 📋 RÉSUMÉ DES MODIFICATIONS - Persistence des Étoiles V1.0.0
 
 ## 🔄 Mise a jour V1.2.0
 
@@ -194,8 +194,8 @@ void setMobGroup(Monster.MobGroup mobGroup) {
 - [ ] Feedback utilisateurs
 
 ### 📦 Artefacts
-- `IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md` - Doc technique
-- `CHANGELOG_PERSISTENCE_STARS_V1.0.0.md` - Changelog détaillé
+- `implementation-persistence-stars-v1-0-0.md` - Doc technique
+- `changelog-persistence-stars-v1-0-0.md` - Changelog détaillé
 - Code modifié compilé avec succès
 
 ---
@@ -261,5 +261,6 @@ Pour toute question ou problème:
 Version: 1.0.0  
 Date: Mars 2026  
 Système: Starloco Fun Server
+
 
 

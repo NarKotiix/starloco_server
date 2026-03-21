@@ -1,4 +1,4 @@
-# 🎨 Résumé des Modifications - Système de Logging Colorisé
+﻿# 🎨 Résumé des Modifications - Système de Logging Colorisé
 
 ## ✅ Modifications Effectuées
 
@@ -30,7 +30,7 @@
    - Exemple complet d'utilisation du système de logging
    - Démontre les différents niveaux et approches
 
-### 6. **README_LOGS.md** (CRÉÉ) ✓
+### 6. **readme-logs.md** (CRÉÉ) ✓
    - Documentation complète du système de logging
    - Guide d'utilisation et bonnes pratiques
 
@@ -100,7 +100,7 @@ ColoredLog.printTitle("Titre Important");
 | `logback.xml` | Nouveau | ✨ Créé |
 | `ColoredLog.java` | Nouveau | ✨ Créé |
 | `LoggingExample.java` | Nouveau | ✨ Créé |
-| `README_LOGS.md` | Nouveau | ✨ Créé |
+| `readme-logs.md` | Nouveau | ✨ Créé |
 
 ---
 
@@ -169,4 +169,5 @@ Le projet compile sans erreurs ! 🎉
 ---
 
 **Configuration complétée avec succès !** 🚀
+
 

@@ -1,4 +1,4 @@
-================================================================================
+﻿================================================================================
                     RÉSUMÉ VISUEL DE LA CORRECTION IA
 ================================================================================
 
@@ -47,17 +47,17 @@ SOLUTION APPLIQUÉE
 FICHIERS FOURNIS
 ================
 
-📄 GUIDE_CORRECTION_IA.md
+📄 guide-correction-ia.md
    → Guide complet pour l'administrateur
    → Comment exécuter la correction
    → FAQ et troubleshooting
 
-📄 RAPPORT_ANALYSE_IA.md
+📄 rapport-analyse-ia.md
    → Analyse technique du problème
    → Détails des erreurs trouvées
    → Recommandations d'exploitation
 
-📄 RAPPORT_COMPLET.md
+📄 rapport-complet.md
    → Résumé exécutif complet
    → Analyse technique détaillée
    → Checklist de déploiement
@@ -72,7 +72,7 @@ FICHIERS FOURNIS
    → Diagnostic + compilation
    → Instructions étape par étape
 
-📄 CHANGELOG_IA_FIX_V1.4.1.md
+📄 changelog-ia-fix-v1-4-1.md
    → Changelog officiel de la correction
    → Archives dans le répertoire docs
 
@@ -102,8 +102,8 @@ Fréquence:
 ====================
 
 [1] Lecture de la documentation
-    ├─ GUIDE_CORRECTION_IA.md (obligatoire)
-    └─ RAPPORT_COMPLET.md (recommandé)
+    ├─ guide-correction-ia.md (obligatoire)
+    └─ rapport-complet.md (recommandé)
 
 [2] Préparation
     ├─ Arrêter le serveur
@@ -179,28 +179,28 @@ FAQ RAPIDE
 ==========
 
 Q: Mon serveur ne démarre pas?
-R: Vérifier les logs d'erreur. Voir GUIDE_CORRECTION_IA.md
+R: Vérifier les logs d'erreur. Voir guide-correction-ia.md
 
 Q: Les IA jouent toujours pas?
-R: Vérifier que le SQL a bien été exécuté. Voir RAPPORT_COMPLET.md
+R: Vérifier que le SQL a bien été exécuté. Voir rapport-complet.md
 
 Q: Comment savoir si c'est corrigé?
-R: Aucune erreur NumberFormatException dans les logs. Voir GUIDE_CORRECTION_IA.md
+R: Aucune erreur NumberFormatException dans les logs. Voir guide-correction-ia.md
 
 Q: Puis-je faire confiance au backup?
 R: Oui, le script crée une table maps_monsters_backup_2026_03_20
 
 Q: Comment tester les IA?
-R: Lancer une carte avec des monstres et vérifier qu'ils jouent. Voir GUIDE_CORRECTION_IA.md
+R: Lancer une carte avec des monstres et vérifier qu'ils jouent. Voir guide-correction-ia.md
 
 
 SUPPORT ET AIDE
 ===============
 
 Documentation:
-  • Lire GUIDE_CORRECTION_IA.md (étapes complètes)
-  • Consulter RAPPORT_COMPLET.md (analyse technique)
-  • Vérifier RAPPORT_ANALYSE_IA.md (détails des erreurs)
+  • Lire guide-correction-ia.md (étapes complètes)
+  • Consulter rapport-complet.md (analyse technique)
+  • Vérifier rapport-analyse-ia.md (détails des erreurs)
 
 Script d'automatisation:
   • Exécuter: .\fix-ia-clean.ps1
@@ -245,7 +245,8 @@ Prêt: 🟢 OUI, pour déploiement
 
 ================================================================================
 
-               Plus d'infos? Lire GUIDE_CORRECTION_IA.md
+               Plus d'infos? Lire guide-correction-ia.md
 
 ================================================================================
+
 

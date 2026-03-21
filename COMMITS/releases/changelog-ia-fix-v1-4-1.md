@@ -1,4 +1,4 @@
-# CHANGELOG CORRECTION IA - v1.4.1
+﻿# CHANGELOG CORRECTION IA - v1.4.1
 
 > **Date:** 20 Mars 2026  
 > **Portée:** Correction du parsing des données de monstres  
@@ -63,9 +63,9 @@ UPDATE maps SET monsters = REGEXP_REPLACE(monsters, '[ ]*\\|[ ]*', '|');
 #### 3. Documentation et Outils
 
 **Fichiers créés:**
-- `GUIDE_CORRECTION_IA.md` - Guide complet pour l'administrateur
-- `RAPPORT_ANALYSE_IA.md` - Analyse technique détaillée
-- `RAPPORT_COMPLET.md` - Rapport exécutif complet
+- `guide-correction-ia.md` - Guide complet pour l'administrateur
+- `rapport-analyse-ia.md` - Analyse technique détaillée
+- `rapport-complet.md` - Rapport exécutif complet
 - `SQL_FIX_MONSTERS.sql` - Script SQL de correction
 - `fix-ia-clean.ps1` - Script PowerShell d'automatisation
 
@@ -120,7 +120,6 @@ Nombre d'erreurs: 0
    ```
 
 3. **Exécuter le SQL de correction:**
-   ```bash
    mysql -u root -p dofus_game < SQL_FIX_MONSTERS.sql
    ```
 
@@ -171,9 +170,9 @@ mysql -u root -p dofus_game < backup_2026_03_20.sql
 |---------|------|--------|
 | `src/.../GameMap.java` | Code | ✅ Modifié |
 | `SQL_FIX_MONSTERS.sql` | SQL | ✅ Créé |
-| `GUIDE_CORRECTION_IA.md` | Doc | ✅ Créé |
-| `RAPPORT_ANALYSE_IA.md` | Doc | ✅ Créé |
-| `RAPPORT_COMPLET.md` | Doc | ✅ Créé |
+| `guide-correction-ia.md` | Doc | ✅ Créé |
+| `rapport-analyse-ia.md` | Doc | ✅ Créé |
+| `rapport-complet.md` | Doc | ✅ Créé |
 | `fix-ia-clean.ps1` | Script | ✅ Créé |
 | `build/libs/Server-1.0.0.jar` | JAR | ✅ Compilé |
 
@@ -207,12 +206,13 @@ mysql -u root -p dofus_game < backup_2026_03_20.sql
 - Vérifier les logs
 
 **Documentation:**
-- Voir `GUIDE_CORRECTION_IA.md` pour les détails
-- Voir `RAPPORT_COMPLET.md` pour l'analyse complète
+- Voir `guide-correction-ia.md` pour les détails
+- Voir `rapport-complet.md` pour l'analyse complète
 
 ---
 
 **Version:** 1.4.1  
 **Date:** 20 Mars 2026  
 **Statut:** ✅ Prêt pour production
+
 

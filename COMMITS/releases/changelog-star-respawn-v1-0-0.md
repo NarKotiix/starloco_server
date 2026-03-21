@@ -1,4 +1,4 @@
-# CHANGELOG - Gestion des Étoiles et Respawn Instantané
+﻿# CHANGELOG - Gestion des Étoiles et Respawn Instantané
 
 ## Version 1.0.0 - 16 Mars 2026
 
@@ -98,8 +98,8 @@ Groupe vaincu (45★) → Attente 11-14 min → Respawn ✓
 
 #### 📖 Documentation
 
-- `MODIFICATIONS_STAR_RESPAWN.md`: Description complète des changements
-- `CONFIGURATION_STAR_RESPAWN.md`: Guide de configuration et d'équilibre
+- `modifications-star-respawn.md`: Description complète des changements
+- `configuration-star-respawn.md`: Guide de configuration et d'équilibre
 
 #### 🚀 Déploiement
 
@@ -154,4 +154,5 @@ Groupe vaincu (45★) → Attente 11-14 min → Respawn ✓
 **Statut**: ✅ **PROD READY**
 **Dernière mise à jour**: 16 Mars 2026
 **Version actuelle**: 1.0.0
+
 

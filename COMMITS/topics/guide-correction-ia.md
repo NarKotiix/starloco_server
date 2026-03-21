@@ -1,4 +1,4 @@
-# 🔧 GUIDE DE CORRECTION - IA NE JOUENT PLUS
+﻿# 🔧 GUIDE DE CORRECTION - IA NE JOUENT PLUS
 
 **Créé le:** 20 Mars 2026  
 **Auteur:** GitHub Copilot  
@@ -179,7 +179,7 @@ FIELDS TERMINATED BY ','
 | Fichier | Description |
 |---------|-------------|
 | `SQL_FIX_MONSTERS.sql` | Script SQL complet pour nettoyer la base |
-| `RAPPORT_ANALYSE_IA.md` | Analyse détaillée du problème |
+| `rapport-analyse-ia.md` | Analyse détaillée du problème |
 | `analyze_monster_data.py` | Script Python d'analyse (optionnel) |
 | `GameMap.java` | Code source amélioré |
 
@@ -237,7 +237,7 @@ REPLACE INTO maps SELECT * FROM maps_monsters_backup_2026_03_20;
 
 En cas de problème:
 1. Vérifiez les logs: `Logs/Error/*.log`
-2. Consultez le rapport: `RAPPORT_ANALYSE_IA.md`
+2. Consultez le rapport: `rapport-analyse-ia.md`
 3. Exécutez le diagnostic SQL du fichier `SQL_FIX_MONSTERS.sql`
 
 ---
@@ -261,4 +261,5 @@ En cas de problème:
 **Dernière mise à jour:** 20 Mars 2026  
 **Commit résolution:** (en attente)  
 **Status:** ✅ PRÊT POUR PRODUCTION
+
 

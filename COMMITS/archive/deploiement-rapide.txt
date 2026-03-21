@@ -1,4 +1,4 @@
-📋 INSTRUCTIONS DÉPLOIEMENT - ROLLBACK v1.4.1
+﻿📋 INSTRUCTIONS DÉPLOIEMENT - ROLLBACK v1.4.1
 ═══════════════════════════════════════════════════════════════════
 
 ⚡ DÉPLOIEMENT RAPIDE (15 MINUTES)
@@ -148,8 +148,8 @@ Fichier: src/.../GameMap.java
 ──────────────────────────────────────────────────────────────────
 
 Pour plus d'informations:
-  • ROLLBACK_REPORT.md       - Rapport technique du rollback
-  • COMPARAISON_SOLUTIONS.md - Comparaison Solution 1 vs 2
+  • rollback-report.md       - Rapport technique du rollback
+  • comparaison-solutions.md - Comparaison Solution 1 vs 2
   • build.gradle             - Configuration finale
   • Logs/server.log          - Logs de démarrage
 
@@ -209,4 +209,5 @@ JAR:             build/libs/Server-1.0.0.jar
               Procédez au déploiement en toute confiance
 
 ═══════════════════════════════════════════════════════════════════
+
 

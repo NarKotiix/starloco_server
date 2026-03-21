@@ -1,4 +1,4 @@
-# COMPARAISON: DEUX SOLUTIONS
+﻿# COMPARAISON: DEUX SOLUTIONS
 
 **Date:** 20 Mars 2026  
 **Problème:** Certaines IA ne jouent plus (MySQL 8.0.33 corrompt les données)
@@ -33,7 +33,7 @@
 
 ### Fichiers fournis
 - `SQL_FIX_MONSTERS.sql` (script de correction)
-- `GUIDE_CORRECTION_IA.md` (guide complet)
+- `guide-correction-ia.md` (guide complet)
 - `fix-ia-clean.ps1` (script PowerShell)
 - Améliorations du code Java
 
@@ -67,7 +67,7 @@
 - **Total: ~15 min**
 
 ### Fichiers fournis
-- `ROLLBACK_REPORT.md` (documentation)
+- `rollback-report.md` (documentation)
 - `build.gradle` modifié
 - Code reverted
 
@@ -149,4 +149,5 @@ Get-Content "Logs\server.log" -Tail 100
 **Dernière mise à jour:** 20 Mars 2026  
 **Auteur:** GitHub Copilot  
 **Status:** ✅ PRODUCTION-READY
+
 

@@ -1,4 +1,4 @@
-📋 INDEX COMPLET - CORRECTION IA NE JOUENT PLUS
+﻿📋 INDEX COMPLET - CORRECTION IA NE JOUENT PLUS
 ═══════════════════════════════════════════════════════════════════════
 
 🔍 ANALYSE
@@ -58,22 +58,22 @@ LOCALISATION:
    • Normaliser les séparateurs
 
 3️⃣  DOCUMENTATION COMPLÈTE
-   • GUIDE_CORRECTION_IA.md
+   • guide-correction-ia.md
      - Guide complet pour l'administrateur
      - Étapes de correction détaillées
      - FAQ et troubleshooting
 
-   • RAPPORT_ANALYSE_IA.md
+   • rapport-analyse-ia.md
      - Analyse technique du problème
      - Détails des erreurs trouvées
      - Recommandations d'exploitation
 
-   • RAPPORT_COMPLET.md
+   • rapport-complet.md
      - Résumé exécutif complet
      - Analyse technique détaillée
      - Checklist de déploiement
 
-   • CHANGELOG_IA_FIX_V1.4.1.md (dans docs/)
+   • changelog-ia-fix-v1-4-1.md (dans docs/)
      - Changelog officiel de la correction
      - Pour archive historique
 
@@ -100,13 +100,13 @@ FICHIERS CRÉÉS (Racine):
   📄 SQL_FIX_MONSTERS.sql
      └─ Script SQL complet de correction (5 étapes)
 
-  📄 GUIDE_CORRECTION_IA.md
+  📄 guide-correction-ia.md
      └─ Guide complet pour l'administrateur
 
-  📄 RAPPORT_ANALYSE_IA.md
+  📄 rapport-analyse-ia.md
      └─ Rapport technique d'analyse
 
-  📄 RAPPORT_COMPLET.md
+  📄 rapport-complet.md
      └─ Rapport exécutif complet
 
   📄 fix-ia-clean.ps1
@@ -115,14 +115,14 @@ FICHIERS CRÉÉS (Racine):
   📄 analyze_monster_data.py
      └─ Script Python d'analyse (optionnel)
 
-  📄 RÉSUMÉ_CORRECTION.txt
+  📄 resume-correction.txt
      └─ Résumé visuel de la correction
 
   📄 RÉSUMÉ_FINAL.md
      └─ Résumé final en 60 secondes
 
 FICHIERS CRÉÉS (docs/):
-  📚 CHANGELOG_IA_FIX_V1.4.1.md
+  📚 changelog-ia-fix-v1-4-1.md
      └─ Changelog officiel pour archive
 
 
@@ -131,26 +131,26 @@ FICHIERS CRÉÉS (docs/):
 
 Pour l'administrateur (30 minutes):
   1️⃣  Lire: RÉSUMÉ_FINAL.md (5 min)
-  2️⃣  Lire: GUIDE_CORRECTION_IA.md (15 min)
+  2️⃣  Lire: guide-correction-ia.md (15 min)
   3️⃣  Exécuter les étapes SQL
   4️⃣  Redémarrer le serveur
   5️⃣  Vérifier les logs
 
 Pour le technicien (60 minutes):
-  1️⃣  Lire: RAPPORT_COMPLET.md (20 min)
-  2️⃣  Lire: RAPPORT_ANALYSE_IA.md (20 min)
+  1️⃣  Lire: rapport-complet.md (20 min)
+  2️⃣  Lire: rapport-analyse-ia.md (20 min)
   3️⃣  Examiner: SQL_FIX_MONSTERS.sql (10 min)
   4️⃣  Examiner: GameMap.java (10 min)
 
 Pour l'archive:
-  • CHANGELOG_IA_FIX_V1.4.1.md
+  • changelog-ia-fix-v1-4-1.md
 
 
 ⚡ ÉTAPES DE DÉPLOIEMENT
 ──────────────────────────────────────────────────────────────────────
 
 [1] PRÉPARATION (5 min)
-    ✓ Lire GUIDE_CORRECTION_IA.md
+    ✓ Lire guide-correction-ia.md
     ✓ Arrêter le serveur
     ✓ Sauvegarder: mysqldump -u root -p dofus_game > backup_2026_03_20.sql
 
@@ -244,9 +244,9 @@ Pour déployer:
   • build/libs/Server-1.0.0.jar (JAR compilé)
 
 Pour documenter:
-  • GUIDE_CORRECTION_IA.md (pour l'admin)
-  • RAPPORT_COMPLET.md (pour la technique)
-  • CHANGELOG_IA_FIX_V1.4.1.md (pour l'archive)
+  • guide-correction-ia.md (pour l'admin)
+  • rapport-complet.md (pour la technique)
+  • changelog-ia-fix-v1-4-1.md (pour l'archive)
 
 
 ✨ BÉNÉFICES DE CETTE CORRECTION
@@ -277,8 +277,8 @@ Pour documenter:
 
 Si vous avez besoin d'aide:
 
-1. Lire le GUIDE_CORRECTION_IA.md
-2. Consulter le RAPPORT_COMPLET.md
+1. Lire le guide-correction-ia.md
+2. Consulter le rapport-complet.md
 3. Vérifier les SQL_FIX_MONSTERS.sql
 4. Examiner les logs (Logs/Error/*.log)
 
@@ -303,4 +303,5 @@ Prêt pour production:       🟢 OUI
                       Merci de lire ce rapport !
 
 ═════════════════════════════════════════════════════════════════════
+
 

@@ -1,4 +1,4 @@
-# 📦 MANIFEST - Persistence des Étoiles V1.0.0
+﻿# 📦 MANIFEST - Persistence des Étoiles V1.0.0
 
 **Project**: Starloco Fun Server - Star Respawn System V2  
 **Feature**: Persistence des Étoiles des Groupes  
@@ -27,12 +27,12 @@ Server/
 │           └── Fight.java            [MODIFIÉ]
 │
 └── docs/
-    ├── VERIFICATION_IMPLEMENTATION_V1.0.0.md    [CRÉÉ]
-    ├── SUMMARY_PERSISTENCE_STARS_V1.0.0.md      [CRÉÉ]
-    ├── IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md [CRÉÉ]
-    ├── CHANGELOG_PERSISTENCE_STARS_V1.0.0.md    [CRÉÉ]
-    ├── INDEX_PERSISTENCE_STARS_V1.0.0.md        [CRÉÉ]
-    └── MANIFEST_PERSISTENCE_STARS_V1.0.0.md     [CRÉÉ - CE FICHIER]
+    ├── verification-implementation-v1-0-0.md    [CRÉÉ]
+    ├── summary-persistence-stars-v1-0-0.md      [CRÉÉ]
+    ├── implementation-persistence-stars-v1-0-0.md [CRÉÉ]
+    ├── changelog-persistence-stars-v1-0-0.md    [CRÉÉ]
+    ├── index-persistence-stars-v1-0-0.md        [CRÉÉ]
+    └── manifest-persistence-stars-v1-0-0.md     [CRÉÉ - CE FICHIER]
 ```
 
 ---
@@ -75,7 +75,7 @@ Server/
 
 ## 📚 Fichiers de Documentation
 
-### 1. INDEX_PERSISTENCE_STARS_V1.0.0.md
+### 1. index-persistence-stars-v1-0-0.md
 **Purpose**: Guide de navigation et index complet  
 **Size**: 9,171 bytes (~300 lignes)  
 **Read Time**: 15 minutes  
@@ -95,7 +95,7 @@ Server/
 
 ---
 
-### 2. SUMMARY_PERSISTENCE_STARS_V1.0.0.md
+### 2. summary-persistence-stars-v1-0-0.md
 **Purpose**: Vue d'ensemble executive et résumé  
 **Size**: 6,587 bytes (~200 lignes)  
 **Read Time**: 5-10 minutes  
@@ -113,7 +113,7 @@ Server/
 
 ---
 
-### 3. IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md
+### 3. implementation-persistence-stars-v1-0-0.md
 **Purpose**: Documentation technique détaillée et architecture  
 **Size**: 7,480 bytes (~300 lignes)  
 **Read Time**: 15-20 minutes  
@@ -136,7 +136,7 @@ Server/
 
 ---
 
-### 4. CHANGELOG_PERSISTENCE_STARS_V1.0.0.md
+### 4. changelog-persistence-stars-v1-0-0.md
 **Purpose**: Journal détaillé des modifications  
 **Size**: 7,318 bytes (~300 lignes)  
 **Read Time**: 20-30 minutes  
@@ -156,7 +156,7 @@ Server/
 
 ---
 
-### 5. VERIFICATION_IMPLEMENTATION_V1.0.0.md
+### 5. verification-implementation-v1-0-0.md
 **Purpose**: Checklist de vérification complète  
 **Size**: ~9,000 bytes (~350 lignes)  
 **Read Time**: 20-25 minutes  
@@ -176,7 +176,7 @@ Server/
 
 ---
 
-### 6. MANIFEST_PERSISTENCE_STARS_V1.0.0.md
+### 6. manifest-persistence-stars-v1-0-0.md
 **Purpose**: Ce document - manifest de tous les artefacts  
 **Size**: À déterminer (~400 lignes)  
 **Read Time**: 15-20 minutes  
@@ -257,12 +257,12 @@ Cohesion: HIGH
 ## 🚀 Guide de Déploiement Rapide
 
 ### Pour les Développeurs
-1. **Étape 1**: Lire `SUMMARY_PERSISTENCE_STARS_V1.0.0.md` (5 min)
-2. **Étape 2**: Consulter `INDEX_PERSISTENCE_STARS_V1.0.0.md` (15 min)
-3. **Étape 3**: Vérifier `VERIFICATION_IMPLEMENTATION_V1.0.0.md` (20 min)
+1. **Étape 1**: Lire `summary-persistence-stars-v1-0-0.md` (5 min)
+2. **Étape 2**: Consulter `index-persistence-stars-v1-0-0.md` (15 min)
+3. **Étape 3**: Vérifier `verification-implementation-v1-0-0.md` (20 min)
 
 ### Pour les Testeurs
-1. **Étape 1**: Lire `CHANGELOG_PERSISTENCE_STARS_V1.0.0.md` (20 min)
+1. **Étape 1**: Lire `changelog-persistence-stars-v1-0-0.md` (20 min)
 2. **Étape 2**: Valider les cas de test (30 min)
 3. **Étape 3**: Monitorer les logs (ongoing)
 
@@ -338,15 +338,15 @@ Avant de commencer, consultez:
 ## 📞 Contact et Support
 
 ### Pour les Problèmes Techniques
-- Consult `VERIFICATION_IMPLEMENTATION_V1.0.0.md`
+- Consult `verification-implementation-v1-0-0.md`
 - Section: "Support et Assistance"
 
 ### Pour les Questions Architecturales
-- Consult `IMPLEMENTATION_PERSISTENCE_STARS_V1.0.0.md`
+- Consult `implementation-persistence-stars-v1-0-0.md`
 - Section: "Architecture en 4 couches"
 
 ### Pour la Validation en Production
-- Consult `CHANGELOG_PERSISTENCE_STARS_V1.0.0.md`
+- Consult `changelog-persistence-stars-v1-0-0.md`
 - Section: "Cas de Test"
 
 ---
@@ -493,4 +493,5 @@ By: AI Assistant (GitHub Copilot)
 **End of Manifest**
 
 Pour toute question, consulter les documents listés ci-dessus.
+
 

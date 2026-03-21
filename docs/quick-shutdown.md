@@ -1,4 +1,4 @@
-# 🛑 ARRÊT RAPIDE - Guide Rapide
+﻿# 🛑 ARRÊT RAPIDE - Guide Rapide
 
 ## Le plus important
 
@@ -84,7 +84,8 @@ Step 4/4 - Closing database connections...       (0.5 sec)
 
 ## Questions ?
 
-Voir : `/docs/GRACEFUL_SHUTDOWN.md` pour le guide détaillé
+Voir : `/docs/graceful-shutdown.md` pour le guide détaillé
+
 
 
 
