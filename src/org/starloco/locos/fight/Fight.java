@@ -56,6 +56,9 @@ import java.util.stream.Collectors;
 public class Fight {
 
     private static final Logger AIPROF_LOGGER = LoggerFactory.getLogger("ai.profiling");
+    private static final Set<Integer> GLOBAL_DOFUS_DROP_IDS = new HashSet<>(Arrays.asList(
+            694, 737, 739, 972, 6980, 7114, 7115, 7754, 8072
+    ));
     private int id, state = 0, guildId = -1, type = -1;
     private int st1, st2;
     private int curPlayer, captWinner = -1;
@@ -166,6 +169,24 @@ public class Fight {
         SocketManager.GAME_SEND_MAP_FIGHT_GMS_PACKETS_TO_FIGHT(this, 7, getMap());
 
         setState(Constant.FIGHT_STATE_PLACE);
+    }
+
+    private static void announceGlobalDofusDrop(Player player, ObjectTemplate objectTemplate) {
+        if (player == null || objectTemplate == null || !GLOBAL_DOFUS_DROP_IDS.contains(objectTemplate.getId())) {
+            return;
+        }
+
+        String serverName = Config.getInstance().NAME == null || Config.getInstance().NAME.trim().isEmpty()
+                ? "Serveur"
+                : Config.getInstance().NAME;
+        String itemName = objectTemplate.getName() == null || objectTemplate.getName().trim().isEmpty()
+                ? ("Objet " + objectTemplate.getId())
+                : objectTemplate.getName();
+
+        String message = "<b>" + serverName
+                + " : Il semblerait que quelqu'un soit chanceux aujourd'hui... "
+                + player.getName() + " vient de drop [" + itemName + "]</b>";
+        SocketManager.GAME_SEND_MESSAGE_TO_ALL(message, "C10000");
     }
 
     public Fight(int id, GameMap map, Player perso, Monster.MobGroup group) {
@@ -4914,12 +4935,14 @@ public class Fight {
                                   newObj=objectTemplate.createNewItem(entry.getValue(),false);
                                   target.addObjet(newObj, false);
                                   World.world.addGameObject(newObj,true);
+                                  announceGlobalDofusDrop(target, objectTemplate);
                                 }
                                 else
                                 {
                                   newObj=objectTemplate.createNewItem(entry.getValue(),false);
                                   if(target.addObjet(newObj, true))
                                 	  World.world.addGameObject(newObj,true);
+                                  announceGlobalDofusDrop(target, objectTemplate);
                                 }
                               }
                         	}

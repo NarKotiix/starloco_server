@@ -108,18 +108,20 @@ public abstract class AbstractIA implements IA {
 
                 long pollingForMs = now - endTurnPollStartMs;
                 if (Config.getInstance().AIProfiling && (endTurnPollCycles == 1 || endTurnPollCycles % 20 == 0)) {
-                    AIPROF_LOGGER.info("[AI-PROF] endTurn polling fight={} fighter={} cycles={} elapsed={}ms stop={}",
+                    AIPROF_LOGGER.info("[AI-PROF] endTurn polling fight={} fighter={} mob={} cycles={} elapsed={}ms stop={}",
                             this.fight.getId(),
                             this.fighter != null ? this.fighter.getId() : -1,
+                            fighterMobLabel(this.fighter),
                             endTurnPollCycles,
                             pollingForMs,
                             this.stop);
                 }
 
                 if (pollingForMs >= STUCK_ENDTURN_TIMEOUT_MS) {
-                    AIPROF_LOGGER.warn("[AI-PROF] endTurn stuck, force pass turn fight={} fighter={} cycles={} elapsed={}ms",
+                    AIPROF_LOGGER.warn("[AI-PROF] endTurn stuck, force pass turn fight={} fighter={} mob={} cycles={} elapsed={}ms",
                             this.fight.getId(),
                             this.fighter != null ? this.fighter.getId() : -1,
+                            fighterMobLabel(this.fighter),
                             endTurnPollCycles,
                             pollingForMs);
                     this.stop = true;
@@ -129,11 +131,16 @@ public abstract class AbstractIA implements IA {
 
                 // Garde ciblée: si rien n'est en cours (ni action ni trap) mais que stop ne bascule jamais,
                 // on termine le tour pour éviter le timeout 2500ms qui crée une latence visible.
-                if (!this.stop && !this.fight.isCurAction() && !this.fight.isTraped() && pollingForMs >= ENDTURN_IDLE_GUARD_MS) {
+                if (!this.stop
+                        && this.count <= 0
+                        && !this.fight.isCurAction()
+                        && !this.fight.isTraped()
+                        && pollingForMs >= ENDTURN_IDLE_GUARD_MS) {
                     if (Config.getInstance().AIProfiling) {
-                        AIPROF_LOGGER.warn("[AI-PROF] endTurn idle guard, force pass turn fight={} fighter={} cycles={} elapsed={}ms",
+                        AIPROF_LOGGER.warn("[AI-PROF] endTurn idle guard, force pass turn fight={} fighter={} mob={} cycles={} elapsed={}ms",
                                 this.fight.getId(),
                                 this.fighter != null ? this.fighter.getId() : -1,
+                                fighterMobLabel(this.fighter),
                                 endTurnPollCycles,
                                 pollingForMs);
                     }
@@ -196,9 +203,10 @@ public abstract class AbstractIA implements IA {
 
             if (Config.getInstance().AIProfiling) {
                 if (blockedCycles == 1 || blockedCycles % 10 == 0) {
-                    AIPROF_LOGGER.info("[AI-PROF] scheduler blocked fight={} fighter={} remaining={} blockedFor={}ms curAction={} traped={}",
+                    AIPROF_LOGGER.info("[AI-PROF] scheduler blocked fight={} fighter={} mob={} remaining={} blockedFor={}ms curAction={} traped={}",
                             this.fight.getId(),
                             this.fighter != null ? this.fighter.getId() : -1,
+                            fighterMobLabel(this.fighter),
                             remaining,
                             blockedForMs,
                             this.fight.isCurAction(),
@@ -207,9 +215,10 @@ public abstract class AbstractIA implements IA {
             }
 
             if (blockedForMs >= STUCK_BLOCK_TIMEOUT_MS) {
-                AIPROF_LOGGER.warn("[AI-PROF] scheduler stuck, force endTurn fight={} fighter={} blockedFor={}ms curAction={} traped={}",
+                AIPROF_LOGGER.warn("[AI-PROF] scheduler stuck, force endTurn fight={} fighter={} mob={} blockedFor={}ms curAction={} traped={}",
                         this.fight.getId(),
                         this.fighter != null ? this.fighter.getId() : -1,
+                        fighterMobLabel(this.fighter),
                         blockedForMs,
                         this.fight.isCurAction(),
                         this.fight.isTraped());
@@ -228,13 +237,32 @@ public abstract class AbstractIA implements IA {
         POOL.schedule(() -> {
             long waitedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - scheduledAt);
             if (Config.getInstance().AIProfiling && waitedMs >= Config.getInstance().AIProfilingWarnMs) {
-                AIPROF_LOGGER.info("[AI-PROF] scheduler wait={}ms requested={}ms fight={} fighter={}",
+                AIPROF_LOGGER.info("[AI-PROF] scheduler wait={}ms requested={}ms fight={} fighter={} mob={}",
                         waitedMs,
                         normalizedDelay,
                         this.fight.getId(),
-                        this.fighter != null ? this.fighter.getId() : -1);
+                        this.fighter != null ? this.fighter.getId() : -1,
+                        fighterMobLabel(this.fighter));
             }
             runnable.run();
         }, normalizedDelay, TimeUnit.MILLISECONDS);
+    }
+
+    private static String fighterMobLabel(Fighter fighter) {
+        if (fighter == null) {
+            return "n/a";
+        }
+        if (fighter.getMob() != null && fighter.getMob().getTemplate() != null) {
+            int mobId = fighter.getMob().getTemplate().getId();
+            int mobIa = fighter.getMob().getTemplate().getIa();
+            return mobId + " - Mob#" + mobId + " (IA " + mobIa + ")";
+        }
+        if (fighter.getPersonnage() != null) {
+            return fighter.getPersonnage().getName();
+        }
+        if (fighter.isDouble() && fighter.getDouble() != null) {
+            return fighter.getDouble().getName();
+        }
+        return "type=" + fighter.getType();
     }
 }

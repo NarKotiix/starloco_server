@@ -53,10 +53,11 @@ public final class IAProfiler {
 
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNs);
         if (elapsedMs >= Config.getInstance().AIProfilingWarnMs) {
-            AIPROF_LOGGER.info("[AI-PROF] slow turn={}ms fight={} fighter={} invoc={} reason={}",
+            AIPROF_LOGGER.info("[AI-PROF] slow turn={}ms fight={} fighter={} mob={} invoc={} reason={}",
                     elapsedMs,
                     fight.getId(),
                     fighter.getId(),
+                    fighterMobLabel(fighter),
                     fighter.isInvocation(),
                     reason == null ? "" : reason);
         }
@@ -81,11 +82,12 @@ public final class IAProfiler {
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNs);
         if (elapsedMs >= Config.getInstance().AIProfilingWarnMs) {
             int fightId = fighter.getFight() != null ? fighter.getFight().getId() : -1;
-            AIPROF_LOGGER.info("[AI-PROF] slow method={} {}ms fight={} fighter={} ctx={}",
+            AIPROF_LOGGER.info("[AI-PROF] slow method={} {}ms fight={} fighter={} mob={} ctx={}",
                     metric,
                     elapsedMs,
                     fightId,
                     fighter.getId(),
+                    fighterMobLabel(fighter),
                     context == null ? "" : context);
         }
 
@@ -139,6 +141,21 @@ public final class IAProfiler {
             long maxMicros = TimeUnit.NANOSECONDS.toMicros(maxNs);
             AIPROF_LOGGER.info("[AI-PROF] summary metric={} calls={} avg={}us max={}us", entry.getKey(), calls, avgMicros, maxMicros);
         }
+    }
+
+    private static String fighterMobLabel(Fighter fighter) {
+        if (fighter == null) {
+            return "n/a";
+        }
+        if (fighter.getMob() != null && fighter.getMob().getTemplate() != null) {
+            int mobId = fighter.getMob().getTemplate().getId();
+            int mobIa = fighter.getMob().getTemplate().getIa();
+            return mobId + " - Mob#" + mobId + " (IA " + mobIa + ")";
+        }
+        if (fighter.getPersonnage() != null) {
+            return fighter.getPersonnage().getName();
+        }
+        return "type=" + fighter.getType();
     }
 
     private static final class Stat {

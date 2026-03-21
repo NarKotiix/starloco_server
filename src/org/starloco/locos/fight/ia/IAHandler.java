@@ -249,6 +249,11 @@ public class IAHandler {
                         fighter != null ? fighter.getId() : -1,
                         mobGrade != null && mobGrade.getTemplate() != null ? mobGrade.getTemplate().getIa() : -1,
                         e);
+                if (fighter != null && fighter.getMob() != null && fighter.getMob().getTemplate() != null) {
+                    AIPROF_LOGGER.error("[AI-PROF] ia.apply crash identity fighter={} mob={}",
+                            fighter.getId(),
+                            fighter.getMob().getTemplate().getId() + " - Mob#" + fighter.getMob().getTemplate().getId());
+                }
                 finalIA.setStop(true);
             } finally {
                 IAProfiler.methodEnd(fighter, "ia.apply", applyStart, "phase=decision");
