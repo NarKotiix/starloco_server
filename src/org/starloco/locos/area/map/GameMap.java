@@ -1348,7 +1348,8 @@ public class GameMap {
         // === Création du combat ===
         perso.setOldMap(perso.getCurMap().getId());
         perso.setOldCell(perso.getCurCell().getId());
-        Fight f = new Fight(id, this, perso, group);
+        final Monster.MobGroup fightGroup = getDungeonFightGroupForPlayer(perso, group);
+        Fight f = new Fight(id, this, perso, fightGroup);
         this.fights.add(f);
         SocketManager.GAME_SEND_MAP_FIGHT_COUNT_TO_MAP(this);
 
@@ -1364,6 +1365,19 @@ public class GameMap {
         }
         if (perso.getTacticalMode())
             SocketManager.sendTacticalTruePacket(perso.getGameClient());
+    }
+
+    private Monster.MobGroup getDungeonFightGroupForPlayer(Player player, Monster.MobGroup baseGroup) {
+        if (!player.isDungeonModularModeEnabled() || !IsInDj(this) || baseGroup.getMobs().size() <= 4) {
+            return baseGroup;
+        }
+
+        Monster.MobGroup modularGroup = baseGroup.createFightGroupWithLimit(4, true);
+        if (modularGroup != baseGroup) {
+            this.send("cs<font color='#FF69B4'>[DEBUG] Mode donjon modulaire actif pour " + player.getName() +
+                    " : groupe " + baseGroup.getId() + " réduit à " + modularGroup.getMobs().size() + " monstres.</font>");
+        }
+        return modularGroup;
     }
 
     public static boolean IsInDj (GameMap map) {

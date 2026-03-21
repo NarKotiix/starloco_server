@@ -10,6 +10,7 @@ import org.starloco.locos.client.other.Stats;
 import org.starloco.locos.common.ConditionParser;
 import org.starloco.locos.common.PathFinding;
 import org.starloco.locos.common.SocketManager;
+import org.starloco.locos.database.Database;
 import org.starloco.locos.game.action.ExchangeAction;
 import org.starloco.locos.game.world.World;
 import org.starloco.locos.kernel.Config;
@@ -81,7 +82,11 @@ public class ExecuteCommandPlayer {
         if (msg.charAt(0) == '.' && msg.charAt(1) != '.') {
         	
         	final String commandName = msg.substring(0, msg.length() - 1).trim().split(" ")[0].substring(1);
-        	
+
+			if (commandName.equalsIgnoreCase("moddj")) {
+				return doDungeonModularMode(msg, player);
+			}
+
         	final PlayerCommand playerCommand = World.world.getPlayerCommandByName(commandName);
         	if(playerCommand == null) 
     		{
@@ -1299,5 +1304,44 @@ public class ExecuteCommandPlayer {
     	player.sendMessage(sb.toString());
     	return true;
     }
-   
+
+  private static boolean doDungeonModularMode(final String msg, final Player player) {
+    final String[] split = msg.substring(0, msg.length() - 1).trim().split(" ");
+
+    if (split.length < 2 || split[1].equalsIgnoreCase("status")) {
+      player.sendInformationMessage("Mode donjon modulaire: <b>" + (player.isDungeonModularModeEnabled() ? "ON" : "OFF") + "</b> (commande: .moddj on|off)");
+      return true;
+    }
+
+    final boolean enable;
+    if (split[1].equalsIgnoreCase("on")) {
+      enable = true;
+    } else if (split[1].equalsIgnoreCase("off")) {
+      enable = false;
+    } else {
+      player.sendErrorMessage("Usage: .moddj on|off|status");
+      return true;
+    }
+
+    if (player.isDungeonModularModeEnabled() == enable) {
+      player.sendInformationMessage("Mode donjon modulaire déjà <b>" + (enable ? "ON" : "OFF") + "</b>.");
+      return true;
+    }
+
+    player.setDungeonModularModeEnabled(enable);
+    if (!Database.getStatics().getPlayerData().updateDungeonModularMode(player)) {
+      player.sendErrorMessage("Impossible de sauvegarder le mode donjon modulaire pour le moment.");
+      return true;
+    }
+
+    player.sendInformationMessage("Mode donjon modulaire <b>" + (enable ? "activé" : "désactivé") + "</b>.");
+    if (enable) {
+      player.sendMessage("En donjon, les groupes de combat seront limités à 4 monstres en conservant le boss.");
+    } else {
+      player.sendMessage("Les combats en donjon reviennent au mode traditionnel.");
+    }
+
+    return true;
+  }
+
 }

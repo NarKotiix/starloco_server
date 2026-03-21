@@ -281,6 +281,9 @@ public class Monster {
         private Timer condTimer;
         private ArrayList<GameObject> objects;
 
+        private MobGroup() {
+        }
+
         public MobGroup(int Aid, int Aalign, ArrayList<MobGrade> possibles,
                         GameMap Map, int cell, int fixSize, int minSize, int maxSize,
                         MobGrade extra) {
@@ -935,6 +938,89 @@ public class Monster {
 
         public Map<Integer, MobGrade> getMobs() {
             return this.mobs;
+        }
+
+        public MobGroup createFightGroupWithLimit(int maxMonsters, boolean keepBoss) {
+            if (maxMonsters <= 0 || this.mobs.size() <= maxMonsters) {
+                return this;
+            }
+
+            MobGrade boss = keepBoss ? findBossMob() : null;
+            List<MobGrade> orderedMobs = new ArrayList<>(this.mobs.values());
+            orderedMobs.sort((left, right) -> Integer.compare(right.getLevel(), left.getLevel()));
+
+            List<MobGrade> selectedMobs = new ArrayList<>();
+            if (boss != null) {
+                selectedMobs.add(boss);
+            }
+
+            for (MobGrade mob : orderedMobs) {
+                if (selectedMobs.size() >= maxMonsters) {
+                    break;
+                }
+                if (mob == boss) {
+                    continue;
+                }
+                selectedMobs.add(mob);
+            }
+
+            if (selectedMobs.size() == this.mobs.size() || selectedMobs.isEmpty()) {
+                return this;
+            }
+
+            MobGroup fightGroup = new MobGroup();
+            fightGroup.id = this.id;
+            fightGroup.cellId = this.cellId;
+            fightGroup.orientation = this.orientation;
+            fightGroup.align = this.align;
+            fightGroup.starBonus = this.starBonus;
+            fightGroup.lastStarBonusUpdateAt = this.lastStarBonusUpdateAt;
+            fightGroup.aggroDistance = 0;
+            fightGroup.subarea = this.subarea;
+            fightGroup.changeAgro = this.changeAgro;
+            fightGroup.isFix = this.isFix;
+            fightGroup.isExtraGroup = this.isExtraGroup;
+            fightGroup.condition = this.condition;
+            fightGroup.objects = this.objects == null ? null : new ArrayList<>(this.objects);
+            fightGroup.mobs = new LinkedHashMap<>();
+
+            int guid = -1;
+            for (MobGrade mob : selectedMobs) {
+                MobGrade copy = mob.getCopy();
+                fightGroup.mobs.put(guid, copy);
+                if (copy.getTemplate().getAggroDistance() > fightGroup.aggroDistance) {
+                    fightGroup.aggroDistance = copy.getTemplate().getAggroDistance();
+                }
+                guid--;
+            }
+            return fightGroup;
+        }
+
+        private MobGrade findBossMob() {
+            MobGrade boss = null;
+            for (MobGrade mob : this.mobs.values()) {
+                if (!isBossMonsterId(mob.getTemplate().getId())) {
+                    continue;
+                }
+                if (boss == null || mob.getLevel() > boss.getLevel()) {
+                    boss = mob;
+                }
+            }
+            return boss;
+        }
+
+        private static boolean isBossMonsterId(int monsterId) {
+            for (int id : Constant.BOSS_ID) {
+                if (id == monsterId) {
+                    return true;
+                }
+            }
+            for (int id : Constant.MONSTRE_ID_ISBOSS) {
+                if (id == monsterId) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public MobGrade getMobGradeById(int id) {

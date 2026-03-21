@@ -51,6 +51,7 @@ public class PlayerData extends AbstractDAO<Player> {
     }
     
     private void load(final ResultSet RS, final boolean checkOldPlayer) throws SQLException{
+		 final boolean hasDungeonModularModeColumn = hasColumn(RS, "dungeon_modular_mode");
     	 while (RS.next()) {
              if (RS.getInt("server") != Main.serverId)
                  continue;
@@ -70,6 +71,10 @@ public class PlayerData extends AbstractDAO<Player> {
             	 Player oldPlayer = World.world.getPlayer(id);
             	 if(oldPlayer != null)
             		 player.setNeededEndFight(oldPlayer.needEndFight(), oldPlayer.hasMobGroup());
+             }
+
+             if (hasDungeonModularModeColumn) {
+                 player.setDungeonModularModeEnabled(RS.getBoolean("dungeon_modular_mode"));
              }
 
              player.VerifAndChangeItemPlace();
@@ -336,6 +341,36 @@ public class PlayerData extends AbstractDAO<Player> {
         } finally {
             close(p);
         }
+    }
+
+    public boolean updateDungeonModularMode(Player player) {
+        PreparedStatement p = null;
+        try {
+            p = getPreparedStatement("UPDATE `players` SET `dungeon_modular_mode` = ? WHERE `id` = ? LIMIT 1");
+            p.setBoolean(1, player.isDungeonModularModeEnabled());
+            p.setInt(2, player.getId());
+            execute(p);
+            return true;
+        } catch (SQLException e) {
+            super.sendError("PlayerData updateDungeonModularMode", e);
+        } finally {
+            close(p);
+        }
+        return false;
+    }
+
+    private boolean hasColumn(ResultSet resultSet, String columnName) {
+        try {
+            final int columns = resultSet.getMetaData().getColumnCount();
+            for (int i = 1; i <= columns; i++) {
+                if (columnName.equalsIgnoreCase(resultSet.getMetaData().getColumnName(i))) {
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            super.sendError("PlayerData hasColumn", e);
+        }
+        return false;
     }
 
     public void updateTitles(int guid, String title) {

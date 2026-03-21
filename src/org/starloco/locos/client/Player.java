@@ -223,6 +223,7 @@ public class Player {
 	private boolean tacticalMode=false;
 	//private boolean worldMarket=false;
 	private boolean autoSkip=false;
+  private boolean dungeonModularModeEnabled = false;
 	// IPDrop System
 	public boolean ipDrop=false;
 	//private boolean canDrop=true;
@@ -5801,6 +5802,14 @@ public class Player {
     public void setAutoSkip(boolean autoSkip)
     {
       this.autoSkip=autoSkip;
+    }
+
+    public boolean isDungeonModularModeEnabled() {
+        return dungeonModularModeEnabled;
+    }
+
+    public void setDungeonModularModeEnabled(boolean dungeonModularModeEnabled) {
+        this.dungeonModularModeEnabled = dungeonModularModeEnabled;
     }
     
     public void resetCapital()
