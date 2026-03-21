@@ -3,6 +3,7 @@
     <property name="LOG_DIR" value="Logs"/>
     <!-- Variable d'environnement optionnelle: APP_LOG_LEVEL (ex: DEBUG, INFO, WARN) -->
     <property name="APP_LOG_LEVEL" value="${APP_LOG_LEVEL:-INFO}"/>
+    <property name="LOG_PATTERN" value="%d{HH:mm:ss.SSS} | %clr(%-5level){FATAL=${ANSI_RED:-},ERROR=${ANSI_RED:-},WARN=${ANSI_YELLOW:-},INFO=${ANSI_GREEN:-},DEBUG=${ANSI_CYAN:-},TRACE=${ANSI_MAGENTA:-}} | %logger{36} - %msg%n"/>
 
     <!-- Déclaration du convertisseur personnalisé -->
     <conversionRule conversionWord="clr" converterClass="org.starloco.locos.kernel.ANSIColoredConverter" />
@@ -11,8 +12,9 @@
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>
         <withJansi>true</withJansi>
+        <immediateFlush>true</immediateFlush>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} | %clr(%-5level){FATAL=${ANSI_RED:-},ERROR=${ANSI_RED:-},WARN=${ANSI_YELLOW:-},INFO=${ANSI_GREEN:-},DEBUG=${ANSI_CYAN:-},TRACE=${ANSI_MAGENTA:-}} | %logger{36} - %msg%n</pattern>
+            <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
     </appender>
@@ -20,6 +22,7 @@
     <!-- Appender Console stderr pour les erreurs -->
     <appender name="CONSOLE_ERROR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
+        <immediateFlush>true</immediateFlush>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
@@ -33,19 +36,23 @@
     <!-- Appender Fichier Rolling pour tous les logs -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/server.log</file>
+        <immediateFlush>true</immediateFlush>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} | %-5level | %logger{36} - %msg%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/server-%d{yyyy-MM-dd}.log</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/server-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
             <maxHistory>30</maxHistory>
+            <totalSizeCap>300MB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
     <!-- Appender Fichier pour les erreurs uniquement -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/errors.log</file>
+        <immediateFlush>true</immediateFlush>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
@@ -53,9 +60,26 @@
             <pattern>%d{HH:mm:ss.SSS} | %-5level | %logger{36} - %msg%n%ex</pattern>
             <charset>UTF-8</charset>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/errors-%d{yyyy-MM-dd}.log</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/errors-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxFileSize>5MB</maxFileSize>
             <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Appender Fichier dédié au profiling IA -->
+    <appender name="AI_PROFILING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/AIProfiling/ai_profiling.log</file>
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} | %-5level | %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/AIProfiling/ai_profiling-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
@@ -94,6 +118,18 @@
         <appender-ref ref="FILE"/>
         <appender-ref ref="ERROR_FILE"/>
     </logger>
+
+    <!-- Logger spécifique AI Profiling : console en direct + fichier dédié, sans polluer server.log -->
+    <logger name="ai.profiling" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="CONSOLE_ERROR"/>
+        <appender-ref ref="AI_PROFILING_FILE"/>
+    </logger>
+
+    <!-- Flush propre à l'arrêt du serveur -->
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook">
+        <delay>10000</delay>
+    </shutdownHook>
 
 </configuration>
 

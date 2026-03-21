@@ -38,6 +38,8 @@ import org.starloco.locos.area.map.GameCase;
 import org.starloco.locos.object.GameObject;
 import org.starloco.locos.object.ObjectTemplate;
 import org.starloco.locos.object.entity.SoulStone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.starloco.locos.other.Guild;
 import org.starloco.locos.quest.Quest;
 import org.starloco.locos.client.other.Party;
@@ -52,6 +54,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class Fight {
+
+    private static final Logger AIPROF_LOGGER = LoggerFactory.getLogger("ai.profiling");
     private int id, state = 0, guildId = -1, type = -1;
     private int st1, st2;
     private int curPlayer, captWinner = -1;
@@ -2570,7 +2574,6 @@ public class Fight {
         {
             // Evite de bloquer tout le tour en cas d'exception pendant un cast.
             setCurAction(false);
-            Logging.getInstance().write("Error", ex.getMessage() + "\n" + Arrays.toString(ex.getStackTrace()));
             return 10;
         }
     }
@@ -2883,12 +2886,10 @@ public class Fight {
         }
         this.setWalkingPacket("");
         Trap.doTraps(this, fighter);
-        // Les IA n'envoient pas d'ACK de déplacement client (GK), on libère donc ici.
-        this.setCurAction(false);
         return true;
       }
 
-      if((getType()==Constant.FIGHT_TYPE_PVM)&&(getAllChallenges().size()>0)&&!current.isInvocation()&&!current.isDouble()&&!current.isCollector()||(getType()==Constant.FIGHT_TYPE_DOPEUL)&&(getAllChallenges().size()>0)&&!current.isInvocation()&&!current.isDouble()&&!current.isCollector())
+      if((getType()==Constant.FIGHT_TYPE_PVM)&&(!getAllChallenges().isEmpty())&&!current.isInvocation()&&!current.isDouble()&&!current.isCollector()||(getType()==Constant.FIGHT_TYPE_DOPEUL)&&(getAllChallenges().size()>0)&&!current.isInvocation()&&!current.isDouble()&&!current.isCollector())
         this.getAllChallenges().entrySet().stream().filter(c -> c.getValue()!=null).forEach(c -> c.getValue().onPlayerMove(fighter));
 
       if(fighter.getPersonnage()!=null)
@@ -5746,7 +5747,7 @@ public class Fight {
     public void cast(Fighter fighter, Runnable runnable) {
         if(this.turn != null && System.currentTimeMillis() - this.turn.getStartTime() >= 30000) {
             if (Config.getInstance().AIProfiling && fighter != null) {
-                World.world.logger.info("[AI-PROF] cast skipped timeout fight={} fighter={} elapsed={}ms",
+                AIPROF_LOGGER.info("[AI-PROF] cast skipped timeout fight={} fighter={} elapsed={}ms",
                         this.getId(),
                         fighter.getId(),
                         System.currentTimeMillis() - this.turn.getStartTime());

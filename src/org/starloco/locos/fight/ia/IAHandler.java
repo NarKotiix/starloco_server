@@ -4,19 +4,23 @@ import org.starloco.locos.entity.monster.Monster.MobGrade;
 import org.starloco.locos.fight.Fight;
 import org.starloco.locos.fight.Fighter;
 import org.starloco.locos.fight.ia.type.*;
-import org.starloco.locos.game.world.World;
 import org.starloco.locos.kernel.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by Locos on 18/09/2015.
  */
 public class IAHandler {
 
+    private static final Logger AIPROF_LOGGER = LoggerFactory.getLogger("ai.profiling");
+
     // TODO : Changer le switch en map, passer le IAHandler en singleton
 
     public static void select(final Fight fight, final Fighter fighter) {
         IAProfiler.startTurn(fight, fighter);
         final long selectStart = IAProfiler.methodStart(fighter, "ia.select");
+
         IA ia = new Blank(fight, fighter);
         MobGrade mobGrade = fighter.getMob();
 
@@ -26,8 +30,9 @@ public class IAHandler {
             else if(fighter.isCollector())
                 ia = new Blank(fight, fighter);
 
-            final IA finalIA = ia;
-            ia.addNext(finalIA::endTurn, Config.getInstance().AIDelay);
+            // Fallback : si apply() ne se déclenche pas, endTurn forcé après AIDelay
+            final IA iaNull = ia;
+            ia.addNext(iaNull::endTurn, Config.getInstance().AIDelay);
         } else if(mobGrade.getTemplate() == null) {
             ia.setStop(true);
             ia.endTurn();
@@ -230,7 +235,6 @@ public class IAHandler {
                     break;
             }
         }
-
         IAProfiler.methodEnd(fighter, "ia.select", selectStart,
                 "mobIa=" + (mobGrade != null && mobGrade.getTemplate() != null ? mobGrade.getTemplate().getIa() : -1));
 
@@ -240,7 +244,7 @@ public class IAHandler {
             try {
                 finalIA.apply();
             } catch (Exception e) {
-                World.world.logger.error("[AI-PROF] ia.apply crash fight={} fighter={} mobIa={}",
+                AIPROF_LOGGER.error("[AI-PROF] ia.apply crash fight={} fighter={} mobIa={}",
                         fight != null ? fight.getId() : -1,
                         fighter != null ? fighter.getId() : -1,
                         mobGrade != null && mobGrade.getTemplate() != null ? mobGrade.getTemplate().getIa() : -1,
@@ -248,7 +252,6 @@ public class IAHandler {
                 finalIA.setStop(true);
             } finally {
                 IAProfiler.methodEnd(fighter, "ia.apply", applyStart, "phase=decision");
-                // Même en cas de crash d'IA, on force un passage de tour propre.
                 finalIA.addNext(finalIA::endTurn, 0);
             }
         }, 0);

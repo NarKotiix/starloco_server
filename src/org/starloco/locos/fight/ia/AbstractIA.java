@@ -1,10 +1,11 @@
 package org.starloco.locos.fight.ia;
 
+import org.starloco.locos.kernel.Config;
+import org.starloco.locos.kernel.Constant;
 import org.starloco.locos.fight.Fight;
 import org.starloco.locos.fight.Fighter;
-import org.starloco.locos.game.world.World;
-import org.starloco.locos.kernel.Constant;
-import org.starloco.locos.kernel.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,6 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Optimized: shared pool (no thread-per-instance), non-blocking addNext, AtomicBoolean terminated flag.
  */
 public abstract class AbstractIA implements IA {
+
+    /** Logger dédié pour les logs AIProfiling (écrit dans Logs/AIProfiling/) */
+    private static final Logger AIPROF_LOGGER = LoggerFactory.getLogger("ai.profiling");
 
     /**
      * Pool partagé par toutes les instances d'IA.
@@ -35,13 +39,15 @@ public abstract class AbstractIA implements IA {
     protected byte count;
 
     /** Empêche l'exécution de tâches planifiées après la fin du tour de cette IA. */
-    private final AtomicBoolean terminated = new AtomicBoolean(false);
     private long blockedSinceMs = 0L;
     private int blockedCycles = 0;
     private static final long STUCK_BLOCK_TIMEOUT_MS = 2500L;
     private long endTurnPollStartMs = 0L;
     private int endTurnPollCycles = 0;
     private static final long STUCK_ENDTURN_TIMEOUT_MS = 2500L;
+    private static final int ENDTURN_POLL_DELAY_MS = 25;
+    private static final long ENDTURN_IDLE_GUARD_MS = 500L;
+    private final AtomicBoolean terminated = new AtomicBoolean(false);
 
     public AbstractIA(Fight fight, Fighter fighter, byte count) {
         this.fight = fight;
@@ -58,12 +64,12 @@ public abstract class AbstractIA implements IA {
     public void endTurn() {
         if (terminated.get()) return;
 
-        if (this.stop && !this.fighter.isDead()) {
+        if (this.stop && this.fighter != null && !this.fighter.isDead()) {
+            // Réinitialise le tracking de polling seulement sur sortie propre
             endTurnPollStartMs = 0L;
             endTurnPollCycles = 0;
             terminated.set(true);
             if (this.fighter.haveInvocation()) {
-                // Planifier via le pool — ne pas bloquer le thread courant
                 POOL.schedule(() -> {
                     IAProfiler.endTurn(this.fight, this.fighter, "invocation");
                     this.fight.endTurn(false, this.fighter);
@@ -74,6 +80,24 @@ public abstract class AbstractIA implements IA {
             }
         } else {
             if (!this.fight.isFinish()) {
+                // CORRECTION DEADLOCK: Vérifier si c'est vraiment le tour de ce fighter
+                // Si le tour a changé et ce n'est plus son tour, sortir proprement
+                Fighter currentFighter = this.fight.getFighterByOrdreJeu();
+                if (currentFighter != null && this.fighter != null && 
+                    currentFighter.getId() != this.fighter.getId()) {
+                    // Le tour a changé, ce n'est plus notre tour
+                    endTurnPollStartMs = 0L;
+                    endTurnPollCycles = 0;
+                    terminated.set(true);
+                    if (Config.getInstance().AIProfiling) {
+                        AIPROF_LOGGER.info("[AI-PROF] endTurn exit, turn changed fight={} fighter={} currentFighter={}",
+                                this.fight.getId(),
+                                this.fighter.getId(),
+                                currentFighter.getId());
+                    }
+                    return;
+                }
+
                 long now = System.currentTimeMillis();
                 if (endTurnPollStartMs == 0L)
                     endTurnPollStartMs = now;
@@ -81,7 +105,7 @@ public abstract class AbstractIA implements IA {
 
                 long pollingForMs = now - endTurnPollStartMs;
                 if (Config.getInstance().AIProfiling && (endTurnPollCycles == 1 || endTurnPollCycles % 20 == 0)) {
-                    World.world.logger.info("[AI-PROF] endTurn polling fight={} fighter={} cycles={} elapsed={}ms stop={}",
+                    AIPROF_LOGGER.info("[AI-PROF] endTurn polling fight={} fighter={} cycles={} elapsed={}ms stop={}",
                             this.fight.getId(),
                             this.fighter != null ? this.fighter.getId() : -1,
                             endTurnPollCycles,
@@ -90,7 +114,7 @@ public abstract class AbstractIA implements IA {
                 }
 
                 if (pollingForMs >= STUCK_ENDTURN_TIMEOUT_MS) {
-                    World.world.logger.warn("[AI-PROF] endTurn stuck, force pass turn fight={} fighter={} cycles={} elapsed={}ms",
+                    AIPROF_LOGGER.warn("[AI-PROF] endTurn stuck, force pass turn fight={} fighter={} cycles={} elapsed={}ms",
                             this.fight.getId(),
                             this.fighter != null ? this.fighter.getId() : -1,
                             endTurnPollCycles,
@@ -99,7 +123,24 @@ public abstract class AbstractIA implements IA {
                     endTurn();
                     return;
                 }
-                addNext(this::endTurn, 0);
+
+                // Garde ciblée: si rien n'est en cours (ni action ni trap) mais que stop ne bascule jamais,
+                // on termine le tour pour éviter le timeout 2500ms qui crée une latence visible.
+                if (!this.stop && !this.fight.isCurAction() && !this.fight.isTraped() && pollingForMs >= ENDTURN_IDLE_GUARD_MS) {
+                    if (Config.getInstance().AIProfiling) {
+                        AIPROF_LOGGER.warn("[AI-PROF] endTurn idle guard, force pass turn fight={} fighter={} cycles={} elapsed={}ms",
+                                this.fight.getId(),
+                                this.fighter != null ? this.fighter.getId() : -1,
+                                endTurnPollCycles,
+                                pollingForMs);
+                    }
+                    this.stop = true;
+                    endTurn();
+                    return;
+                }
+
+                // Évite les boucles ultra-serrées à délai 0 (CPU + cycles explosifs) lors du polling endTurn.
+                addNext(this::endTurn, ENDTURN_POLL_DELAY_MS);
             } else {
                 terminated.set(true);
             }
@@ -126,7 +167,6 @@ public abstract class AbstractIA implements IA {
             terminated.set(true);
             return;
         }
-
         Fighter current = this.fight.getFighterByOrdreJeu();
         if (this.fight.getState() == Constant.FIGHT_STATE_ACTIVE
                 && this.fighter != null
@@ -139,10 +179,11 @@ public abstract class AbstractIA implements IA {
 
         final long scheduledAt = System.nanoTime();
         final int normalizedDelay = Math.max(0, time);
+        final int remaining = Math.max(0, time - Config.getInstance().AIDelay);
+
 
         if (this.fight.isCurAction() || this.fight.isTraped()) {
             // Reschedule non-bloquant : on réessaie dans AIDelay ms sans bloquer le thread
-            final int remaining = Math.max(0, time - Config.getInstance().AIDelay);
             long now = System.currentTimeMillis();
             if (blockedSinceMs == 0L)
                 blockedSinceMs = now;
@@ -151,7 +192,7 @@ public abstract class AbstractIA implements IA {
 
             if (Config.getInstance().AIProfiling) {
                 if (blockedCycles == 1 || blockedCycles % 10 == 0) {
-                    World.world.logger.info("[AI-PROF] scheduler blocked fight={} fighter={} remaining={} blockedFor={}ms curAction={} traped={}",
+                    AIPROF_LOGGER.info("[AI-PROF] scheduler blocked fight={} fighter={} remaining={} blockedFor={}ms curAction={} traped={}",
                             this.fight.getId(),
                             this.fighter != null ? this.fighter.getId() : -1,
                             remaining,
@@ -162,7 +203,7 @@ public abstract class AbstractIA implements IA {
             }
 
             if (blockedForMs >= STUCK_BLOCK_TIMEOUT_MS) {
-                World.world.logger.warn("[AI-PROF] scheduler stuck, force endTurn fight={} fighter={} blockedFor={}ms curAction={} traped={}",
+                AIPROF_LOGGER.warn("[AI-PROF] scheduler stuck, force endTurn fight={} fighter={} blockedFor={}ms curAction={} traped={}",
                         this.fight.getId(),
                         this.fighter != null ? this.fighter.getId() : -1,
                         blockedForMs,
@@ -175,20 +216,21 @@ public abstract class AbstractIA implements IA {
                 return;
             }
             POOL.schedule(() -> addNext(runnable, remaining), Config.getInstance().AIDelay, TimeUnit.MILLISECONDS);
-        } else {
-            blockedSinceMs = 0L;
-            blockedCycles = 0;
-            POOL.schedule(() -> {
-                long waitedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - scheduledAt);
-                if (Config.getInstance().AIProfiling && waitedMs >= Config.getInstance().AIProfilingWarnMs) {
-                    World.world.logger.info("[AI-PROF] scheduler wait={}ms requested={}ms fight={} fighter={}",
-                            waitedMs,
-                            normalizedDelay,
-                            this.fight.getId(),
-                            this.fighter != null ? this.fighter.getId() : -1);
-                }
-                runnable.run();
-            }, normalizedDelay, TimeUnit.MILLISECONDS);
+            return;
         }
+
+        blockedSinceMs = 0L;
+        blockedCycles = 0;
+        POOL.schedule(() -> {
+            long waitedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - scheduledAt);
+            if (Config.getInstance().AIProfiling && waitedMs >= Config.getInstance().AIProfilingWarnMs) {
+                AIPROF_LOGGER.info("[AI-PROF] scheduler wait={}ms requested={}ms fight={} fighter={}",
+                        waitedMs,
+                        normalizedDelay,
+                        this.fight.getId(),
+                        this.fighter != null ? this.fighter.getId() : -1);
+            }
+            runnable.run();
+        }, normalizedDelay, TimeUnit.MILLISECONDS);
     }
 }

@@ -2,8 +2,9 @@ package org.starloco.locos.fight.ia;
 
 import org.starloco.locos.fight.Fight;
 import org.starloco.locos.fight.Fighter;
-import org.starloco.locos.game.world.World;
 import org.starloco.locos.kernel.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -20,6 +21,8 @@ import java.util.concurrent.atomic.LongAdder;
  * Disabled by default via config flags.
  */
 public final class IAProfiler {
+
+    private static final Logger AIPROF_LOGGER = LoggerFactory.getLogger("ai.profiling");
 
     private static final ConcurrentMap<Long, Long> TURN_START_NS = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, Stat> STATS = new ConcurrentHashMap<>();
@@ -50,7 +53,7 @@ public final class IAProfiler {
 
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNs);
         if (elapsedMs >= Config.getInstance().AIProfilingWarnMs) {
-            World.world.logger.info("[AI-PROF] slow turn={}ms fight={} fighter={} invoc={} reason={}",
+            AIPROF_LOGGER.info("[AI-PROF] slow turn={}ms fight={} fighter={} invoc={} reason={}",
                     elapsedMs,
                     fight.getId(),
                     fighter.getId(),
@@ -78,7 +81,7 @@ public final class IAProfiler {
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNs);
         if (elapsedMs >= Config.getInstance().AIProfilingWarnMs) {
             int fightId = fighter.getFight() != null ? fighter.getFight().getId() : -1;
-            World.world.logger.info("[AI-PROF] slow method={} {}ms fight={} fighter={} ctx={}",
+            AIPROF_LOGGER.info("[AI-PROF] slow method={} {}ms fight={} fighter={} ctx={}",
                     metric,
                     elapsedMs,
                     fightId,
@@ -134,7 +137,7 @@ public final class IAProfiler {
             }
             long avgMicros = TimeUnit.NANOSECONDS.toMicros(totalNs / calls);
             long maxMicros = TimeUnit.NANOSECONDS.toMicros(maxNs);
-            World.world.logger.info("[AI-PROF] summary metric={} calls={} avg={}us max={}us", entry.getKey(), calls, avgMicros, maxMicros);
+            AIPROF_LOGGER.info("[AI-PROF] summary metric={} calls={} avg={}us max={}us", entry.getKey(), calls, avgMicros, maxMicros);
         }
     }
 
