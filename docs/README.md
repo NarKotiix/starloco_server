@@ -21,6 +21,11 @@ Documentation durable du projet : exploitation, configuration, guides rapides.
 - [`maps-classiques-multigroupes.md`](./maps-classiques-multigroupes.md)
 - [`amelioration-maxgroup.md`](./amelioration-maxgroup.md)
 
+### IA / debug combat
+- [`ia-combat-reference.md`](./ia-combat-reference.md)
+- [`ia-combat-diagnostic-playbook.md`](./ia-combat-diagnostic-playbook.md)
+- [`ia2-ia107-catalog.md`](./ia2-ia107-catalog.md)
+
 ### Divers
 - [`utf8-accents-fix.md`](./utf8-accents-fix.md)
 
