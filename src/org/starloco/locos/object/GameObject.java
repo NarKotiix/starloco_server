@@ -33,6 +33,7 @@ public class GameObject {
     protected int obvijevanLook;
     protected int puit;
     private int mimibioteApparence = 0;
+    private volatile boolean lockedForTransform = false;
     private Stats Stats = new Stats();
     private ArrayList<SpellEffect> Effects = new ArrayList<>();
     private ArrayList<String> SortStats = new ArrayList<>();
@@ -355,6 +356,22 @@ public class GameObject {
     public void setPosition(int position) {
         this.setModification();
         this.position = position;
+    }
+
+    public boolean isLockedForTransform() {
+        return lockedForTransform;
+    }
+
+    public synchronized boolean tryLockForTransform() {
+        if (this.lockedForTransform) {
+            return false;
+        }
+        this.lockedForTransform = true;
+        return true;
+    }
+
+    public synchronized void unlockForTransform() {
+        this.lockedForTransform = false;
     }
 
     public ObjectTemplate getTemplate() {

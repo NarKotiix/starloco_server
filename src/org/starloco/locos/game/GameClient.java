@@ -73,6 +73,7 @@ import static org.starloco.locos.kernel.Main.exchangeClient;
 
 public class GameClient {
 
+    private static final long EQUIP_DOUBLE_CLICK_GUARD_MS = 200L;
     private final IoSession session;
     private final static String POLICY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<cross-domain-policy>"+
@@ -341,7 +342,7 @@ public class GameClient {
         if(oldQS == null){
             World.world.logger.debug("[QuickSet] Création pour joueur {}", this.player.getName());
             QuickSet newQS = new QuickSet(this.player,posid,iconid,"",name);
-            for(GameObject obj : this.player.GetequipedObjects().values()){
+            for(GameObject obj : this.player.getAllEquipped()){
                 if(obj!=null) {
                     if (obj.getPosition() >= Constant.CONSO_POS_1 && obj.getPosition() <= Constant.ITEM_POS_TONIQUE9)
                         continue;
@@ -359,7 +360,7 @@ public class GameClient {
             World.world.logger.debug("[QuickSet] Modification pour joueur {}", this.player.getName());
             oldQS.setName(name);
             oldQS.setIconId(iconid);
-            for(GameObject obj : this.player.GetequipedObjects().values()){
+            for(GameObject obj : this.player.getAllEquipped()){
                 if(obj!=null) {
                     if (obj.getPosition() >= Constant.CONSO_POS_1 && obj.getPosition() <= Constant.ITEM_POS_TONIQUE9)
                         continue;
@@ -381,7 +382,7 @@ public class GameClient {
         if(oldQS!=null) {
             Map<Integer, GameObject> newAO = new HashMap<Integer, GameObject>();
             StringBuilder stringObj = new StringBuilder();
-            for (GameObject obj : this.player.GetequipedObjects().values()) {
+            for (GameObject obj : this.player.getAllEquipped()) {
                 if(obj != null) {
                     if (obj.getPosition() >= Constant.CONSO_POS_1 && obj.getPosition() <= Constant.ITEM_POS_TONIQUE9)
                         continue;
@@ -403,8 +404,7 @@ public class GameClient {
         packet = packet.substring(2);
         int posid = Integer.parseInt(packet);
         QuickSet oldQS = World.world.getQuickSet(this.player,posid);
-        ArrayList<GameObject> oldStuff = new ArrayList<GameObject>();
-        oldStuff.addAll(this.player.GetequipedObjects().values());
+        ArrayList<GameObject> oldStuff = this.player.getAllEquipped();
 
         if(oldQS!=null) {
             for (GameObject obj : oldStuff) {
@@ -413,8 +413,10 @@ public class GameClient {
                         continue;
 
                     int oldpos = obj.getPosition();
-                    this.player.unEquipItem(obj.getPosition());
-                    obj.setPosition(Constant.ITEM_POS_NO_EQUIPED);
+                    if (!this.player.moveEquipmentAtomically(obj, oldpos, Constant.ITEM_POS_NO_EQUIPED, obj.getGuid())) {
+                        this.logEquipmentMoveFailure(obj, oldpos, Constant.ITEM_POS_NO_EQUIPED, "quickset-unequip");
+                        continue;
+                    }
                     SocketManager.GAME_SEND_OBJET_MOVE_PACKET(player, obj);
                     if (obj.getTemplate().getPanoId() > 0)
                         SocketManager.GAME_SEND_OS_PACKET(this.player, obj.getTemplate().getPanoId());
@@ -429,15 +431,19 @@ public class GameClient {
             SocketManager.GAME_SEND_STATS_PACKET(this.player);
 
             for(Entry<Integer, GameObject> entry : oldQS.getObjectsArray().entrySet()){
-                GameObject newobj = entry.getValue();
+                GameObject quickSetObject = entry.getValue();
+                GameObject newobj = quickSetObject == null ? null : this.player.getItems().get(quickSetObject.getGuid());
                 int pos = entry.getKey();
 
                 if (newobj != null) {
                     if (newobj.getPosition() >= Constant.CONSO_POS_1 && newobj.getPosition() <= Constant.ITEM_POS_TONIQUE9)
                         continue;
 
-                    newobj.setPosition(pos);
-                    this.player.equipItem(newobj);
+                    int previousPos = newobj.getPosition();
+                    if (!this.player.moveEquipmentAtomically(newobj, previousPos, pos, newobj.getGuid())) {
+                        this.logEquipmentMoveFailure(newobj, previousPos, pos, "quickset-equip");
+                        continue;
+                    }
                     SocketManager.GAME_SEND_OBJET_MOVE_PACKET(this.player, newobj);
                     if (newobj.getTemplate().getPanoId() > 0)
                         SocketManager.GAME_SEND_OS_PACKET(this.player, newobj.getTemplate().getPanoId());
@@ -611,8 +617,26 @@ public class GameClient {
 
     	GameObject itemToKeep = World.world.getGameObject(idItemToKeep);
     	GameObject itemToDelete = World.world.getGameObject(idItemToDelete);
+      final GameObject baseItemToKeep = itemToKeep;
 
     	if(itemToKeep == null || itemToDelete == null) return;
+      if(!baseItemToKeep.tryLockForTransform()) {
+        World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason=LOCKED_FOR_TRANSFORM windowMs=0", this.player.getName(), baseItemToKeep.getGuid(), baseItemToKeep.getPosition(), Constant.ITEM_POS_NO_EQUIPED);
+        return;
+      }
+      if(!itemToDelete.tryLockForTransform()) {
+        baseItemToKeep.unlockForTransform();
+        World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason=LOCKED_FOR_TRANSFORM windowMs=0", this.player.getName(), itemToDelete.getGuid(), itemToDelete.getPosition(), Constant.ITEM_POS_NO_EQUIPED);
+        return;
+      }
+      if(!mimibiote.tryLockForTransform()) {
+        itemToDelete.unlockForTransform();
+        baseItemToKeep.unlockForTransform();
+        World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason=LOCKED_FOR_TRANSFORM windowMs=0", this.player.getName(), mimibiote.getGuid(), mimibiote.getPosition(), Constant.ITEM_POS_NO_EQUIPED);
+        return;
+      }
+
+      try {
     	if(!this.player.hasItemGuid(idItemToKeep) || !this.player.hasItemGuid(idItemToDelete)) return;
     	if(itemToDelete.getPosition() != Constant.ITEM_POS_NO_EQUIPED || itemToKeep.getPosition() != Constant.ITEM_POS_NO_EQUIPED) return;
     	if(itemToKeep.isMimibiote() || itemToDelete.isMimibiote()) return;
@@ -639,11 +663,19 @@ public class GameClient {
     	if(update)
     		SocketManager.GAME_SEND_UPDATE_ITEM(player, itemToKeep);
     	else {
-    		this.player.addObjet(itemToKeep, false);
-    		World.world.addGameObject(itemToKeep, true);
+        if (this.player.addObjet(itemToKeep, false)) {
+          World.world.addGameObject(itemToKeep, true);
+        } else {
+          World.world.logger.warn("[GHOST_ITEM] player={} context=createMimibiote guid={} action=skip_world_add_after_failed_inventory_attach", this.player.getName(), itemToKeep.getGuid());
+        }
     	}
 		SocketManager.GAME_SEND_Im_PACKET(this.player, "022;" + 1 + "~" + itemToDelete.getTemplate().getId());
 		SocketManager.GAME_SEND_Im_PACKET(this.player, "022;" + 1 + "~" + mimibiote.getTemplate().getId());
+      } finally {
+        mimibiote.unlockForTransform();
+        itemToDelete.unlockForTransform();
+        baseItemToKeep.unlockForTransform();
+      }
 
     }
 
@@ -663,12 +695,20 @@ public class GameClient {
 
     	final GameObject item = World.world.getGameObject(idItem);
     	if(item == null) return;
+      if(!item.tryLockForTransform()) {
+        World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason=LOCKED_FOR_TRANSFORM windowMs=0", this.player.getName(), item.getGuid(), item.getPosition(), item.getPosition());
+        return;
+      }
+
+      GameObject apparat = null;
+      boolean apparatLocked = false;
+      try {
     	if(!this.player.hasItemGuid(idItem)) return;
     	if(!item.isMimibiote()) return;
 
     	final GameObject mimibiote = World.world.getObjTemplate(Constant.ID_TEMPLATE_MIMIBIOTE).createNewItem(1, false);
     	final int idApparat = Integer.parseInt(item.getTxtStat().get(Constant.STATS_MIMIBIOTE).split(";")[0], 16);
-    	final GameObject apparat = World.world.getGameObject(idApparat);
+      apparat = World.world.getGameObject(idApparat);
 
     	if(apparat == null)
     	{
@@ -676,9 +716,18 @@ public class GameClient {
     		return;
     	}
 
+      if(!apparat.tryLockForTransform()) {
+        World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason=LOCKED_FOR_TRANSFORM windowMs=0", this.player.getName(), apparat.getGuid(), apparat.getPosition(), apparat.getPosition());
+        return;
+      }
+      apparatLocked = true;
+
     	if(this.player.addObjet(mimibiote, true))
     		World.world.addGameObject(mimibiote, true);
-    	this.player.addObjet(apparat, true);
+      if (!this.player.addObjet(apparat, true)) {
+        World.world.removeGameObject(apparat.getGuid());
+        World.world.logger.warn("[GHOST_ITEM] player={} context=dissociateMimibiote guid={} action=merged_existing_stack_cleanup", this.player.getName(), apparat.getGuid());
+      }
     	item.removeTxtStat(Constant.STATS_MIMIBIOTE); // setModification est dedans
     	item.setMimibioteApparence(0);
     	SocketManager.GAME_SEND_UPDATE_ITEM(player, item);
@@ -687,6 +736,12 @@ public class GameClient {
 
 		SocketManager.GAME_SEND_Im_PACKET(this.player, "021;" + 1 + "~" + apparat.getTemplate().getId());
 		SocketManager.GAME_SEND_Im_PACKET(this.player, "021;" + 1 + "~" + mimibiote.getTemplate().getId());
+      } finally {
+        if (apparatLocked && apparat != null) {
+          apparat.unlockForTransform();
+        }
+        item.unlockForTransform();
+      }
     }
 
     /**
@@ -1990,7 +2045,10 @@ public class GameClient {
                         qua = itemStore.getQuantity();
                     if (qua == itemStore.getQuantity()) {
                         seller.getStoreItems().remove(itemStore.getGuid());
-                        this.player.addObjet(itemStore, true);
+                        if (!this.player.addObjet(itemStore, true)) {
+                            World.world.removeGameObject(itemStore.getGuid());
+                            World.world.logger.warn("[GHOST_ITEM] buyer={} seller={} context=offlineMerchantBuy guid={} action=merged_existing_stack_cleanup", this.player.getName(), seller.getName(), itemStore.getGuid());
+                        }
                     } else if (itemStore.getQuantity() > qua) {
                         seller.getStoreItems().remove(itemStore.getGuid());
                         itemStore.setQuantity(itemStore.getQuantity() - qua);
@@ -2903,11 +2961,13 @@ public class GameClient {
                             obj.setQuantity(obj.getQuantity() - rAmount);
                             SocketManager.GAME_SEND_OBJECT_QUANTITY_PACKET(this.player, obj);
                             GameObject newObj = GameObject.getCloneObjet(obj, rAmount);
-                            World.world.addGameObject(newObj, true);
                             obj = newObj;
                         }
                         HdvEntry toAdd = new HdvEntry(World.world.getNextObjectHdvId(), price, amount, this.player.getAccount().getId(), obj);
                         curHdv.addEntry(toAdd, false); //Ajthise l'entry dans l'HDV
+                        if (World.world.getGameObject(obj.getGuid()) == null) {
+                            World.world.addGameObject(obj, true);
+                        }
                         SocketManager.GAME_SEND_EXCHANGE_OTHER_MOVE_OK(this, '+', "", toAdd.parseToEmK()); //Envoie un packet pour ajthiser l'item dans la fenetre de l'HDV du client
                         SocketManager.GAME_SEND_HDVITEM_SELLING(this.player);
                         Database.getStatics().getPlayerData().update(this.player);
@@ -6305,9 +6365,14 @@ public class GameClient {
             }
             if (obj.getPosition() != Constant.ITEM_POS_NO_EQUIPED){
                 int idSetExObj = obj.getTemplate().getPanoId();
-                GameObject obj2;
+                GameObject obj2 = player.getSimilarItem(obj);
                 ObjectTemplate exObjTpl = obj.getTemplate();
-                if ((obj2 = player.getSimilarItem(obj)) != null)//On le poss?de deja
+                int oldPosition = obj.getPosition();
+                if (!this.player.moveEquipmentAtomically(obj, oldPosition, Constant.ITEM_POS_NO_EQUIPED, obj.getGuid())) {
+                    this.logEquipmentMoveFailure(obj, oldPosition, Constant.ITEM_POS_NO_EQUIPED, "destroy-equipped-item");
+                    return;
+                }
+                if (obj2 != null)//On le poss?de deja
                 {
                     obj2.setQuantity(obj2.getQuantity()
                             + obj.getQuantity());
@@ -6318,7 +6383,6 @@ public class GameClient {
                 } else
                 //On ne le poss?de pas
                 {
-                    obj.setPosition(Constant.ITEM_POS_NO_EQUIPED);
                     if ((idSetExObj >= 81 && idSetExObj <= 92)
                             || (idSetExObj >= 201 && idSetExObj <= 212)) {
                         String[] stats = exObjTpl.getStrTemplate().split(",");
@@ -6572,8 +6636,12 @@ public class GameClient {
     }
 
     private synchronized void onMovementUnEquipObject(final GameObject objectToRemove) {
-    	this.player.unEquipItem(objectToRemove.getPosition());
         final GameObject object = this.player.getSimilarItem(objectToRemove);
+	    final int oldPosition = objectToRemove.getPosition();
+	    if (!this.player.moveEquipmentAtomically(objectToRemove, oldPosition, Constant.ITEM_POS_NO_EQUIPED, objectToRemove.getGuid())) {
+	    	this.logEquipmentMoveFailure(objectToRemove, oldPosition, Constant.ITEM_POS_NO_EQUIPED, "movement-unequip");
+	    	return;
+	    }
         if (object != null)//On le possède deja
         {
         	object.setQuantity(object.getQuantity() + objectToRemove.getQuantity());
@@ -6582,17 +6650,17 @@ public class GameClient {
             this.player.removeItem(objectToRemove.getGuid());
             SocketManager.GAME_SEND_REMOVE_ITEM_PACKET(this.player, objectToRemove.getGuid());
         } else{
-            objectToRemove.setPosition(Constant.ITEM_POS_NO_EQUIPED);
             SocketManager.GAME_SEND_OBJET_MOVE_PACKET(this.player, objectToRemove);
         }
-
-        return;
     }
 
     private synchronized void onMovementEquipItem(final GameObject object, final int position, final boolean isAConsumableItem, int quantity) {
     	// Equiper un item de manière basique
-        object.setPosition(position);
-        this.player.equipItem(object);
+	        final int oldPosition = object.getPosition();
+	        if (!this.player.moveEquipmentAtomically(object, oldPosition, position, object.getGuid())) {
+	        	this.logEquipmentMoveFailure(object, oldPosition, position, "movement-equip");
+	        	return;
+	        }
         SocketManager.GAME_SEND_OBJET_MOVE_PACKET(this.player, object);
         if(!isAConsumableItem)
         	quantity = 1;
@@ -6653,8 +6721,31 @@ public class GameClient {
 
     }
 
+    private void logEquipmentMoveFailure(final GameObject object, final int fromPos, final int toPos, final String context) {
+        if (object == null) {
+            return;
+        }
+        World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason={} windowMs=0", this.player != null ? this.player.getName() : "unknown", object.getGuid(), fromPos, toPos, context);
+    }
+
+    private boolean canProcessEquipmentMove(final GameObject object, final int requestedPosition) {
+        if (object == null) {
+            return false;
+        }
+        long elapsed = this.player.getElapsedSinceLastEquipChange(object.getGuid(), System.currentTimeMillis());
+        if (elapsed < EQUIP_DOUBLE_CLICK_GUARD_MS) {
+            World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason=DOUBLE_CLICK windowMs={}", this.player.getName(), object.getGuid(), object.getPosition(), requestedPosition, elapsed);
+            return false;
+        }
+        return true;
+    }
+
     public synchronized void onMovementEquipUnequipItem(GameObject object, final int position, final int quantity, final boolean sendStats) {
-    	final GameObject exObj = this.player.getObjetByPos(position);//Objet a l'ancienne position
+	    // Store snapshot of currently equipped object and its GUID to detect concurrent modifications
+	    final GameObject exObj = this.player.getEquippedAt(position);//Objet reel deja equipe sur ce slot
+        final int exObjGuid = exObj != null ? exObj.getGuid() : -1;
+        final int exObjPosition = exObj != null ? exObj.getPosition() : -1;
+        
         if(this.onMovementItemObvi(object, exObj, quantity, position)) return;
 
         this.onMovementItemClass(object, position);
@@ -6665,10 +6756,14 @@ public class GameClient {
         // Si la position est de retirer
         // Ou bien
         // Si il y avait déjà un item sur l'emplacement on le retire
-        if(exObj != null) {
-            if (exObj.getPosition() != Constant.ITEM_POS_NO_EQUIPED)
-                this.onMovementUnEquipObject(exObj);
-            this.onMovementEquipItem(exObj, Constant.ITEM_POS_NO_EQUIPED, isAConsumableItem, quantity);
+        if(exObj != null && exObjGuid != -1 && exObjPosition == position) {
+            // Validate GUID + position snapshot: ensure object hasn't been moved by concurrent operation
+            // before we unequip it
+            final GameObject currentExObj = this.player.getItems().get(exObjGuid);
+            if (currentExObj != null && currentExObj.getPosition() == position 
+                    && exObjGuid != object.getGuid()) {
+                this.onMovementUnEquipObject(currentExObj);
+            }
         }
         if(position != Constant.ITEM_POS_NO_EQUIPED) {
             this.onMovementEquipItem(object, position, isAConsumableItem, quantity);
@@ -6790,6 +6885,10 @@ public class GameClient {
             GameObject object = World.world.getGameObject(id);
             if (object == null || !this.player.hasItemGuid(id))
                 return;
+            if (object.isLockedForTransform()) {
+                World.world.logger.warn("[EQUIP_GUARD] player={} guid={} currentPos={} requestedPos={} reason=LOCKED_FOR_TRANSFORM windowMs=0", this.player.getName(), object.getGuid(), object.getPosition(), position);
+                return;
+            }
             if (this.player.getFight() != null)
                 if (this.player.getFight().getState() > Constant.FIGHT_STATE_ACTIVE)
                     return;
@@ -6803,6 +6902,9 @@ public class GameClient {
 
             if(this.onMovementFeedMount(object, position, quantity, id)) return;
             if(this.onMovementFeedPet(object, position)) return;
+
+            if ((position != Constant.ITEM_POS_NO_EQUIPED || object.getPosition() != Constant.ITEM_POS_NO_EQUIPED) && !this.canProcessEquipmentMove(object, position))
+                return;
 
             if (position != Constant.ITEM_POS_NO_EQUIPED && !Constant.isValidPlaceForItem(object.getTemplate(), position))
                 return;

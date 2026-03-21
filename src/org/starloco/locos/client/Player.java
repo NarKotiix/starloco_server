@@ -124,6 +124,7 @@ public class Player {
     private Map<Integer, SpellEffect> buffs = new HashMap<Integer, SpellEffect>();
     private Map<Integer, GameObject> objects = new HashMap<Integer, GameObject>();
     private Map<Integer, GameObject> equipedObjects = new HashMap<Integer, GameObject>();
+    private final Map<Integer, Long> lastEquipChangeByGuid = new HashMap<Integer, Long>();
     private String _savePos;
     private int _emoteActive = 0;
     private int savestat;
@@ -2699,11 +2700,82 @@ public class Player {
         World.world.removeGameObject(guid);
     }
 
-    public GameObject getObjetByPos(int pos) {
+    public synchronized GameObject getEquippedAt(int pos) {
         if (pos == Constant.ITEM_POS_NO_EQUIPED)
             return null;
-        
+
         return this.equipedObjects.get(pos);
+    }
+
+    public synchronized ArrayList<GameObject> getAllEquipped() {
+        ArrayList<GameObject> equipped = new ArrayList<GameObject>();
+        for (GameObject gameObject : this.equipedObjects.values()) {
+            if (gameObject != null) {
+                equipped.add(gameObject);
+            }
+        }
+        return equipped;
+    }
+
+    public synchronized long getElapsedSinceLastEquipChange(int guid, long now) {
+        Long lastChange = this.lastEquipChangeByGuid.get(guid);
+        return lastChange == null ? Long.MAX_VALUE : now - lastChange;
+    }
+
+    public synchronized void markEquipChange(int guid, long now) {
+        if (guid > 0) {
+            this.lastEquipChangeByGuid.put(guid, now);
+        }
+    }
+
+    public synchronized boolean moveEquipmentAtomically(final GameObject gameObject, final int fromPos, final int toPos) {
+        return this.moveEquipmentAtomically(gameObject, fromPos, toPos, null);
+    }
+
+    public synchronized boolean moveEquipmentAtomically(final GameObject gameObject, final int fromPos, final int toPos, final Integer expectedGuid) {
+        if (gameObject == null) {
+            return false;
+        }
+        if (fromPos == toPos) {
+            return gameObject.getPosition() == toPos;
+        }
+        if (gameObject.getPosition() != fromPos) {
+            return false;
+        }
+
+        if (fromPos != Constant.ITEM_POS_NO_EQUIPED) {
+            final GameObject equippedAtFrom = this.equipedObjects.get(fromPos);
+            if (equippedAtFrom == null || equippedAtFrom.getGuid() != gameObject.getGuid()) {
+                return false;
+            }
+            if (expectedGuid != null && equippedAtFrom.getGuid() != expectedGuid.intValue()) {
+                return false;
+            }
+        }
+
+        if (toPos != Constant.ITEM_POS_NO_EQUIPED) {
+            final GameObject equippedAtTo = this.equipedObjects.get(toPos);
+            if (equippedAtTo != null && equippedAtTo.getGuid() != gameObject.getGuid()) {
+                return false;
+            }
+        }
+
+        if (fromPos != Constant.ITEM_POS_NO_EQUIPED) {
+            this.unEquipItem(fromPos);
+        }
+
+        gameObject.setPosition(toPos);
+
+        if (toPos != Constant.ITEM_POS_NO_EQUIPED) {
+            this.equipItem(gameObject);
+        }
+
+        this.markEquipChange(gameObject.getGuid(), System.currentTimeMillis());
+        return true;
+    }
+
+    public synchronized GameObject getObjetByPos(int pos) {
+        return this.getEquippedAt(pos);
     }
     
     public void DestuffALL() {
@@ -2917,7 +2989,7 @@ public class Player {
     }
 
     public boolean hasEquiped(int id) {
-        for (final GameObject gameObject : this.equipedObjects.values())
+        for (final GameObject gameObject : this.getAllEquipped())
             if (gameObject != null && gameObject.getTemplate().getId() == id)
                 return true;
 
@@ -2959,7 +3031,7 @@ public class Player {
 
     public byte getNumbEquipedItemOfPanoplie(int panID) {
         byte nb = 0;
-        for (final GameObject gameObject : this.equipedObjects.values())
+        for (final GameObject gameObject : this.getAllEquipped())
             if (gameObject != null && gameObject.getTemplate().getPanoId() == panID)
                 ++nb;
         
@@ -4375,15 +4447,18 @@ public class Player {
 
     //FIN CLONAGE
     public void VerifAndChangeItemPlace() {
-    	
-    	for (final GameObject obj : objects.values()) {
-    		if (obj.getPosition() == Constant.ITEM_POS_NO_EQUIPED)
+        synchronized (this) {
+            this.equipedObjects.clear();
+
+            for (final GameObject obj : objects.values()) {
+                if (obj.getPosition() == Constant.ITEM_POS_NO_EQUIPED)
                 continue;
-    		if(this.equipedObjects.get(obj.getPosition()) == null)
-    			this.equipedObjects.put(obj.getPosition(), obj);
-    		else
-    			obj.setPosition(Constant.ITEM_POS_NO_EQUIPED);
-    	}
+                if(this.equipedObjects.get(obj.getPosition()) == null)
+                    this.equipedObjects.put(obj.getPosition(), obj);
+                else
+                    obj.setPosition(Constant.ITEM_POS_NO_EQUIPED);
+            }
+        }
     }
 
     //Mariage
@@ -5930,12 +6005,12 @@ public class Player {
 		
 	}
 	
-	public void unEquipItem(final int pos)
+  public synchronized void unEquipItem(final int pos)
 	{
 		this.equipedObjects.put(pos, null);
 	}
 	
-	public void equipItem(final GameObject gameObject)
+  public synchronized void equipItem(final GameObject gameObject)
 	{
 		this.equipedObjects.put(gameObject.getPosition(), gameObject);
 	}
@@ -6091,8 +6166,9 @@ public class Player {
         return statTonique;
     }
 
-    public Map<Integer, GameObject> GetequipedObjects(){
-        return this.equipedObjects;
+    @Deprecated
+    public synchronized Map<Integer, GameObject> GetequipedObjects(){
+        return new HashMap<Integer, GameObject>(this.equipedObjects);
     }
 
     public String getWrPacket(int palier) {
