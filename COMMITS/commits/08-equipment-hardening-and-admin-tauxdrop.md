@@ -83,6 +83,10 @@
   - Ceil, action, level, condition
   - Tri décroissant par meilleur taux de drop
 - Accessible aux administrateurs uniquement (bloqué pour les groupes non-admin).
+- Ajout de la commande admin `MOBAGGRO` / `AGGROMOB` pour basculer l'agression des mobs à chaud :
+  - `MOBAGGRO ON`
+  - `MOBAGGRO OFF`
+  - `MOBAGGRO STATUS`
 
 **`src/org/starloco/locos/kernel/Config.java`**
 - Ajout du flag runtime `mobAggression` (par défaut `true`).
@@ -121,5 +125,6 @@ Format: [itemId] nom  G1..G5  ceil  action  level  condition
   - Étendre le hardening aux autres flux inventaire non encore couverts.
   - Ajouter un outillage GM pour rejouer deux paquets `OM` successifs sur un même GUID en test.
   - Isoler `QuickSet` dans un lot de vérification fonctionnelle dédié en jeu.
+
 
 

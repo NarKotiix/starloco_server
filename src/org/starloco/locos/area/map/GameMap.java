@@ -1308,6 +1308,18 @@ public class GameMap {
 
         int id = getFightID();
 
+        if (shouldTraceAggro()) {
+            World.world.logger.info("[DEBUG AGGRO] fightStart map={} fightId={} player={} playerCell={} groupId={} groupCell={} aggroDistance={} stars={}",
+                    this.id,
+                    id,
+                    perso.getName(),
+                    perso.getCurCell() != null ? perso.getCurCell().getId() : -1,
+                    group.getId(),
+                    group.getCellId(),
+                    group.getAggroDistance(),
+                    group.getStarBonus());
+        }
+
         // DEBUG : joueur lance un combat
         this.send("cs<font color='#FF69B4'>[DEBUG] Joueur " + perso.getName() +
                 " lance un combat contre le groupe " + group.getId() +
@@ -1964,9 +1976,24 @@ public class GameMap {
             return;
         if (player.getCurMap().getId() != this.id || !player.canAggro())
             return;
+
         if(!Constant.isInGladiatorDonjon(Integer.parseInt(String.valueOf(id)))) {
             for (Monster.MobGroup group : this.mobGroups.values()) {
-                if (PathFinding.getDistanceBetween(this, id, group.getCellId()) <= group.getAggroDistance()) {//S'il y aggr
+                int distance = PathFinding.getDistanceBetween(this, id, group.getCellId());
+                final int triggerDistance = Config.singleton.mobAggression ? group.getAggroDistance() : 1;
+                if (triggerDistance > 0 && distance <= triggerDistance) {
+                    if (shouldTraceAggro()) {
+                        World.world.logger.info("[DEBUG AGGRO] trigger map={} player={} playerCell={} groupId={} groupCell={} distance={} triggerDistance={} groupAggroDistance={} mobAggression={}",
+                                this.id,
+                                player.getName(),
+                                id,
+                                group.getId(),
+                                group.getCellId(),
+                                distance,
+                                triggerDistance,
+                                group.getAggroDistance(),
+                                Config.singleton.mobAggression);
+                    }
                     startFightVersusMonstres(player, group);
                     return;
                 }
@@ -2039,6 +2066,10 @@ public class GameMap {
 
     private boolean shouldTraceStars() {
         return Main.modDebug && this.id == STAR_DEBUG_TRACE_MAP_ID;
+    }
+
+    private boolean shouldTraceAggro() {
+        return Main.modDebug;
     }
 
     private long computeStarDelayPerPointMillis(int currentInternalStars) {

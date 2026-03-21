@@ -186,11 +186,12 @@ public class CommandAdmin extends AdminUser {
             }
             boolean isCustomStarsCommand = command.equalsIgnoreCase("STARS");
             boolean isCustomDropRateCommand = command.equalsIgnoreCase("TD") || command.equalsIgnoreCase("TAUXDROP");
-            if ((isCustomStarsCommand || isCustomDropRateCommand) && groupe.isPlayer()) {
+            boolean isCustomMobAggroCommand = command.equalsIgnoreCase("MOBAGGRO") || command.equalsIgnoreCase("AGGROMOB");
+            if ((isCustomStarsCommand || isCustomDropRateCommand || isCustomMobAggroCommand) && groupe.isPlayer()) {
                 this.sendErrorMessage("Commande reservee aux administrateurs.");
                 return;
             }
-            if (!groupe.haveCommand(command) && !isCustomStarsCommand && !isCustomDropRateCommand) {
+            if (!groupe.haveCommand(command) && !isCustomStarsCommand && !isCustomDropRateCommand && !isCustomMobAggroCommand) {
                 this.sendMessage("Commande invalide !");
                 return;
             }
@@ -2853,6 +2854,29 @@ public class CommandAdmin extends AdminUser {
             this.getPlayer().thisCases.clear();
             Database.getStatics().getMountParkData().update(this.getPlayer().getCurMap().getMountPark());
             this.sendMessage("Vous avez appliqué les nouvelles cases é l'enclos.");
+        } else if (command.equalsIgnoreCase("MOBAGGRO") || command.equalsIgnoreCase("AGGROMOB")) {
+            if (infos.length < 2) {
+                this.sendMessage("MOB_AGGRESSION est actuellement: " + (Config.getInstance().mobAggression ? "ON" : "OFF"));
+                this.sendMessage("Utilisation: MOBAGGRO [ON|OFF|STATUS]");
+                return;
+            }
+
+            String mode = infos[1].trim().toUpperCase(Locale.ROOT);
+            if (mode.equals("STATUS")) {
+                this.sendMessage("MOB_AGGRESSION est actuellement: " + (Config.getInstance().mobAggression ? "ON" : "OFF"));
+                return;
+            }
+
+            if (mode.equals("ON") || mode.equals("OFF")) {
+                boolean enabled = mode.equals("ON");
+                Config.getInstance().setMobAggression(enabled);
+                this.sendMessage("Aggression des groupes de mobs: " + (enabled ? "ACTIVEE" : "DESACTIVEE") + " (runtime)");
+                this.sendMessage("Pour rendre ce changement permanent, mettez MOB_AGGRESSION=" + (enabled ? "true" : "false") + " dans config.properties.");
+                return;
+            }
+
+            this.sendErrorMessage("Commande invalide. Utilisation: MOBAGGRO [ON|OFF|STATUS]");
+            return;
         } else if (command.equalsIgnoreCase("TD") || command.equalsIgnoreCase("TAUXDROP")) {
             if (infos.length < 2) {
                 this.sendErrorMessage("Commande invalide. Utilisation: TD [monsterId]");

@@ -54,6 +54,10 @@ public class Config {
         return singleton;
     }
 
+    public synchronized void setMobAggression(boolean enabled) {
+        this.mobAggression = enabled;
+    }
+
     public void load() {
         File configFile = new File(CONFIG_FILE);
         if (!configFile.exists()) {
