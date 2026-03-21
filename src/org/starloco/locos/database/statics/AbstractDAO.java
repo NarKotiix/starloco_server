@@ -84,9 +84,14 @@ public abstract class AbstractDAO<T> implements DAO<T> {
             e.printStackTrace();
             logger.error("Can't getWaitingAccount datasource connection", e);
             dataSource.close();
-            if (!Database.getStatics().initializeConnection())
+            if (!Database.getStatics().initializeConnection()) {
                 Main.stop("statics prepared statement failed");
-            return null;
+                throw e;
+            }
+
+            // Retry une fois après réinitialisation pour éviter les NPE côté DAO appelants.
+            Connection connection = dataSource.getConnection();
+            return connection.prepareStatement(query);
         }
     }
 
