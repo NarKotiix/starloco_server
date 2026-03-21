@@ -5,7 +5,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 JAR_PATH="build/libs/Server-1.0.0.jar"
-JAVA_OPTS=(-Dfile.encoding=UTF-8 -Xms512M -Xmx2G)
+JAVA_OPTS=(
+  --add-opens=java.base/java.lang=ALL-UNNAMED
+  -Dfile.encoding=UTF-8
+  -Xms512M
+  -Xmx2G
+)
 
 if ! command -v java >/dev/null 2>&1; then
   echo "[ERREUR] Java est introuvable dans le PATH."

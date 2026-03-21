@@ -27,57 +27,55 @@ public class PathFinding {
                                   int targetCell) {
         AtomicReference<Integer> nSteps = new AtomicReference<>();
         nSteps.set(0);
-        synchronized (nSteps.get()) {
+        nSteps.set(0);
+        int newPos = cellID;
+        int Steps = 0;
+        String path = pathRef.get();
+        String newPath = "";
+        for (int i = 0; i < path.length(); i += 3) {
+            String SmallPath = path.substring(i, i + 3);
+            char dir = SmallPath.charAt(0);
+            int dirCaseID = World.world.getCryptManager().cellCode_To_ID(SmallPath.substring(1));
             nSteps.set(0);
-            int newPos = cellID;
-            int Steps = 0;
-            String path = pathRef.get();
-            String newPath = "";
-            for (int i = 0; i < path.length(); i += 3) {
-                String SmallPath = path.substring(i, i + 3);
-                char dir = SmallPath.charAt(0);
-                int dirCaseID = World.world.getCryptManager().cellCode_To_ID(SmallPath.substring(1));
-                nSteps.set(0);
-                //Si en combat et Si Pas début du path, on vérifie tacle
-                if (fight != null && i != 0 && getEnemyFighterArround(newPos, map, fight, true) != null) {
-                    pathRef.set(newPath);
-                    return Steps;
-                }
-                //Si en combat, et pas au début du path
-                if (fight != null && i != 0) {
-                    for (Trap trap : fight.getAllTraps()) {
-                        if (getDistanceBetween(map, trap.getCell().getId(), newPos) <= trap.getSize()) {
-                            pathRef.set(newPath);
-                            return Steps;
-                        }
+            //Si en combat et Si Pas début du path, on vérifie tacle
+            if (fight != null && i != 0 && getEnemyFighterArround(newPos, map, fight, true) != null) {
+                pathRef.set(newPath);
+                return Steps;
+            }
+            //Si en combat, et pas au début du path
+            if (fight != null && i != 0) {
+                for (Trap trap : fight.getAllTraps()) {
+                    if (getDistanceBetween(map, trap.getCell().getId(), newPos) <= trap.getSize()) {
+                        pathRef.set(newPath);
+                        return Steps;
                     }
                 }
-
-                String[] aPathInfos = ValidSinglePath(nSteps, newPos, SmallPath, map, fight, perso, targetCell).split(":");
-                if (aPathInfos[0].equalsIgnoreCase("stop")) {
-                    newPos = Integer.parseInt(aPathInfos[1]);
-                    Steps += nSteps.get();
-                    newPath += dir + World.world.getCryptManager().cellID_To_Code(newPos);
-                    pathRef.set(newPath);
-                    return -Steps;
-                } else if (aPathInfos[0].equalsIgnoreCase("ok")) {
-                    newPos = dirCaseID;
-                    Steps += nSteps.get();
-                } else if (aPathInfos[0].equalsIgnoreCase("stoptp")) {
-                    newPos = Integer.parseInt(aPathInfos[1]);
-                    Steps += nSteps.get();
-                    newPath += dir + World.world.getCryptManager().cellID_To_Code(newPos);
-                    pathRef.set(newPath);
-                    return -Steps - 10000;
-                } else {
-                    pathRef.set(newPath);
-                    return -1000;
-                }
-                newPath += dir + World.world.getCryptManager().cellID_To_Code(newPos);
             }
-            pathRef.set(newPath);
-            return Steps;
+
+            String[] aPathInfos = ValidSinglePath(nSteps, newPos, SmallPath, map, fight, perso, targetCell).split(":");
+            if (aPathInfos[0].equalsIgnoreCase("stop")) {
+                newPos = Integer.parseInt(aPathInfos[1]);
+                Steps += nSteps.get();
+                newPath += dir + World.world.getCryptManager().cellID_To_Code(newPos);
+                pathRef.set(newPath);
+                return -Steps;
+            } else if (aPathInfos[0].equalsIgnoreCase("ok")) {
+                newPos = dirCaseID;
+                Steps += nSteps.get();
+            } else if (aPathInfos[0].equalsIgnoreCase("stoptp")) {
+                newPos = Integer.parseInt(aPathInfos[1]);
+                Steps += nSteps.get();
+                newPath += dir + World.world.getCryptManager().cellID_To_Code(newPos);
+                pathRef.set(newPath);
+                return -Steps - 10000;
+            } else {
+                pathRef.set(newPath);
+                return -1000;
+            }
+            newPath += dir + World.world.getCryptManager().cellID_To_Code(newPos);
         }
+        pathRef.set(newPath);
+        return Steps;
     }
 
     public static ArrayList<Fighter> getEnemyFighterArround(int cellID,

@@ -69,7 +69,6 @@ public class Database {
         config.setConnectionTimeout(Math.max(1000, Main.dbConnectTimeoutMs));
         config.setIdleTimeout(Math.max(10000, Main.dbIdleTimeoutMs));
         config.setMaxLifetime(Math.max(30000, Main.dbMaxLifetimeMs));
-        config.setInitializationFailFast(false);
         return config;
     }
 

@@ -2797,12 +2797,12 @@ public class Function {
         }
       }
       int i=0,i2=ennemy.size();
-      int curHP=10000;
+      int curHP;
       Fighter curEnnemy=null;
 
       while(i<i2)
       {
-        curHP=200000;
+        curHP=Integer.MAX_VALUE;
         curEnnemy=null;
         for(Map.Entry<Integer, Fighter> t : ennemy.entrySet())
         {
@@ -2812,6 +2812,7 @@ public class Function {
             curEnnemy=t.getValue();
           }
         }
+        if(curEnnemy==null) break; // ennemy map vide ou tous invulnérables : sortie propre
         list.put(curEnnemy.getId(),curEnnemy);
         ennemy.remove(curEnnemy.getId());
         i++;

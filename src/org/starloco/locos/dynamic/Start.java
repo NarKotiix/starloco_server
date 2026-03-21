@@ -18,6 +18,13 @@ public class Start {
 	private GameMap map;
 	private Map<Integer, GameMap> mapUse = new HashMap<>();
 	private Thread thread;
+
+	private void cleanupState() {
+		player = null;
+		helper = null;
+		map = null;
+		mapUse.clear();
+	}
 	
 	public Start(Player player) {
 		this.player = player;
@@ -28,23 +35,19 @@ public class Start {
 	}
 	
 	public class verifyIsOnline implements Runnable {
-		@SuppressWarnings("deprecation")
 		@Override
 		public void run() {
-			while(Start.this.player.isOnline())
+			while(Start.this.player != null && Start.this.player.isOnline())
 				try { Thread.sleep(250); } catch (Exception ignored) {}
 			
-			player = null;
-			helper = null;
-			map = null;
-			mapUse.clear();
-			thread.interrupt();
-			thread.stop();
+			leave = true;
+			cleanupState();
+			if (thread != null)
+				thread.interrupt();
 		}
 	}
 	
 	public class starting implements Runnable {
-		@SuppressWarnings("deprecation")
 		@Override
 		public void run() {
 			/** START : Construction de l'nvironement **/
@@ -97,12 +100,8 @@ public class Start {
 				SocketManager.GAME_SEND_cMK_PACKET(player, "", helper.getId(), "Gardien Amakna", "Si tu es certain de ne vouloir aucune aide, clique une nouvelle fois sur le plot.");
 				try { Thread.sleep(3000); } catch (InterruptedException ignored) {}
 				SocketManager.GAME_SEND_cMK_PACKET(player, "", helper.getId(), "Gardien Amakna", "Bonne chance !");
-				player = null;
-				helper = null;
-				map = null;
-				mapUse.clear();
-				thread.interrupt();
-				thread.stop();
+				cleanupState();
+				Thread.currentThread().interrupt();
 				return;
 			}
 			
