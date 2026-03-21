@@ -25,6 +25,7 @@ Documentation durable du projet : exploitation, configuration, guides rapides.
 - [`ia-combat-reference.md`](./ia-combat-reference.md)
 - [`ia-combat-diagnostic-playbook.md`](./ia-combat-diagnostic-playbook.md)
 - [`ia2-ia107-catalog.md`](./ia2-ia107-catalog.md)
+- [`ia-type-files-reference.md`](./ia-type-files-reference.md)
 
 ### Divers
 - [`utf8-accents-fix.md`](./utf8-accents-fix.md)
