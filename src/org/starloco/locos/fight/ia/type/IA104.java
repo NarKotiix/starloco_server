@@ -81,20 +81,18 @@ public class IA104 extends AbstractNeedSpell
 	          C=Function.getInstance().getNearestEnnemynbrcasemax(this.fight,this.fighter,0,maxPo+1);
 	        }
 	      }
-	      // On cherche é taper avant d'invoquer pour ne pas obstruer sa LDV
+	      // On cherche à taper avant d'invoquer pour ne pas obstruer sa LDV
 	      if(this.fighter.getCurPa(this.fight)>0&&C!=null&&!action)
 	      {
-	    	  //insert condition on Los
 	    	  int value=-1;
-	    	  //int mapt=(int) fight.getMap().getId();
-	    	  // int celltf=fighter.getCell().getId();
-	    	  //int celltc=C.getCell().getId();
-	    	  //int idCible = C.getId();
-	    	  if(PathFinding.checkLoS(fight.getMap(), fighter.getCell().getId(), C.getCell().getId(), C) && this.attackRonce<1 ||!Function.getInstance().checkIfInvocPossible(this.fight,this.fighter,this.invocations))
+	    	  boolean canAttack = PathFinding.checkLoS(fight.getMap(), fighter.getCell().getId(), C.getCell().getId(), C) && this.attackRonce<1;
+	    	  boolean noInvoqAvailable = !Function.getInstance().checkIfInvocPossible(this.fight,this.fighter,this.invocations);
+	    	  
+	    	  // Attaquer si on a ligne de vue ET pas attaqué, OU si pas d'invocations disponibles
+	    	  if(canAttack || noInvoqAvailable)
 	    	  {
-	    		  for(int i=0; i<2; i++) // On essaie d'attaquer deux fois si pas d'invocs
+	    		  for(int i=0; i<2; i++)
 	    		  {
-	    			  boolean noInvoqAvailable = !Function.getInstance().checkIfInvocPossible(this.fight,this.fighter,this.invocations);
 	    			  if(this.attackRonce<1 || noInvoqAvailable)
 	    			  {
 		    		  value=Function.getInstance().attackIfPossible(this.fight,this.fighter,this.highests);
@@ -102,34 +100,25 @@ public class IA104 extends AbstractNeedSpell
 	    			  }
 	    		  }
 	    	  }
-	    	  else {
-	    		  if(movedDiag==0 && attackRonce<1) // ICI MODIF IF
-	  	    	  {
+	    	  else
+	    	  {
+	    		  // Pas de ligne de vue: se déplacer diagonalement une fois
+	    		  if(movedDiag==0 && attackRonce<1)
+	    		  {
 	    			  value=Function.getInstance().movediagIfPossible(this.fight,this.fighter,ennemy);
 			  	      movedDiag++;
-	  	    	  }
-	    		  move++;
 	    		  }
-	    	  	  // On attaque aprés le déplacement ?5 lignes
-		    	  if(PathFinding.checkLoS(fight.getMap(), fighter.getCell().getId(), C.getCell().getId(), C) && this.attackRonce<1 ||!Function.getInstance().checkIfInvocPossible(this.fight,this.fighter,this.invocations))
-		    	  {
-		    		  for(int i=0; i<2; i++) // On essaie d'attaquer deux fois si pas d'invocs
-		    		  {
-		    			  if(this.attackRonce<1 || !Function.getInstance().checkIfInvocPossible(this.fight,this.fighter,this.invocations))
-		    			  {
-			    		  value=Function.getInstance().attackIfPossible(this.fight,this.fighter,this.highests);
-			    		  this.attackRonce++;
-		    			  }
-		    		  }
-		    	  }
+	    		  move++;
+	    	  }
+	    	  
 	    	  if(value!=-1)
 	    	  {
 	    		  time=value;
-	    		  //action=true;
 	    		  this.attack++;
-	    	  } else if(this.fighter.getCurPm(this.fight)>0&&this.attack==0&&move==0)
+	    	  }
+	    	  else if(this.fighter.getCurPm(this.fight)>0&&this.attack==0&&move==0)
 	    	  {
-	    		  if(movedDiag==0 && attackRonce<1) // ICI
+	    		  if(movedDiag==0 && attackRonce<1)
 	    		  {
 		    		  value=Function.getInstance().movediagIfPossible(this.fight,this.fighter,ennemy);
 		    		  movedDiag++;

@@ -2886,6 +2886,7 @@ public class Fight {
         }
         this.setWalkingPacket("");
         Trap.doTraps(this, fighter);
+        this.setCurAction(false);
         return true;
       }
 

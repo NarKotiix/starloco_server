@@ -47,12 +47,15 @@ public abstract class AbstractIA implements IA {
     private static final long STUCK_ENDTURN_TIMEOUT_MS = 2500L;
     private static final int ENDTURN_POLL_DELAY_MS = 25;
     private static final long ENDTURN_IDLE_GUARD_MS = 500L;
+    private static final byte INVOCATION_ACTION_BUDGET = 4;
     private final AtomicBoolean terminated = new AtomicBoolean(false);
 
     public AbstractIA(Fight fight, Fighter fighter, byte count) {
         this.fight = fight;
         this.fighter = fighter;
-        this.count = count;
+        this.count = (fighter != null && fighter.isInvocation() && count > INVOCATION_ACTION_BUDGET)
+                ? INVOCATION_ACTION_BUDGET
+                : count;
     }
 
     @Override public Fight getFight()               { return fight;   }
@@ -179,7 +182,8 @@ public abstract class AbstractIA implements IA {
 
         final long scheduledAt = System.nanoTime();
         final int normalizedDelay = Math.max(0, time);
-        final int remaining = Math.max(0, time - Config.getInstance().AIDelay);
+        final int baseDelay = Config.getInstance().getAIDelay(this.fighter);
+        final int remaining = Math.max(0, time - baseDelay);
 
 
         if (this.fight.isCurAction() || this.fight.isTraped()) {
@@ -215,7 +219,7 @@ public abstract class AbstractIA implements IA {
                 addNext(this::endTurn, 0);
                 return;
             }
-            POOL.schedule(() -> addNext(runnable, remaining), Config.getInstance().AIDelay, TimeUnit.MILLISECONDS);
+            POOL.schedule(() -> addNext(runnable, remaining), baseDelay, TimeUnit.MILLISECONDS);
             return;
         }
 

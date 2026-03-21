@@ -1,5 +1,7 @@
 package org.starloco.locos.kernel;
 
+import org.starloco.locos.fight.Fighter;
+
 import java.io.*;
 import java.util.Properties;
 
@@ -36,6 +38,11 @@ public class Config {
     public int AIDelay = 100, AIMovementCellDelay = 100, AIMovementFlatDelay = 500;
     /** Délai maximum autorisé pour l'animation d'un sort côté IA (plafond de getDuration()). */
     public int AISpellMaxDelay = 600;
+    // Invocation-specific AI delays (ms)
+    public int AIInvocationDelay = 35;
+    public int AIInvocationSpellMaxDelay = 160;
+    public int AIInvocationMovementBaseDelay = 160;
+    public int AIInvocationMovementStepDelay = 40;
     // AI profiling
     public boolean AIProfiling = false;
     public boolean AIProfilingInvocationOnly = true;
@@ -153,6 +160,10 @@ public class Config {
         this.AIMovementCellDelay = getInt(p,  "AI_MOVEMENT_CELL_DELAY",  this.AIMovementCellDelay);
         this.AIMovementFlatDelay = getInt(p,  "AI_MOVEMENT_FLAT_DELAY",  this.AIMovementFlatDelay);
         this.AISpellMaxDelay     = getInt(p,  "AI_SPELL_MAX_DELAY",      this.AISpellMaxDelay);
+        this.AIInvocationDelay = getInt(p, "AI_INVOCATION_DELAY", this.AIInvocationDelay);
+        this.AIInvocationSpellMaxDelay = getInt(p, "AI_INVOCATION_SPELL_MAX_DELAY", this.AIInvocationSpellMaxDelay);
+        this.AIInvocationMovementBaseDelay = getInt(p, "AI_INVOCATION_MOVEMENT_BASE_DELAY", this.AIInvocationMovementBaseDelay);
+        this.AIInvocationMovementStepDelay = getInt(p, "AI_INVOCATION_MOVEMENT_STEP_DELAY", this.AIInvocationMovementStepDelay);
         this.AIProfiling         = getBool(p, "AI_PROFILING",            this.AIProfiling);
         this.AIProfilingInvocationOnly = getBool(p, "AI_PROFILING_INVOCATIONS_ONLY", this.AIProfilingInvocationOnly);
         this.AIProfilingWarnMs   = Math.max(1, getInt(p, "AI_PROFILING_WARN_MS", this.AIProfilingWarnMs));
@@ -236,6 +247,12 @@ public class Config {
         props.setProperty("AI_PROFILING_INVOCATIONS_ONLY", "true");
         props.setProperty("AI_PROFILING_WARN_MS", "60");
 
+        // IA invocations (plus rapide que l'IA classique)
+        props.setProperty("AI_INVOCATION_DELAY", "35");
+        props.setProperty("AI_INVOCATION_SPELL_MAX_DELAY", "160");
+        props.setProperty("AI_INVOCATION_MOVEMENT_BASE_DELAY", "160");
+        props.setProperty("AI_INVOCATION_MOVEMENT_STEP_DELAY", "40");
+
         // Rates
         props.setProperty("RATE_XP",    "1");
         props.setProperty("RATE_DROP",  "1");
@@ -252,6 +269,35 @@ public class Config {
         }
 
         load();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers délais IA (invocation-aware)
+    // -------------------------------------------------------------------------
+
+    private boolean isInvocationFighter(Fighter fighter) {
+        return fighter != null && fighter.isInvocation();
+    }
+
+    public int getAIDelay(Fighter fighter) {
+        return Math.max(0, isInvocationFighter(fighter) ? AIInvocationDelay : AIDelay);
+    }
+
+    public int getAISpellMaxDelay(Fighter fighter) {
+        return Math.max(0, isInvocationFighter(fighter) ? AIInvocationSpellMaxDelay : AISpellMaxDelay);
+    }
+
+    public int getAIMovementCellDelay(Fighter fighter) {
+        return Math.max(0, isInvocationFighter(fighter) ? AIInvocationMovementStepDelay : AIMovementCellDelay);
+    }
+
+    public int getAIMovementFlatDelay(Fighter fighter) {
+        return Math.max(0, isInvocationFighter(fighter) ? AIInvocationMovementBaseDelay : AIMovementFlatDelay);
+    }
+
+    public int computeAIMovementDelay(Fighter fighter, int steps) {
+        int boundedSteps = Math.max(0, steps);
+        return boundedSteps * getAIMovementCellDelay(fighter) + getAIMovementFlatDelay(fighter);
     }
 
     // -------------------------------------------------------------------------

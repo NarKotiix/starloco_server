@@ -47,6 +47,14 @@ public class IA30 extends AbstractNeedSpell
         {
           time=value;
           action=true;
+          // Réévaluer les ennemis après déplacement (la position a changé)
+          longestEnnemy=Function.getInstance().getNearestEnnemynbrcasemax(this.fight,this.fighter,1,maxPo+1);
+          nearestEnnemy=Function.getInstance().getNearestEnnemynbrcasemax(this.fight,this.fighter,0,2);
+          if(maxPo==1) longestEnnemy=null;
+          if(nearestEnnemy!=null&&nearestEnnemy.isHide()) nearestEnnemy=null;
+          if(longestEnnemy!=null&&longestEnnemy.isHide()) longestEnnemy=null;
+          // Si le deplacement a ouvert une fenetre de cast, autoriser une attaque immediate.
+          if(longestEnnemy!=null||nearestEnnemy!=null) action=false;
         }
       }
 
@@ -95,7 +103,7 @@ public class IA30 extends AbstractNeedSpell
           action=true;
         }
       }
-      if(this.fighter.getCurPa(this.fight)>0&&nearestEnnemy!=null&&!action)
+      if(this.fighter.getCurPa(this.fight)>0&&ennemy!=null&&!action)
       {
         String value = Function.getInstance().moveToAttackIfPossible2(this.fight,this.fighter);
         if(!value.isEmpty())
@@ -103,7 +111,7 @@ public class IA30 extends AbstractNeedSpell
           int cellId = Integer.parseInt(value.split(";")[0]);
           SortStats spellStats = fighter.getMob().getSpells().get(Integer.parseInt(value.split(";")[1]));
 
-          if(fight.canCastSpell1(fighter, spellStats, fight.getMap().getCase(cellId), cellId)){
+          if(fight.canCastSpell1(fighter, spellStats, fight.getMap().getCase(cellId), fighter.getCell().getId())){
             int val = fight.tryCastSpell(fighter, spellStats, cellId);
             if(val == 0) {
               time = spellStats.getSpell().getDuration();

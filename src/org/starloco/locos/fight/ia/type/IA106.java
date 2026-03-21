@@ -42,22 +42,19 @@ public class IA106 extends AbstractNeedSpell
 	      //** edit C==null replace with !PathFinding.checkLoS(fight.getMap(), fighter.getCell().getId(), C.getCell().getId(), C)
 	      if(this.fighter.getCurPa(this.fight)>0&&!action&&A!=null)
 	      {
-	    	//Function.getInstance().movediagIfPossible(this.fight,this.fighter,A);	
-    		// évite les déplacement inutiles vers l'invocateur quand aucun sort n'est disponible					// !Path = si au cac avec ennemy on ne détacle pas pour booster
-    		if(Function.getInstance().checkIfBuffAvailable(this.fight,this.fighter,this.fighter,this.buffs)&&!PathFinding.isCACwithEnnemy(this.fighter,ennemy)) // Vérification de la disponibilité sur soi-méme
-    				{
-				    	Function.getInstance().moveautourIfPossible(this.fight,this.fighter,A); // se place en face
-				    	move++;
-    				}
-    		for(int i=0; i<2; i++)
-    		{    		
-		        if(Function.getInstance().buffIfPossible(this.fight,this.fighter,A,this.buffs)) // Buff A= adversaire
-		        {
-		          time=1000;
-		          action=true;
-		        }
+	    	// Évite les déplacements inutiles vers l'invocateur quand aucun sort n'est disponible
+    		if(Function.getInstance().checkIfBuffAvailable(this.fight,this.fighter,this.fighter,this.buffs)&&!PathFinding.isCACwithEnnemy(this.fighter,ennemy))
+    		{
+			    	Function.getInstance().moveautourIfPossible(this.fight,this.fighter,A);
+			    	move++;
+    		}
+    		// Amplification de pouvoir (A = adversaire pour augmenter dégâts)
+	        if(Function.getInstance().buffIfPossible(this.fight,this.fighter,A,this.buffs))
+	        {
+	          time=1000;
+	          action=true;
 	        }
-    		// Roulette
+    		// Roulette (autorenforcement)
     		if(Function.getInstance().buffIfPossible(this.fight,this.fighter,this.fighter,this.buffs))
 	        {
 	          time=1000;

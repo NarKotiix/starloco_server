@@ -32,7 +32,7 @@ public class IAHandler {
 
             // Fallback : si apply() ne se déclenche pas, endTurn forcé après AIDelay
             final IA iaNull = ia;
-            ia.addNext(iaNull::endTurn, Config.getInstance().AIDelay);
+            ia.addNext(iaNull::endTurn, Config.getInstance().getAIDelay(fighter));
         } else if(mobGrade.getTemplate() == null) {
             ia.setStop(true);
             ia.endTurn();

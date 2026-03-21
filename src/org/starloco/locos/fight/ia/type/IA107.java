@@ -52,16 +52,15 @@ public class IA107 extends AbstractNeedSpell
 	      }
 
 	     	      
+	      // Amplification du pouvoir magique (une seule itération)
 	      if(this.fighter.getCurPa(this.fight)>0&&!action&&A!=null)
 	      {
-	    	  if(Function.getInstance().checkIfBuffAvailable(this.fight,this.fighter,this.fighter,this.buffs)&&!PathFinding.isCACwithEnnemy(this.fighter,ennemy)) // Vérification de la disponibilité sur soit-méme
-			
+	    	  if(Function.getInstance().checkIfBuffAvailable(this.fight,this.fighter,this.fighter,this.buffs)&&!PathFinding.isCACwithEnnemy(this.fighter,ennemy))
 	    	{
-	    		  
-	    		final int value = Function.getInstance().moveautourIfPossible(this.fight,this.fighter,A); // se place en face
+	    		final int value = Function.getInstance().moveautourIfPossible(this.fight,this.fighter,A);
 	    		if (value!=0) {
-	    			action =true;
-	    			time =value;
+	    			action = true;
+	    			time = value;
 	    			++move;
 	    		}
 			}
@@ -71,35 +70,6 @@ public class IA107 extends AbstractNeedSpell
 	          action=true;
 	        }
 	      }
-	     
-	      	    if(this.fighter.getCurPa(this.fight)>0&&!action&&A!=null)
-	  	      {
-	  	    	if(Function.getInstance().checkIfBuffAvailable(this.fight,this.fighter,this.fighter,this.buffs)&&!PathFinding.isCACwithEnnemy(this.fighter,ennemy)) // Vérification de la disponibilité sur soit-méme
-	  			
-	  	    	{
-	  	    		Function.getInstance().moveautourIfPossible(this.fight,this.fighter,A); // se place en face
-	  	    		move++;
-	  			}
-	  	        if(Function.getInstance().buffIfPossible(this.fight,this.fighter,A,this.buffs))
-	  	        {
-	  	          time=1000;
-	  	          action=true;
-	  	        }
-	  	      }
-	      	  if(this.fighter.getCurPa(this.fight)>0&&!action&&A!=null)
-		      {
-		    	if(Function.getInstance().checkIfBuffAvailable(this.fight,this.fighter,this.fighter,this.buffs)&&!PathFinding.isCACwithEnnemy(this.fighter,ennemy)) // Vérification de la disponibilité sur soit-méme
-				
-		    	{
-		    		Function.getInstance().moveautourIfPossible(this.fight,this.fighter,A); // se place en face
-		    		move++;
-				}
-		        if(Function.getInstance().buffIfPossible(this.fight,this.fighter,A,this.buffs))
-		        {
-		          time=1000;
-		          action=true;
-		        }
-		      }
 	      	//partie attaque BEGIN
 	    	  
 	      if(this.fighter.getCurPm(this.fight)>0&&C==null&&this.attack==0)

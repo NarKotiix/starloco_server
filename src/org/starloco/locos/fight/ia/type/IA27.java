@@ -50,6 +50,9 @@ public class IA27 extends AbstractNeedSpell
           secondEnnemy=Function.getInstance().getNearestEnnemynbrcasemax(this.fight,this.fighter,0,2);
           if(maxPo==1)
             firstEnnemy=null;
+          // Meme logique que IA30: ne pas bloquer le cast si le deplacement a ouvert la portee.
+          if(firstEnnemy!=null||secondEnnemy!=null)
+            action=false;
         }
       }
 
@@ -97,7 +100,7 @@ public class IA27 extends AbstractNeedSpell
           int cellId = Integer.parseInt(value.split(";")[0]);
           SortStats spellStats = fighter.getMob().getSpells().get(Integer.parseInt(value.split(";")[1]));
 
-          if(fight.canCastSpell1(fighter, spellStats, fight.getMap().getCase(cellId), cellId)){
+          if(fight.canCastSpell1(fighter, spellStats, fight.getMap().getCase(cellId), fighter.getCell().getId())){
             int val = fight.tryCastSpell(fighter, spellStats, cellId);
             if(val == 0) {
               time = spellStats.getSpell().getDuration();
