@@ -1,0 +1,3 @@
+﻿# IDs prÃ©sents dans maps_ancien.sql mais absents de maps_new.sql
+# Count = 4
+1,6835,11192,21966
