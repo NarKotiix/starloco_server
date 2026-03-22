@@ -37,6 +37,7 @@ Ce serveur met l'accent sur :
 
 | Date | Version | Type | Résumé |
 |------|---------|------|--------|
+| 22/03/2026 | **session-dev** | 🧩 runtime + outils DB | levee limite maison Admin + correctifs runtime + pipeline migration maps dans `Outils/db` |
 | 21/03/2026 | **v1.4.2-stable** | ✅ release stable | logs IA isolés + durcissement boucle `endTurn` + refonte docs (`COMMITS/`) |
 | 20/03/2026 | **v1.4.1** | 🔐 sécurité / build | durcissement `PlayerExchange` + correctifs compilation IA/profiling |
 | 19/03/2026 | **v1.4.0** | ⚙ admin / IA / DB | `RELOADITEM`, `SPAWN`, profiling invocations, fix runtime MySQL |
@@ -162,6 +163,7 @@ Guide détaillé : [`docs/graceful-shutdown.md`](docs/graceful-shutdown.md)
 - [`docs/quick-shutdown.md`](docs/quick-shutdown.md)
 - [`docs/readme-logs.md`](docs/readme-logs.md)
 - [`docs/quick-start-star-respawn.md`](docs/quick-start-star-respawn.md)
+- [`docs/maps-db-tooling.md`](docs/maps-db-tooling.md)
 
 ### Historique projet / release notes
 

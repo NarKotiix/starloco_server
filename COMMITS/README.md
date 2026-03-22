@@ -48,6 +48,16 @@ COMMITS/
 
 ## Commits récents documentés
 
+### 10. Runtime hardening + maisons Admin
+- Fichier : [`commits/10-runtime-hardening-admin-house-2026-03-22.md`](./commits/10-runtime-hardening-admin-house-2026-03-22.md)
+- Sujet : lot runtime gameplay/securite + levee de la limite 1 maison pour le groupe `Admin`
+- Resultat : comportement maison adapte aux Admins et consolidation de la stabilite runtime
+
+### 9. Outillage DB maps
+- Fichier : [`commits/09-db-maps-tooling-session-2026-03-22.md`](./commits/09-db-maps-tooling-session-2026-03-22.md)
+- Sujet : pipeline scripts + SQL pour comparer/migrer les dumps de maps
+- Resultat : migration maps plus reproductible et mieux tracee
+
 ### 1. Correction du deadlock IA
 - Fichier : [`commits/01-deadlock-ia-fix.md`](./commits/01-deadlock-ia-fix.md)
 - Sujet : combat avec invocation bloqué à ~3100ms
@@ -112,7 +122,7 @@ Recommandation simple :
 
 ---
 
-**Dernière réorganisation :** 21/03/2026  
+**Dernière réorganisation :** 22/03/2026  
 **Statut :** propre, centralisé, prêt pour GitBook
 
 

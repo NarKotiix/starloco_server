@@ -29,6 +29,7 @@ Documentation durable du projet : exploitation, configuration, guides rapides.
 
 ### Divers
 - [`utf8-accents-fix.md`](./utf8-accents-fix.md)
+- [`maps-db-tooling.md`](./maps-db-tooling.md)
 
 ---
 
