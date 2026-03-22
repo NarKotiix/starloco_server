@@ -595,8 +595,10 @@ public class World {
         Database.getStatics().getPrestigeBonusData().load();
         logger.debug("The prestiges bonus were loaded successfully.");
         
+        long playersLoadStart = System.currentTimeMillis();
         Database.getStatics().getPlayerData().load();
         logger.debug("The players were loaded successfully.");
+        logger.info("World step 'players' completed in {} ms.", System.currentTimeMillis() - playersLoadStart);
 
         Database.getDynamics().getGuildMemberData().load();
         logger.debug("The guilds and guild members were loaded successfully.");
@@ -664,11 +666,23 @@ public class World {
         logger.debug("The adding of gangsters on the maps were done successfully.");
 
         logger.debug("Initialization of the dungeon : Dragon Pig.");
-        PigDragon.initialize();
+        try {
+            PigDragon.initialize();
+        } catch (Exception e) {
+            logger.warn("Skipping Dragon Pig dungeon initialization due to invalid/missing maps.", e);
+        }
         logger.debug("Initialization of the dungeon : Labyrinth of the Minotoror.");
-        Minotoror.initialize();
+        try {
+            Minotoror.initialize();
+        } catch (Exception e) {
+            logger.warn("Skipping Minotoror dungeon initialization due to invalid/missing maps.", e);
+        }
         logger.debug("Initialization of the dungeons : Gladiatrool.");
-        Gladiatrool.initialize();
+        try {
+            Gladiatrool.initialize();
+        } catch (Exception e) {
+            logger.warn("Skipping Gladiatrool initialization due to invalid/missing maps.", e);
+        }
 
         Database.getDynamics().getGladiatroolSpellsData().load();
         logger.debug("The gladiatrool spells of players were loaded successfully.");

@@ -1070,11 +1070,31 @@ public class GameCase {
                 Trunk trunk = Trunk.getTrunkIdByCoord(player.getCurMap().getId(), CcellID);
 
                 if (trunk == null) {
-                    trunk = new Trunk(Database.getStatics().getTrunkData().getNextId(), player.getInHouse().getId(), player.getCurMap().getId(), CcellID);
+                    if (player.getInHouse() == null) {
+                        SocketManager.GAME_SEND_MESSAGE(player, "Impossible d'ouvrir le coffre pour le moment.");
+                        return;
+                    }
+
+                    int trunkId = Database.getStatics().getTrunkData().getNextId();
+                    if (trunkId <= 0) {
+                        World.world.logger.error("[TRUNK] getNextId invalide mapId={} cellId={} player={}",
+                                player.getCurMap().getId(), CcellID, player.getName());
+                        SocketManager.GAME_SEND_MESSAGE(player, "Le coffre est indisponible, réessayez plus tard.");
+                        return;
+                    }
+
+                    trunk = new Trunk(trunkId, player.getInHouse().getId(), player.getCurMap().getId(), CcellID);
                     trunk.setOwnerId(player.getInHouse().getOwnerId());
                     trunk.setKey("-");
                     trunk.setKamas(0);
-                    Database.getStatics().getTrunkData().insert(trunk);
+
+                    if (!Database.getStatics().getTrunkData().insert(trunk)) {
+                        World.world.logger.error("[TRUNK] Echec création coffre id={} houseId={} mapId={} cellId={} player={}",
+                                trunkId, player.getInHouse().getId(), player.getCurMap().getId(), CcellID, player.getName());
+                        SocketManager.GAME_SEND_MESSAGE(player, "Le coffre est indisponible, réessayez plus tard.");
+                        return;
+                    }
+
                     World.world.addTrunk(trunk);
                 }
                 if(player.getInHouse() != null && trunk.getOwnerId() != player.getAccID() && trunk.getHouseId() == player.getInHouse().getId() && player.getId() == player.getInHouse().getOwnerId()) {

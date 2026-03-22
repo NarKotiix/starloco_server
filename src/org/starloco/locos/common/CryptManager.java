@@ -189,30 +189,79 @@ public class CryptManager {
         return unescape(dataToDecrypt.toString());
     }
 
+    /**
+     * Détecte si le mapData est en format chiffré (XOR + hex).
+     *
+     * <p>Deux formats de mapData sont supportés :
+     * <ul>
+     *   <li><b>Format HASH plain</b> : 10 chars/cellule, encodé en base64 Dofus (HASH).
+     *       Exemple : {@code HhaaeaaaaaHhaaeaaaaa...}
+     *       Caractéristique : contient des lettres hors [0-9a-fA-F] dès les premiers chars.</li>
+     *   <li><b>Format hex chiffré (XOR)</b> : 20 chars/cellule (2 chars hex par byte),
+     *       chiffré XOR avec la clé de la map.
+     *       Exemple : {@code 0512182d12113c071b05...}
+     *       Caractéristique : seulement des chars [0-9a-fA-F].</li>
+     * </ul>
+     *
+     * <p>Détection en O(1) : on vérifie les 16 premiers caractères.
+     * Un mapData plain HASH contient forcément des chars hors hexadécimal
+     * (ex. 'H', 'G', 'b', etc.) dans ses premières cellules.
+     * Un mapData chiffré XOR est exclusivement hexadécimal.
+     *
+     * @param mapData la chaîne brute stockée en base
+     * @return {@code true} si le mapData est en format hex chiffré, {@code false} s'il est plain
+     */
     private boolean mapCrypted(String mapData) {
         if (mapData == null || mapData.isEmpty()) {
             return false;
         }
-        int nb = 0;
-        for (char a : mapData.toCharArray()) if (Character.isDigit(a)) nb++;
-        return (nb > 1000);
+        // Vérification O(1) : les 16 premiers chars suffisent.
+        // Un plain HASH contient dès la 1ʳᵉ cellule des chars non-hex (H, G, b, h…).
+        // Un hex chiffré XOR ne contient QUE [0-9a-fA-F].
+        final int checkLen = Math.min(16, mapData.length());
+        for (int i = 0; i < checkLen; i++) {
+            char c = mapData.charAt(i);
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+                return false; // char non-hex → format plain HASH
+            }
+        }
+        return true; // tous hex → format chiffré XOR
     }
 
+    /**
+     * Décompile le mapData (plain HASH ou hex chiffré XOR) en liste de {@link GameCase}.
+     *
+     * <p>Supporte automatiquement les deux formats :
+     * <ul>
+     *   <li>Format plain HASH : {@code len % 10 == 0}, 10 chars par cellule.</li>
+     *   <li>Format hex chiffré XOR : {@code len % 20 == 0}, 20 chars par cellule
+     *       (déchiffré avec la clé → 10 chars par cellule).</li>
+     * </ul>
+     */
     public List<GameCase> decompileMapData(GameMap map, String data, byte sniffed) {
-        if (map == null || data == null || data.isEmpty() || data.length() > MAX_MAPDATA_CHARS || (data.length() % 10) != 0) {
+        if (map == null || data == null || data.isEmpty() || data.length() > MAX_MAPDATA_CHARS) {
             return Collections.emptyList();
         }
 
-        final int cellCount = data.length() / 10;
-        List<GameCase> cells = new ArrayList<>(cellCount);
-        List<Short> losCells = new ArrayList<>(cellCount);
+        // Accepte les deux formats : plain (len%10==0) et hex chiffré (len%20==0)
+        if ((data.length() % 10) != 0) {
+            return Collections.emptyList();
+        }
 
-        if (mapCrypted(data) && map.getKey() != null && !map.getKey().isEmpty()) {
+        if (mapCrypted(data)) {
+            // Format hex chiffré : doit être len%20==0 (2 chars/byte, 20 chars/cell)
+            if ((data.length() % 20) != 0 || map.getKey() == null || map.getKey().isEmpty()) {
+                return Collections.emptyList();
+            }
             data = this.decryptMapData(data, map.getKey());
             if (data.isEmpty() || (data.length() % 10) != 0) {
                 return Collections.emptyList();
             }
         }
+
+        final int cellCount = data.length() / 10;
+        List<GameCase> cells = new ArrayList<>(cellCount);
+        List<Short> losCells = new ArrayList<>(cellCount);
 
         String mapSizeKey = map.getW() + "_" + map.getH();
         if (PathFinding.outForbiddenCells.get(mapSizeKey) == null)

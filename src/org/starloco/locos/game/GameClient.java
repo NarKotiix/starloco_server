@@ -4671,12 +4671,7 @@ public class GameClient {
                 targetCell = this.resolveMovementCell(this.player.getCurMap(), GA.packet.substring(GA.packet.length() - 2));
                 int orientation = this.resolveOrientationFromPath(path);
 
-                // Déplacement instantané : pas d'animation de marche.
-
-                // Envoyer l'animation de déplacement à tout le monde (y compris le joueur)
-                // AVANT de déplacer, afin que la cellule de départ soit correcte dans le paquet
-                SocketManager.GAME_SEND_GA_PACKET_TO_MAP(this.player.getCurMap(), "" + GA.id, 1,
-                        this.player.getId() + "", "a" + World.world.getCryptManager().cellID_To_Code(this.player.getCurCell().getId()) + path);
+                // Déplacement instantané : aucune animation de marche n'est envoyée.
 
                 // Mettre à jour la position côté serveur immédiatement (sans attendre le GKA client)
                 this.player.getCurCell().removePlayer(this.player);

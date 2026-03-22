@@ -90,7 +90,7 @@ public class TrunkData extends AbstractDAO<Trunk> {
         }
     }
 
-    public void insert(Trunk trunk) {
+    public boolean insert(Trunk trunk) {
         PreparedStatement p = null;
         try {
             p = getPreparedStatement("INSERT INTO `coffres` (`id`, `object`, `kamas`, `key`, `owner_id`) " +
@@ -101,11 +101,13 @@ public class TrunkData extends AbstractDAO<Trunk> {
             p.setString(4, "-");
             p.setInt(5, trunk.getOwnerId());
             execute(p);
+            return true;
         } catch (SQLException e) {
             super.sendError("Coffre insert", e);
         } finally {
             close(p);
         }
+        return false;
     }
 
     public void updateCode(Player P, Trunk t, String packet) {

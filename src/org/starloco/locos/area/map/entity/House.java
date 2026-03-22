@@ -2,12 +2,15 @@ package org.starloco.locos.area.map.entity;
 
 import org.starloco.locos.client.Account;
 import org.starloco.locos.client.Player;
+import org.starloco.locos.command.administration.Group;
 import org.starloco.locos.common.SocketManager;
 import org.starloco.locos.database.Database;
 import org.starloco.locos.game.world.World;
 import org.starloco.locos.kernel.Constant;
 import org.starloco.locos.other.Guild;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -120,7 +123,10 @@ public class House {
     {
         House house = player.getInHouse();
 
-        if (House.alreadyHaveHouse(player)) {
+        if (house == null)
+            return;
+
+        if (House.hasReachedOwnedHouseLimit(player)) {
             SocketManager.GAME_SEND_Im_PACKET(player, "132;1");
             return;
         }
@@ -245,11 +251,17 @@ public class House {
         return packet;
     }
 
+    private static boolean hasReachedOwnedHouseLimit(Player player) {
+        return !hasUnlimitedHouseOwnership(player == null ? null : player.getGroupe())
+                && alreadyHaveHouse(player);
+    }
+
+    static boolean hasUnlimitedHouseOwnership(Group group) {
+        return group != null && "Admin".equalsIgnoreCase(group.getName());
+    }
+
     public static boolean alreadyHaveHouse(Player P) {
-        for (Entry<Integer, House> house : World.world.getHouses().entrySet())
-            if (house.getValue().getOwnerId() == P.getAccID())
-                return true;
-        return false;
+        return getHouseByPerso(P) != null;
     }
 
     public static void parseHG(Player P, String packet) {
@@ -309,12 +321,23 @@ public class House {
         SocketManager.GAME_SEND_Im_PACKET(Target, "018;" + P.getName());
     }
 
-    public static House getHouseByPerso(Player P)//Connaitre la MAPID + CELLID de sa maison
-    {
+    public static List<House> getHousesByPerso(Player P) {
+        List<House> houses = new ArrayList<>();
+        if (P == null)
+            return houses;
+
         for (Entry<Integer, House> house : World.world.getHouses().entrySet())
             if (house.getValue().getOwnerId() == P.getAccID())
-                return house.getValue();
-        return null;
+                houses.add(house.getValue());
+
+        houses.sort((first, second) -> Integer.compare(first.getId(), second.getId()));
+        return houses;
+    }
+
+    public static House getHouseByPerso(Player P)//Connaitre la MAPID + CELLID de sa maison
+    {
+        List<House> houses = getHousesByPerso(P);
+        return houses.isEmpty() ? null : houses.get(0);
     }
 
     public static void removeHouseGuild(int GuildID) {

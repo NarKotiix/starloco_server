@@ -37,6 +37,7 @@ import org.starloco.locos.area.map.entity.MountPark;
 import org.starloco.locos.object.GameObject;
 import org.starloco.locos.object.ObjectSet;
 import org.starloco.locos.object.ObjectTemplate;
+import org.starloco.locos.other.Action;
 import org.starloco.locos.quest.Quest;
 import org.starloco.locos.quest.Quest.QuestPlayer;
 
@@ -169,6 +170,150 @@ public class CommandAdmin extends AdminUser {
         return best;
     }
 
+    private boolean canUseCustomCommand(Group group, String commandName) {
+        if (group == null)
+            return false;
+
+        // Les commandes custom récentes ne sont pas forcément en base rights,
+        // donc on garde la même règle runtime que apply(): admin-only si groupe joueur.
+        return group.haveCommand(commandName) || !group.isPlayer();
+    }
+
+    private String getHelpCategory(String commandName, String commandArgs, String description) {
+        String cmd = commandName == null ? "" : commandName.toLowerCase(Locale.ROOT);
+        String args = commandArgs == null ? "" : commandArgs.toLowerCase(Locale.ROOT);
+        String desc = description == null ? "" : description.toLowerCase(Locale.ROOT);
+        String full = (cmd + " " + args + " " + desc).trim();
+
+        if (full.contains("trigger") || full.contains("map") || full.contains("cell") || full.contains("cellule") || full.contains("soleil"))
+            return "MAPS & TRIGGERS";
+        if (full.contains("teleport") || full.contains(" tp") || cmd.startsWith("go") || cmd.equals("join") || full.contains("zaap") || full.contains("zaapi"))
+            return "TELEPORTATION";
+        if (full.contains("ban") || full.contains("mute") || full.contains("kick") || full.contains("jail") || full.contains("prison") || full.contains("sanction"))
+            return "MODERATION";
+        if (full.contains("reload") || full.contains("save") || full.contains("maintenance") || full.contains("groupe") || full.contains("right") || full.contains("droit"))
+            return "DONNEES & MAINTENANCE";
+        if (full.contains("mob") || full.contains("combat") || full.contains("fight") || full.contains("drop") || full.contains("etoile") || full.contains("stars") || full.contains("aggro"))
+            return "COMBAT & MOBS";
+
+        return "AUTRES";
+    }
+
+    private String getCategoryColor(String category) {
+        if (category == null)
+            return "#FFD966";
+        switch (category) {
+            case "TELEPORTATION":
+                return "#6FA8DC";
+            case "MAPS & TRIGGERS":
+                return "#93C47D";
+            case "MODERATION":
+                return "#E06666";
+            case "DONNEES & MAINTENANCE":
+                return "#8E7CC3";
+            case "COMBAT & MOBS":
+                return "#F6B26B";
+            default:
+                return "#FFD966";
+        }
+    }
+
+    private String formatHelpHeader(String title, String color) {
+        String safeColor = (color == null || color.isEmpty()) ? "#6FA8DC" : color;
+        return "<font color='" + safeColor + "'><b>----------- " + escapeAdminText(title) + " ------------</b></font>";
+    }
+
+    private String formatHelpCommandLine(String commandText, String description, String color) {
+        String desc = (description == null) ? "" : escapeAdminText(description);
+        String cmd = (commandText == null) ? "" : escapeAdminText(commandText);
+        String safeColor = (color == null || color.isEmpty()) ? "#FFD966" : color;
+        return "<b><font color='" + safeColor + "'>" + cmd + "</font></b> - " + desc;
+    }
+
+    private String escapeAdminText(String value) {
+        if (value == null || value.isEmpty())
+            return "";
+
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
+    private void sendGroupedCommandsHelp(List<Command> commands) {
+        if (commands == null || commands.isEmpty()) {
+            this.sendMessage("Aucune commande disponible.");
+            return;
+        }
+
+        Map<String, List<Command>> byCategory = new LinkedHashMap<>();
+        byCategory.put("TELEPORTATION", new ArrayList<>());
+        byCategory.put("MAPS & TRIGGERS", new ArrayList<>());
+        byCategory.put("MODERATION", new ArrayList<>());
+        byCategory.put("DONNEES & MAINTENANCE", new ArrayList<>());
+        byCategory.put("COMBAT & MOBS", new ArrayList<>());
+        byCategory.put("AUTRES", new ArrayList<>());
+
+        for (Command command : commands) {
+            if (command == null || command.getArguments() == null)
+                continue;
+            String[] arguments = command.getArguments();
+            if (arguments.length == 0 || arguments[0] == null)
+                continue;
+
+            String category = getHelpCategory(arguments[0], arguments.length > 1 ? arguments[1] : "", arguments.length > 2 ? arguments[2] : "");
+            byCategory.computeIfAbsent(category, key -> new ArrayList<>()).add(command);
+        }
+
+        for (Map.Entry<String, List<Command>> entry : byCategory.entrySet()) {
+            List<Command> list = entry.getValue();
+            if (list == null || list.isEmpty())
+                continue;
+
+            list.sort((a, b) -> a.getArguments()[0].compareToIgnoreCase(b.getArguments()[0]));
+
+            String categoryColor = getCategoryColor(entry.getKey());
+            this.sendMessage(formatHelpHeader(entry.getKey(), categoryColor));
+            for (Command command : list) {
+                String[] args = command.getArguments();
+                String cmdArgs = (args[1] != null && !args[1].equalsIgnoreCase("")) ? (" + " + args[1]) : ("");
+                String desc = (args[2] != null && !args[2].equalsIgnoreCase("")) ? (args[2]) : ("");
+                this.sendMessage(formatHelpCommandLine(args[0] + cmdArgs, desc, categoryColor));
+            }
+        }
+    }
+
+    private void sendNewCommandsHelpSection(Group group) {
+        List<String> lines = new ArrayList<>();
+
+        if (canUseCustomCommand(group, "LISTTRIGGERS") || canUseCustomCommand(group, "LISTTRIGGER")) {
+            String category = getHelpCategory("LISTTRIGGERS", "[SOLEIL]", "Liste les triggers de la map courante");
+            lines.add(formatHelpCommandLine("LISTTRIGGERS + [SOLEIL]", "Liste les triggers de la map courante (filtre SOLEIL optionnel).", getCategoryColor(category)));
+        }
+        if (canUseCustomCommand(group, "STARS")) {
+            String category = getHelpCategory("STARS", "[1-10 | INFO | CLEARMAP | CLEARALL]", "Outils debug etoiles mobs");
+            lines.add(formatHelpCommandLine("STARS + [1-10 | INFO [groupId|cellId] | CLEARMAP | CLEARALL]", "Outils debug etoiles mobs.", getCategoryColor(category)));
+        }
+        if (canUseCustomCommand(group, "MOBAGGRO") || canUseCustomCommand(group, "AGGROMOB")) {
+            String category = getHelpCategory("MOBAGGRO", "[ON|OFF|STATUS]", "Aggro des groupes de monstres");
+            lines.add(formatHelpCommandLine("MOBAGGRO + [ON|OFF|STATUS]", "Active/desactive l'aggro des groupes de monstres (runtime).", getCategoryColor(category)));
+        }
+        if (canUseCustomCommand(group, "TD") || canUseCustomCommand(group, "TAUXDROP")) {
+            String category = getHelpCategory("TD", "[monsterId]", "drops et taux de drop");
+            lines.add(formatHelpCommandLine("TD + [monsterId]", "Affiche les drops et taux de drop d'un monstre.", getCategoryColor(category)));
+        }
+
+        if (lines.isEmpty())
+            return;
+
+        this.sendMessage(formatHelpHeader("NOUVEAU", "#3D85C6"));
+        for (String line : lines) {
+            this.sendMessage(line);
+        }
+    }
+
     public void apply(String packet) {
         String msg = packet.substring(2);
         String[] infos = msg.split(" ");
@@ -187,11 +332,12 @@ public class CommandAdmin extends AdminUser {
             boolean isCustomStarsCommand = command.equalsIgnoreCase("STARS");
             boolean isCustomDropRateCommand = command.equalsIgnoreCase("TD") || command.equalsIgnoreCase("TAUXDROP");
             boolean isCustomMobAggroCommand = command.equalsIgnoreCase("MOBAGGRO") || command.equalsIgnoreCase("AGGROMOB");
-            if ((isCustomStarsCommand || isCustomDropRateCommand || isCustomMobAggroCommand) && groupe.isPlayer()) {
+            boolean isCustomListTriggersCommand = command.equalsIgnoreCase("LISTTRIGGERS") || command.equalsIgnoreCase("LISTTRIGGER");
+            if ((isCustomStarsCommand || isCustomDropRateCommand || isCustomMobAggroCommand || isCustomListTriggersCommand) && groupe.isPlayer()) {
                 this.sendErrorMessage("Commande reservee aux administrateurs.");
                 return;
             }
-            if (!groupe.haveCommand(command) && !isCustomStarsCommand && !isCustomDropRateCommand && !isCustomMobAggroCommand) {
+            if (!groupe.haveCommand(command) && !isCustomStarsCommand && !isCustomDropRateCommand && !isCustomMobAggroCommand && !isCustomListTriggersCommand) {
                 this.sendMessage("Commande invalide !");
                 return;
             }
@@ -267,11 +413,8 @@ public class CommandAdmin extends AdminUser {
             }
             if (cmd.equalsIgnoreCase("")) {
                 this.sendMessage("\nVous avez actuellement le groupe GM " + this.getPlayer().getGroupe().getName() + ".\nCommandes disponibles :\n");
-                for (Command commande : this.getPlayer().getGroupe().getCommands()) {
-                    String args = (commande.getArguments()[1] != null && !commande.getArguments()[1].equalsIgnoreCase("")) ? (" + " + commande.getArguments()[1]) : ("");
-                    String desc = (commande.getArguments()[2] != null && !commande.getArguments()[2].equalsIgnoreCase("")) ? (commande.getArguments()[2]) : ("");
-                    this.sendMessage("<u>" + commande.getArguments()[0] + args + "</u> - " + desc);
-                }
+                this.sendGroupedCommandsHelp(this.getPlayer().getGroupe().getCommands());
+                this.sendNewCommandsHelpSection(this.getPlayer().getGroupe());
                 return;
             } else {
                 this.sendMessage("\nVous avez actuellement le groupe GM " + this.getPlayer().getGroupe().getName() + ".\nCommandes recherches :\n");
@@ -1796,6 +1939,79 @@ public class CommandAdmin extends AdminUser {
                 str = "Le trigger n'a pas été retiré.";
             this.sendMessage(str);
             return;
+        } else if (command.equalsIgnoreCase("LISTTRIGGERS") || command.equalsIgnoreCase("LISTTRIGGER")) {
+            String filter = infos.length > 1 ? infos[1].trim() : "";
+            boolean filterSoleil = !filter.isEmpty() && filter.equalsIgnoreCase("SOLEIL");
+
+            GameMap map = this.getPlayer().getCurMap();
+            int triggerCellCount = 0;
+            int triggerActionCount = 0;
+            List<String> lines = new ArrayList<>();
+
+            for (GameCase cell : map.getCases()) {
+                if (cell == null || !cell.getOnCellStopAction())
+                    continue;
+
+                ArrayList<Action> actions = cell.getOnCellStop();
+                if (actions == null || actions.isEmpty())
+                    continue;
+
+                boolean cellHasMatchingAction = false;
+                for (Action action : actions) {
+                    if (action == null)
+                        continue;
+
+                    String args = action.getArgs();
+                    if (args == null)
+                        args = "";
+
+                    boolean isSoleilTrigger = false;
+                    String destination = "";
+                    if (action.getId() == 0 && !args.isEmpty()) {
+                        String[] parts = args.split(",");
+                        if (parts.length >= 2 && isNumeric(parts[0]) && isNumeric(parts[1])) {
+                            isSoleilTrigger = true;
+                            destination = " -> toMap=" + parts[0] + " toCell=" + parts[1];
+                        }
+                    }
+
+                    if (filterSoleil && !isSoleilTrigger)
+                        continue;
+
+                    if (!cellHasMatchingAction) {
+                        triggerCellCount++;
+                        cellHasMatchingAction = true;
+                    }
+
+                    triggerActionCount++;
+                    if (args.length() > 90)
+                        args = args.substring(0, 90) + "...";
+
+                    lines.add("Cell " + cell.getId() + " -> action=" + action.getId() + destination + " args=" + args);
+                }
+            }
+
+            if (triggerActionCount == 0) {
+                if (filterSoleil)
+                    this.sendMessage("Aucun trigger SOLEIL trouvé sur la map " + map.getId() + ".");
+                else
+                    this.sendMessage("Aucun trigger trouvé sur la map " + map.getId() + ".");
+                return;
+            }
+
+            if (filterSoleil)
+                this.sendMessage("Triggers SOLEIL map " + map.getId() + " : " + triggerActionCount + " action(s) sur " + triggerCellCount + " cellule(s).");
+            else
+                this.sendMessage("Triggers map " + map.getId() + " : " + triggerActionCount + " action(s) sur " + triggerCellCount + " cellule(s). (Filtre possible: SOLEIL)");
+
+            final int maxLines = 120;
+            for (int i = 0; i < lines.size() && i < maxLines; i++) {
+                this.sendMessage(lines.get(i));
+            }
+            if (lines.size() > maxLines) {
+                this.sendMessage("... " + (lines.size() - maxLines) + " ligne(s) supplémentaires non affichées.");
+            }
+            return;
         } else if (command.equalsIgnoreCase("SAVETHAT")) {
             this.getPlayer().thatMap = this.getPlayer().getCurMap().getId();
             this.getPlayer().thatCell = this.getPlayer().getCurCell().getId();
@@ -3311,15 +3527,8 @@ public class CommandAdmin extends AdminUser {
             if (cmd.equalsIgnoreCase("")) {
                 this.sendMessage("\nCommandes disponibles pour le groupe "
                         + g.getName() + " :\n");
-                for (Command co : c) {
-                    String args = (co.getArguments()[1] != null && !co.getArguments()[1].equalsIgnoreCase("")) ? (" + " + co.getArguments()[1]) : ("");
-                    String desc = (co.getArguments()[2] != null && !co.getArguments()[2].equalsIgnoreCase("")) ? (co.getArguments()[2]) : ("");
-                    this.sendMessage("<u>"
-                            + co.getArguments()[0]
-                            + args
-                            + "</u> - "
-                            + desc);
-                }
+                this.sendGroupedCommandsHelp(c);
+                this.sendNewCommandsHelpSection(g);
             } else {
                 this.sendMessage("\nCommandes recherches pour le groupe "
                         + g.getName() + " :\n");

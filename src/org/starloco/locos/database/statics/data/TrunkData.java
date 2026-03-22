@@ -9,7 +9,6 @@ import org.starloco.locos.database.statics.AbstractDAO;
 import org.starloco.locos.game.world.World;
 
 import com.zaxxer.hikari.HikariDataSource;
-import org.starloco.locos.kernel.Main;
 import org.starloco.locos.area.map.entity.Trunk;
 
 public class TrunkData extends AbstractDAO<Trunk> {
@@ -48,7 +47,7 @@ public class TrunkData extends AbstractDAO<Trunk> {
 		return nbr;
 	}
 
-    public void insert(Trunk trunk) {
+    public boolean insert(Trunk trunk) {
         PreparedStatement p = null;
         try {
             p = getPreparedStatement("INSERT INTO `coffres` (`id`, `id_house`, `mapid`, `cellid`) " +
@@ -59,12 +58,13 @@ public class TrunkData extends AbstractDAO<Trunk> {
             p.setInt(4, trunk.getCellId());
             execute(p);
 
-            Database.getDynamics().getTrunkData().insert(trunk);
+            return Database.getDynamics().getTrunkData().insert(trunk);
         } catch (SQLException e) {
             super.sendError("Coffre insert", e);
         } finally {
             close(p);
         }
+        return false;
     }
 
     public int getNextId() {
@@ -74,13 +74,14 @@ public class TrunkData extends AbstractDAO<Trunk> {
             result = getData("SELECT MAX(id) AS max FROM `coffres`");
             ResultSet RS = result.resultSet;
 
-            boolean found = RS.first();
-
-            if (found)
-                guid = RS.getInt("max") + 1;
+            if (RS.next()) {
+                int max = RS.getInt("max");
+                guid = (RS.wasNull() ? 1 : max + 1);
+            } else {
+                guid = 1;
+            }
         } catch (SQLException e) {
             super.sendError("CoffreData getNextId", e);
-            Main.stop("unknown");
         } finally {
             close(result);
         }

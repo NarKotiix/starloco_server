@@ -6,6 +6,7 @@ import org.starloco.locos.client.Player;
 import org.starloco.locos.common.Formulas;
 import org.starloco.locos.common.SocketManager;
 import org.starloco.locos.game.world.World;
+import org.starloco.locos.kernel.Main;
 import org.starloco.locos.util.TimerWaiter;
 
 import java.util.concurrent.TimeUnit;
@@ -49,21 +50,37 @@ public class PigDragon {
 
     private static void checkOutside() {
         GameMap actual = World.world.getMap((short) 9375);
+        if (actual == null) {
+            Main.logger.warn("PigDragon checkOutside skipped: map 9375 is missing.");
+            return;
+        }
         if (actual.getCase(returnCell(actual, 413)).isLoS()) {
             TimerWaiter.addNext(PigDragon::checkOutside, 5, TimeUnit.MINUTES, TimerWaiter.DataType.MAP);
             return;
         }
         actual = World.world.getMap((short) 9377);
+        if (actual == null) {
+            Main.logger.warn("PigDragon checkOutside skipped: map 9377 is missing.");
+            return;
+        }
         if (actual.getCase(returnCell(actual, 36)).isLoS()) {
             TimerWaiter.addNext(PigDragon::checkOutside, 5, TimeUnit.MINUTES, TimerWaiter.DataType.MAP);
             return;
         }
         actual = World.world.getMap((short) 9381);
+        if (actual == null) {
+            Main.logger.warn("PigDragon checkOutside skipped: map 9381 is missing.");
+            return;
+        }
         if (actual.getCase(returnCell(actual, 216)).isLoS()) {
             TimerWaiter.addNext(PigDragon::checkOutside, 5, TimeUnit.MINUTES, TimerWaiter.DataType.MAP);
             return;
         }
         actual = World.world.getMap((short) 9387);
+        if (actual == null) {
+            Main.logger.warn("PigDragon checkOutside skipped: map 9387 is missing.");
+            return;
+        }
         if (actual.getCase(returnCell(actual, 262)).isLoS()) {
             TimerWaiter.addNext(PigDragon::checkOutside, 5, TimeUnit.MINUTES, TimerWaiter.DataType.MAP);
             return;
@@ -469,7 +486,16 @@ public class PigDragon {
         // Ferme toutes les portes et ouvre une porte dans chaque salle.
         closeMap(id, c1, c2, c3, c4);
         GameMap map = World.world.getMap((short) id);
+        if (map == null) {
+            Main.logger.warn("PigDragon initializeMap skipped: map {} is missing.", id);
+            return;
+        }
+
         GameCase cell = randomCase(map, c1, c2, c3, c4);
+        if (cell == null) {
+            Main.logger.warn("PigDragon initializeMap skipped: no candidate cell found for map {}.", id);
+            return;
+        }
 
         switch (id) {
             case 9395: // 13ème
@@ -535,24 +561,40 @@ public class PigDragon {
             case 0: // 9375 - 8ème
                 closeMap(9375, 413, 274, 262, 36);
                 map = World.world.getMap((short) 9375);
+                if (map == null) {
+                    Main.logger.warn("PigDragon initializeExt skipped: map 9375 is missing.");
+                    break;
+                }
                 cell = map.getCase(413);
                 open(map, cell);
                 break;
             case 1: // 9381 - 12ème
                 closeMap(9381, 442, 320, 216, 22);
                 map = World.world.getMap((short) 9381);
+                if (map == null) {
+                    Main.logger.warn("PigDragon initializeExt skipped: map 9381 is missing.");
+                    break;
+                }
                 cell = map.getCase(216);
                 open(map, cell);
                 break;
             case 2: // 9387 - 14ème
                 closeMap(9387, 414, 262, 144, 48);
                 map = World.world.getMap((short) 9387);
+                if (map == null) {
+                    Main.logger.warn("PigDragon initializeExt skipped: map 9387 is missing.");
+                    break;
+                }
                 cell = map.getCase(262);
                 open(map, cell);
                 break;
             case 3: // 9377 - 18ème
                 closeMap(9377, 413, 274, 262, 36);
                 map = World.world.getMap((short) 9377);
+                if (map == null) {
+                    Main.logger.warn("PigDragon initializeExt skipped: map 9377 is missing.");
+                    break;
+                }
                 cell = map.getCase(36);
                 open(map, cell);
                 break;
@@ -561,6 +603,10 @@ public class PigDragon {
 
     private static void closeMap(int id, int c1, int c2, int c3, int c4) {
         GameMap map = World.world.getMap((short) id);
+        if (map == null) {
+            Main.logger.warn("PigDragon closeMap skipped: map {} is missing.", id);
+            return;
+        }
         close(map, map.getCase(c1));
         close(map, map.getCase(c2));
         close(map, map.getCase(c3));

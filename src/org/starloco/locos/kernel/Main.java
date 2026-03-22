@@ -173,6 +173,8 @@ public class Main {
             logger.warn("═══════════════════════════════════════════════════════════");
             logger.warn("  SERVER SHUTDOWN INITIATED - " + reason);
             logger.warn("═══════════════════════════════════════════════════════════");
+            logger.warn("Shutdown requested by thread '{}'", Thread.currentThread().getName());
+            logger.warn("Shutdown origin trace", new Exception("Shutdown origin: " + reason));
 
             isRunning = false;
 

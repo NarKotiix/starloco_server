@@ -64,8 +64,20 @@ public class PlayerData extends AbstractDAO<Player> {
              stats.put(Constant.STATS_ADD_CHAN, RS.getInt("chance"));
              stats.put(Constant.STATS_ADD_AGIL, RS.getInt("agilite"));
              final int id = RS.getInt("id");
+             final String playerName = RS.getString("name");
+             final short playerMapId = RS.getShort("map");
+             final int playerCellId = RS.getInt("cell");
              final short prestige = Config.getInstance().prestige ? RS.getShort("prestige") : (short) 0;
-             Player player = new Player(id, RS.getString("name"), RS.getInt("groupe"), RS.getInt("sexe"), RS.getInt("class"), RS.getInt("color1"), RS.getInt("color2"), RS.getInt("color3"), RS.getLong("kamas"), RS.getInt("spellboost"), RS.getInt("capital"), RS.getInt("energy"), RS.getInt("level"), RS.getLong("xp"), RS.getInt("size"), RS.getInt("gfx"), RS.getByte("alignement"), RS.getInt("account"), stats, RS.getByte("seeFriend"), RS.getByte("seeAlign"), RS.getByte("seeSeller"), RS.getString("canaux"), RS.getShort("map"), RS.getInt("cell"), RS.getString("objets"), RS.getString("storeObjets"), RS.getInt("pdvper"), RS.getString("spells"), RS.getString("savepos"), RS.getString("jobs"), RS.getInt("mountxpgive"), RS.getInt("mount"), RS.getInt("honor"), RS.getInt("deshonor"), RS.getInt("alvl"), RS.getString("zaaps"), RS.getByte("title"), RS.getInt("wife"), RS.getString("morphMode"), RS.getString("allTitle"), RS.getString("emotes"), RS.getLong("prison"), false, RS.getString("parcho"), RS.getLong("timeDeblo"), RS.getBoolean("noall"), RS.getString("deadInformation"), RS.getByte("deathCount"), RS.getLong("totalKills"), prestige, RS.getString("artefact"), RS.getString("saveSpells"), RS.getInt("saveSpellPts"));
+             Player player = new Player(id, playerName, RS.getInt("groupe"), RS.getInt("sexe"), RS.getInt("class"), RS.getInt("color1"), RS.getInt("color2"), RS.getInt("color3"), RS.getLong("kamas"), RS.getInt("spellboost"), RS.getInt("capital"), RS.getInt("energy"), RS.getInt("level"), RS.getLong("xp"), RS.getInt("size"), RS.getInt("gfx"), RS.getByte("alignement"), RS.getInt("account"), stats, RS.getByte("seeFriend"), RS.getByte("seeAlign"), RS.getByte("seeSeller"), RS.getString("canaux"), playerMapId, playerCellId, RS.getString("objets"), RS.getString("storeObjets"), RS.getInt("pdvper"), RS.getString("spells"), RS.getString("savepos"), RS.getString("jobs"), RS.getInt("mountxpgive"), RS.getInt("mount"), RS.getInt("honor"), RS.getInt("deshonor"), RS.getInt("alvl"), RS.getString("zaaps"), RS.getByte("title"), RS.getInt("wife"), RS.getString("morphMode"), RS.getString("allTitle"), RS.getString("emotes"), RS.getLong("prison"), false, RS.getString("parcho"), RS.getLong("timeDeblo"), RS.getBoolean("noall"), RS.getString("deadInformation"), RS.getByte("deathCount"), RS.getLong("totalKills"), prestige, RS.getString("artefact"), RS.getString("saveSpells"), RS.getInt("saveSpellPts"));
+
+             if (player.getCurMap() == null || player.getCurCell() == null) {
+                 Main.logger.error("Skipping player load due to unresolved bootstrap position: playerId={}, name={}, map={}, cell={}",
+                         id,
+                         playerName,
+                         playerMapId,
+                         playerCellId);
+                 continue;
+             }
 
              if(checkOldPlayer) {
             	 Player oldPlayer = World.world.getPlayer(id);

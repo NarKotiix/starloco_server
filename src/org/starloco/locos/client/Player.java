@@ -48,6 +48,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 public class Player {
+  private static final short DEFAULT_BOOTSTRAP_FALLBACK_MAP_ID = 7411;
+  private static final int DEFAULT_BOOTSTRAP_FALLBACK_CELL_ID = 311;
+
 	private boolean esclave = false;
     public int[] LastTonicProposed = new int[3];
 
@@ -313,18 +316,12 @@ public class Player {
                 this.enteredOnEnnemyFaction = prison;
             }
             this._showWings = this.get_align() != 0 && seeAlign == 1;
-            if (curMap == null && World.world.getMap((short) 7411) != null) {
-                this.curMap = World.world.getMap((short) 7411);
-                this.curCell = curMap.getCase(311);
-            } else if (curMap == null && World.world.getMap((short) 7411) == null) {
-                GameServer.a();
-                Main.stop("Player1");
-                return;
+            if (curMap == null) {
+                recoverInvalidBootstrapPosition(map, cell, "missing current map");
             } else if (curMap != null) {
                 this.curCell = curMap.getCase(cell);
                 if (curCell == null) {
-                    this.curMap = World.world.getMap((short) 7411);
-                    this.curCell = curMap.getCase(311);
+                    recoverInvalidBootstrapPosition(map, cell, "missing current cell");
                 }
             }
             if (!z.equalsIgnoreCase("")) {
@@ -337,14 +334,18 @@ public class Player {
                 }
             }
             if (!isNew && (curMap == null || curCell == null)) {
-                Main.stop("Player2");
+                Main.logger.error("Player bootstrap unresolved after fallback attempts: playerId={}, name={}, requestedMap={}, requestedCell={}, fallbackMapPresent={}",
+                        this.id,
+                        this.name,
+                        map,
+                        cell,
+                        World.world.getMap(DEFAULT_BOOTSTRAP_FALLBACK_MAP_ID) != null);
                 return;
             }
             for (String item : stuff.split("\\|")) {
                 if (item.equals(""))
                     continue;
                 String[] infos = item.split(":");
-
                 int guid = 0;
                 try {
                     guid = Integer.parseInt(infos[0]);
@@ -476,6 +477,69 @@ public class Player {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void recoverInvalidBootstrapPosition(short requestedMapId, int requestedCellId, String reason) {
+        final GameMap emergencyMap = findEmergencyBootstrapMap();
+        final GameCase emergencyCell = findEmergencyBootstrapCell(emergencyMap);
+
+        if (emergencyMap == null || emergencyCell == null) {
+            GameServer.a();
+            Main.logger.error("Unable to recover bootstrap position for playerId={}, name={}, requestedMap={}, requestedCell={}, reason={}, fallbackMapPresent={}, loadedMapsCount={}",
+                    this.id,
+                    this.name,
+                    requestedMapId,
+                    requestedCellId,
+                    reason,
+                    World.world.getMap(DEFAULT_BOOTSTRAP_FALLBACK_MAP_ID) != null,
+                    World.world.getMaps().size());
+            this.curMap = null;
+            this.curCell = null;
+            return;
+        }
+
+        this.curMap = emergencyMap;
+        this.curCell = emergencyCell;
+        Main.logger.warn("Recovered invalid bootstrap position for playerId={}, name={}, requestedMap={}, requestedCell={}, reason={} -> fallbackMap={}, fallbackCell={}",
+                this.id,
+                this.name,
+                requestedMapId,
+                requestedCellId,
+                reason,
+                emergencyMap.getId(),
+                emergencyCell.getId());
+    }
+
+    private GameMap findEmergencyBootstrapMap() {
+        final GameMap configuredFallback = World.world.getMap(DEFAULT_BOOTSTRAP_FALLBACK_MAP_ID);
+        if (configuredFallback != null) {
+            return configuredFallback;
+        }
+
+        for (GameMap map : World.world.getMaps()) {
+            if (map != null) {
+                return map;
+            }
+        }
+        return null;
+    }
+
+    private GameCase findEmergencyBootstrapCell(GameMap map) {
+        if (map == null) {
+            return null;
+        }
+
+        final GameCase preferredCell = map.getCase(DEFAULT_BOOTSTRAP_FALLBACK_CELL_ID);
+        if (preferredCell != null) {
+            return preferredCell;
+        }
+
+        final int randomCellId = map.getRandomFreeCellId();
+        if (randomCellId >= 0) {
+            return map.getCase(randomCellId);
+        }
+
+        return null;
     }
 
     //Clone double
@@ -6035,7 +6099,13 @@ public class Player {
 
     public void UpdateAllInit() {
         if(_morphMode) {
-            this.initiative = Integer.parseInt(World.world.getFullMorph(_morphId).get("initiative"));
+            Map<String, String> fullMorph = World.world.getFullMorph(_morphId);
+            if (fullMorph == null) {
+                World.world.logger.warn("UpdateAllInit: fullMorph introuvable pour morphId={} (joueur={}), _morphMode réinitialisé.", _morphId, getName());
+                _morphMode = false;
+                return;
+            }
+            this.initiative = Integer.parseInt(fullMorph.get("initiative"));
 
             for (int i = Constant.ITEM_POS_TONIQUE1; i < Constant.ITEM_POS_TONIQUE9 + 1; i++) {
                 GameObject object = getObjetByPos(i);

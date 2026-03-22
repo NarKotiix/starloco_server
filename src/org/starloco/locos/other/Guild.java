@@ -200,9 +200,8 @@ public class Guild {
     }
 
     public void removeMember(Player player) {
-        House house = House.getHouseByPerso(player);
-        if (house != null)
-            if (House.houseOnGuild(this.id) > 0)
+        for (House house : House.getHousesByPerso(player))
+            if (house.getGuildId() == this.id)
                 Database.getDynamics().getHouseData().updateGuild(house, 0, 0);
 
         this.members.remove(player.getId());
